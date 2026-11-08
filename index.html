@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7jkIRteIr9Jqo4wFyiHP32iHjVJju0BhvCqGB3pMOF4=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tNte7W90QQZcHMogE/st55oKos/oWrnwKT4G02XlW9s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -615,7 +615,8 @@ function repintar(){
 function alternar(r, c){
   if (alternar._t && Date.now() - alternar._t < 600 && alternar._id === r.id) return;    // doble toque accidental
   alternar._t = Date.now(); alternar._id = r.id;
-  if (r.llego) quitarCheckin(r, c);
+  if (r.llego && !checkinAbierto(c, ahoraMs()) && ahoraMs() > new Date(c.inicio).getTime()) toast('Ya tienes check-in. Para cambiarlo, pasa a recepción.');
+  else if (r.llego) quitarCheckin(r, c);
   else if (!checkinAbierto(c, ahoraMs())) toast(ahoraMs() < abre(c.inicio) ? `El check-in de esta clase abre a las ${hhmm(abre(c.inicio))}` : 'La tolerancia de 10 min ya terminó. Pasa a recepción, por favor.');
   else marcarCheckin(r, c);
 }
@@ -738,7 +739,9 @@ function abrirReservar(disciplina, inicio, lleno = false, serviceId = ''){
   $('rQR').innerHTML = '<span class="cargando">…</span>'; $('rWeb').hidden = !USAR_APP; $('rQRWeb').innerHTML = '';
   // «Pedir a recepción»: solo dentro de «Mis clases» (ya verificó su celular).
   solicitudActual = cuentaPase ? { disciplina, inicio, lleno } : null;
-  $('rPedir').hidden = !solicitudActual; $('rPedir').disabled = false; $('rPedirMsg').textContent = '';
+  const yaPedida = solicitudActual && pedidas.has(`${disciplina}|${inicio}`);
+  $('rPedir').hidden = !solicitudActual || yaPedida; $('rPedir').disabled = false;
+  $('rPedirMsg').style.color = 'var(--ok)'; $('rPedirMsg').textContent = yaPedida ? '✓ Ya se la pediste a recepción.' : '';
   $('rPedir').textContent = lleno ? 'Pedir a recepción que me anote en espera' : 'Pedir a recepción que me lo aparte';
   $('veloReservar').classList.add('abierto');
   cargarQRLib().then(() => { $('rQR').innerHTML = qrBonito(url); if (USAR_APP) $('rQRWeb').innerHTML = qrBonito(web); }).catch(() => { $('rQR').innerHTML = '<p style="font-size:16px;color:var(--gris)">No se pudo dibujar el código. Pide ayuda en recepción.</p>'; });
@@ -905,6 +908,7 @@ function diaRelativo(d){
   return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
 }
 let cuentaActual = null, cuentaPase = null, solicitudActual = null;
+const pedidas = new Set();                 // «disciplina|inicio» ya pedidas a recepción en esta consulta
 function pintarCuenta(u){
   cuentaActual = u;
   const pl = u.plan, col = pl && pl.elemento && EL[pl.elemento] ? EL[pl.elemento][0] : 'var(--carbon)';
@@ -939,10 +943,10 @@ function pintarCuenta(u){
   // y nunca en un día en que ya tiene clase. Primero su día y hora de siempre, luego por fecha.
   if (u.lugares) {
     const diaDe = d => { const x = enGDL(d); return `${x.getUTCFullYear()}-${x.getUTCMonth()}-${x.getUTCDate()}`; };
-    const ocupados = new Set(fut.map(r => diaDe(r.inicio)));
+    const ocupados = new Set([...(u.diasReservados || []).map(diaDe), ...fut.map(r => diaDe(r.inicio))]);
     const max = fut.length === 0 ? 6 : fut.length === 1 ? 4 : 2;
     const sug = u.lugares.flatMap(g => g.clases.map(l => ({ ...l, disciplina: g.disciplina, serviceId: g.serviceId })))
-      .filter(l => !ocupados.has(diaDe(l.inicio)))
+      .filter(l => !ocupados.has(diaDe(l.inicio)) && !(l.nivel === 'lleno' && l.espera === false))
       .sort((a, b) => (b.suHorario - a.suHorario) || (new Date(a.inicio) - new Date(b.inicio)))
       .slice(0, max).sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
     if (sug.length) html += `<div class="tarjeta"><h3>${fut.length ? 'Otro día con lugar' : '¿Cuándo vienes? Hay lugar'}</h3><div class="chips">${sug.map(l => `
@@ -983,10 +987,11 @@ function checkinDesdeCuenta(r){
   const nombre = cuentaActual ? cuentaActual.nombreCorto : '';
   salirCuenta();
   if (!hit) hit = { r: { id: r.id, nombre, ins: null, llego: false }, c: { id: 'x', disciplina: r.disciplina, inicio: r.inicio, coach: r.coach } };
-  if (!hit.r.llego) marcarCheckin(hit.r, hit.c);
+  if (hit.r.llego) toast(`Ya tienes check-in en ${hit.c.disciplina} · ${hhmm(hit.c.inicio)} ✓`);
+  else marcarCheckin(hit.r, hit.c);
 }
 function salirCuenta(volver = true){
-  cuentaActual = null; cuentaPase = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = ''; $('veloReservar').classList.remove('abierto');
+  cuentaActual = null; cuentaPase = null; pedidas.clear(); $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = ''; $('veloReservar').classList.remove('abierto');
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
@@ -1011,7 +1016,9 @@ let enVuelo = null;                                    // { id, tipo } que se es
 function encolar(op){
   const c = leerCola();
   const opuesto = op.tipo === 'checkin' ? 'deshacer' : 'checkin';
-  const i = c.findIndex(x => x.id === op.id && x.tipo === opuesto && !(enVuelo && enVuelo.id === x.id && enVuelo.tipo === x.tipo));
+  // Solo se anula el opuesto si NUNCA se intentó mandar: si ya salió (aunque la respuesta se perdiera), pudo llegar a Wix,
+  // así que el nuevo toque se encola detrás y el servidor decide (responde «ya» si no hay nada que cambiar). (revisión 8-nov)
+  const i = c.findIndex(x => x.id === op.id && x.tipo === opuesto && !x.intentada && !(enVuelo && enVuelo.id === x.id && enVuelo.tipo === x.tipo));
   if (i >= 0) c.splice(i, 1);
   else if (!c.some(x => x.id === op.id && x.tipo === op.tipo)) c.push({ ...op, intentos: 0 });
   guardarCola(c); red(estadoRed.ok); vaciarCola();
@@ -1046,6 +1053,7 @@ async function vaciarCola(){
       if (ahoraMs() - op.ts > 12 * 3600e3) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'vencido'); continue; }
       if (finDiaMs && op.ts < finDiaMs - 24 * 3600e3) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'otro-dia'); continue; }   // de ayer: Wix ya no lo acepta
       enVuelo = { id: op.id, tipo: op.tipo };
+      { const c0 = leerCola(), y = c0.find(z => z.id === op.id && z.tipo === op.tipo); if (y && !y.intentada) { y.intentada = true; guardarCola(c0); } }
       try {
         await api(op.tipo, { bookingId: op.id, ts: op.ts });
         quitarDeCola(op.id, op.tipo); red(true);
@@ -1053,7 +1061,13 @@ async function vaciarCola(){
         if (e.auth) break;
         if (!e.resp) { red(false); break; }                    // sin red: se intenta después
         const err = e.resp.error;
-        if (['no-encontrada', 'fuera-de-horario', 'tolerancia', 'wix-rechazo', 'bookingId', 'sin-sesion'].includes(err)) { quitarDeCola(op.id, op.tipo); noRegistrado(op, err); continue; }
+        if (['no-encontrada', 'fuera-de-horario', 'tolerancia', 'wix-rechazo', 'bookingId', 'sin-sesion'].includes(err)) {
+          quitarDeCola(op.id, op.tipo); noRegistrado(op, err);
+          // La pantalla regresa a lo que hay en Wix (antes seguía la palomita 15 min aunque Wix lo rechazó).
+          locales.delete(op.id); marcarLocal(op.id, op.tipo === 'deshacer');
+          if (op.tipo !== 'deshacer') toast(`No se pudo registrar a ${op.nombre || 'esta alumna'}. Pasa a recepción, por favor.`);
+          continue;
+        }
         // Error pasajero (Wix 502, secretos 503…): se reintenta (unos 30 min de respuestas de error) y luego va a la lista.
         bloqueados.add(op.id);                                   // se respeta el orden: check-in → quitar → check-in…
         const c = leerCola(), x = c.find(y => y.id === op.id && y.tipo === op.tipo);
@@ -1126,6 +1140,7 @@ $('rPedir').onclick = async () => {
   $('rPedir').disabled = true; $('rPedir').textContent = 'Enviando…';
   try {
     await api('solicitar', { pase: cuentaPase, disciplina: s0.disciplina, inicio: s0.inicio, lleno: s0.lleno });
+    pedidas.add(`${s0.disciplina}|${s0.inicio}`);
     if (solicitudActual !== s0) return;
     $('rPedir').hidden = true; $('rPedirMsg').style.color = 'var(--ok)';
     $('rPedirMsg').textContent = '✓ Listo. Recepción ya recibió tu solicitud y te la aparta con tu plan.';
@@ -1136,7 +1151,7 @@ $('rPedir').onclick = async () => {
     $('rPedirMsg').style.color = 'var(--alerta)';
     $('rPedirMsg').textContent = err === 'demasiadas' ? 'Ya enviaste varias solicitudes. Pasa a recepción, por favor.'
       : err === 'pase' ? 'Vuelve a abrir «Mis clases» para pedirla.'
-      : err === 'sin-slack' ? 'Por ahora pídelo directo en recepción, por favor.'
+      : (err === 'sin-slack' || err === 'slack' || err === 'datos') ? 'Por ahora pídelo directo en recepción, por favor.'
       : 'No se pudo enviar. Revisa el internet o pide en recepción.';
   }
 };
