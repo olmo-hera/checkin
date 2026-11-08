@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tbi+ov0gmSYhUn8wyrMN26vmQU9pgFVaLv4cGE1Czcg=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-YTvcjvzR30Xvv+NwCyCn0ZaJttKViW6Nu1FBBKrguo4=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -152,6 +152,13 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 @keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
 .exito h1{font-size:30px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap}
 .exito .sub{font-size:17px;color:var(--gris)}
+.medallas{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
+.medallas:empty{display:none}
+.medalla{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;animation:pop .35s cubic-bezier(.2,1.4,.4,1) both}
+.medalla:nth-child(2){animation-delay:.08s}.medalla:nth-child(3){animation-delay:.16s}.medalla:nth-child(4){animation-delay:.24s}
+.medalla svg{display:block}
+.medalla .anio{width:52px;height:52px;border-radius:50%;border:2.5px solid var(--laurel);color:var(--laurel);display:grid;place-items:center;font-family:Poppins;font-weight:600;font-size:22px;line-height:1}
+.medalla span{font-size:14px;color:var(--carbon);line-height:1.2;text-align:center}
 .exito .dato{padding:10px 16px;min-width:0}
 .exito .dato .num{font-size:22px}
 .exito .aviso{font-size:17px;padding:12px 18px}
@@ -305,6 +312,7 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
   <div class="cabeza"><div class="palomita"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <h1 id="eTitulo"></h1></div>
   <div class="sub" id="eSub"></div>
+  <div class="medallas" id="eMedallas"></div>
   <div id="ePlan"></div>
   <div class="datos" id="eDatos"></div>
   <div id="eAviso"></div>
@@ -600,12 +608,23 @@ function quitarCheckin(r, c){
 let cierre = null;
 function mostrarExito(r, c){
   const mio = ++turno;
-  $('eTitulo').innerHTML = RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}! ${insignias(r.ins, 30)}`;
+  $('eTitulo').innerHTML = RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}!`;
+  $('eMedallas').innerHTML = RE_MARKET.test(r.nombre) ? '' : medallas(r.ins);
   $('eSub').textContent = `${c.disciplina} · ${hhmm(c.inicio)}${c.coach ? ' con ' + c.coach : ''}`;
   $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
   $('exito').classList.add('abierto');
   arrancarCuenta(6000);
   Promise.resolve(pedirPerfil(r.id)).then(p => { if (mio === turno && $('exito').classList.contains('abierto')) pintarPerfil(p); });
+}
+/** Las insignias completas al abrir la tarjeta: cada una en grande y con su nombre. */
+function medallas(ins){
+  if (!ins) return '';
+  const m = [];
+  if (ins.elemento && EL[ins.elemento]) m.push([svgElemento(ins.elemento, 52), EL[ins.elemento][1]]);
+  if (ins.miembro) m.push([svgLaurel(58), 'Miembro']);
+  if (ins.estrella) m.push([svgEstrella(ins.estrella, 58), `${ins.estrella} clases`]);
+  if (ins.anios) m.push([`<div class="anio">${ins.anios}</div>`, `año${ins.anios === 1 ? '' : 's'} en Hera`]);
+  return m.map(([icono, txt]) => `<div class="medalla">${icono}<span>${txt}</span></div>`).join('');
 }
 function pintarPerfil(p){
   if (!p) { $('eDatos').innerHTML = ''; return; }
@@ -629,7 +648,7 @@ function pintarPerfil(p){
   if (p.tipo === 'membresia' || p.tipo === 'paquete') {
     // Nombre real del plan (sin asteriscos ni "Precio Guardado"); si no viene, "Miembro Agua" / "Paquete Fuego".
     const nom = p.plan || `${p.miembro ? 'Miembro' : 'Paquete'}${p.elemento && EL[p.elemento] ? ' ' + EL[p.elemento][1] : ''}`;
-    $('ePlan').innerHTML = `<span class="plan">${svgElemento(p.elemento, 24)}${p.miembro ? svgLaurel(28) : ''}<span>${esc(nom)}</span></span>`;
+    $('ePlan').innerHTML = `<span class="plan" style="padding-left:16px"><span>${esc(nom)}</span></span>`;
   }
   $('eDatos').innerHTML = d.join('');
   const colores = { cumple:'#9A4215', hito:'#7F866F', bienvenida:'#788991', ultima:'#B5651D', vence:'#B5651D', pocas:'#B5651D', ciclo:'#788991', termina:'#788991' };
