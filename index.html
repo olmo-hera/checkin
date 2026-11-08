@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tNte7W90QQZcHMogE/st55oKos/oWrnwKT4G02XlW9s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3PXi3zTiJeceHGBm06zhWle4MyjMCLGsnTgZ67P3940=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -127,6 +127,9 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .ok{width:34px;height:34px;border-radius:50%;background:var(--ok);display:grid;place-items:center;flex:none}
 .ayuda{font-size:17px;color:var(--gris);text-align:center}
 .ins{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-left:4px}
+.hoy-chip{font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;line-height:1.3;white-space:nowrap;background:#F6EFE6;color:#7A4A1E}
+.hoy-chip.primera{background:#E8F2E5;color:#2F6B3A}.hoy-chip.hito{background:#FBF0D6;color:#8A6410}
+.hoy-chip.cumple{background:#FBE6EC;color:#9B2F52}.hoy-chip.regreso{background:#E6EEF6;color:#2E5578}
 .anios{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--laurel);border:1.5px solid var(--laurel);border-radius:999px;padding:2px 9px;line-height:1.3;white-space:nowrap}
 .ins svg{display:block}
 
@@ -185,6 +188,7 @@ button.fila-r:active{background:var(--arena-suave)}
 .medalla:nth-child(2){animation-delay:.08s}.medalla:nth-child(3){animation-delay:.16s}.medalla:nth-child(4){animation-delay:.24s}
 .medalla svg{display:block}
 .medalla .anio{width:52px;height:52px;border-radius:50%;border:2.5px solid var(--laurel);color:var(--laurel);display:grid;place-items:center;font-family:Poppins;font-weight:600;font-size:22px;line-height:1}
+.medalla .emoji-grande{font-size:46px;line-height:58px;height:58px}
 .medalla span{font-size:14px;color:var(--carbon);line-height:1.2;text-align:center}
 .exito .dato{padding:10px 16px;min-width:0}
 .exito .dato .num{font-size:22px}
@@ -455,10 +459,12 @@ function svgAnillo(p, t = 26, col = 'var(--carbon)') {
       stroke-dasharray="${(c * f).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 12 12)"/></svg>`;
 }
 /** Junto al nombre: elemento, laureles (miembro), estrella de hito y años en Hera. Sin anillo (Olmo, 8-nov). */
+const HOY_ETQ = { primera: () => '🌱 1ª vez', hito: x => `⭐ clase ${x.n}`, cumple: () => '🎂 cumple', regreso: () => '👋 de regreso' };
+const chipsHoy = ins => (ins && ins.hoy || []).filter(x => HOY_ETQ[x.tipo]).map(x => `<span class="hoy-chip ${x.tipo}">${HOY_ETQ[x.tipo](x)}</span>`).join('');
 function insignias(ins, t = 26) {
   if (!ins) return '';
   const anios = ins.anios ? `<span class="anios" title="${ins.anios} año${ins.anios === 1 ? '' : 's'} en Hera">${ins.anios} año${ins.anios === 1 ? '' : 's'}</span>` : '';
-  return `<span class="ins">${svgElemento(ins.elemento, t)}${ins.miembro ? svgLaurel(t + 8) : ''}${svgEstrella(ins.estrella, t + 6)}${anios}</span>`;
+  return `<span class="ins">${svgElemento(ins.elemento, t)}${ins.miembro ? svgLaurel(t + 8) : ''}${svgEstrella(ins.estrella, t + 6)}${anios}${chipsHoy(ins)}</span>`;
 }
 
 /* --------------------------------------------------------------- red */
@@ -654,7 +660,8 @@ let cierre = null;
 function mostrarExito(r, c){
   const mio = ++turno;
   $('eTitulo').innerHTML = RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}!`;
-  $('eMedallas').innerHTML = RE_MARKET.test(r.nombre) ? '' : medallas(r.ins);
+  exitoIns = RE_MARKET.test(r.nombre) ? null : r.ins;
+  $('eMedallas').innerHTML = exitoIns ? medallas(exitoIns) : '';
   $('eSub').textContent = `${c.disciplina} · ${hhmm(c.inicio)}${c.coach ? ' con ' + c.coach : ''}`;
   $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
   $('exito').classList.add('abierto');
@@ -667,12 +674,22 @@ function medallas(ins){
   const m = [];
   if (ins.elemento && EL[ins.elemento]) m.push([svgElemento(ins.elemento, 52), EL[ins.elemento][1]]);
   if (ins.miembro) m.push([svgLaurel(58), 'Miembro']);
-  if (ins.estrella) m.push([svgEstrella(ins.estrella, 58), `${ins.estrella} clases`]);
+  if (ins.estrella && !(ins.hoy || []).some(x => x.tipo === 'hito')) m.push([svgEstrella(ins.estrella, 58), `${ins.estrella} clases`]);
   if (ins.anios) m.push([`<div class="anio">${ins.anios}</div>`, `año${ins.anios === 1 ? '' : 's'} en Hera`]);
+  const GRANDE = { primera: ['🌱', 'Tu primera clase'], hito: null, cumple: ['🎂', '¡Feliz cumpleaños!'], regreso: ['👋', '¡Qué gusto verte!'] };
+  for (const x of ins.hoy || []) {
+    if (x.tipo === 'hito') m.push([svgEstrella(x.n, 58), `¡Tu clase ${x.n}!`]);
+    else if (GRANDE[x.tipo]) m.push([`<div class="emoji-grande">${GRANDE[x.tipo][0]}</div>`, GRANDE[x.tipo][1]]);
+  }
   return m.map(([icono, txt]) => `<div class="medalla">${icono}<span>${txt}</span></div>`).join('');
 }
 function pintarPerfil(p){
   if (!p) { $('eDatos').innerHTML = ''; return; }
+  // El número de clase del servidor manda: si ya tomó otra clase hoy, no se repite «primera clase» ni un hito viejo.
+  if (exitoIns && p.numeroClase && (exitoIns.hoy || []).length) {
+    const hoy = exitoIns.hoy.filter(x => !(x.tipo === 'primera' && p.numeroClase > 1) && !(x.tipo === 'hito' && x.n !== p.numeroClase));
+    if (hoy.length !== exitoIns.hoy.length) $('eMedallas').innerHTML = medallas({ ...exitoIns, hoy });
+  }
   const col = p.elemento && EL[p.elemento] ? EL[p.elemento][0] : 'var(--carbon)';
   const d = [];
   if (p.numeroClase) d.push(`<div class="dato"><div><div class="num">#${p.numeroClase}</div><span>clase en Hera</span></div></div>`);
@@ -907,7 +924,7 @@ function diaRelativo(d){
   if (dif === 0) return 'Hoy'; if (dif === 1) return 'Mañana'; if (dif === -1) return 'Ayer';
   return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
 }
-let cuentaActual = null, cuentaPase = null, solicitudActual = null;
+let cuentaActual = null, cuentaPase = null, solicitudActual = null, exitoIns = null;
 const pedidas = new Set();                 // «disciplina|inicio» ya pedidas a recepción en esta consulta
 function pintarCuenta(u){
   cuentaActual = u;
