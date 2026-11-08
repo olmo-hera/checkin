@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0EIyfq4lwqRr8+43uEkR3WGyyrFHlYtIiSK9+CJXDRc=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PnN4/R+GcZ6JFOL8ruU/eJf7oQ7sE6a0ALiUF9Xv5z8=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,6 +131,12 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 /* Hoja de confirmación */
 .velo{position:fixed;inset:0;background:rgba(43,43,43,.35);display:none;align-items:flex-end;justify-content:center;z-index:10}
 .velo.abierto{display:flex}
+.qr-bonito{width:280px;height:280px;background:#fff;border-radius:28px;padding:14px;box-shadow:0 6px 24px rgba(154,66,21,.18);display:grid;place-items:center}
+.qr-bonito svg{width:100%;height:100%;display:block}
+.pasos{text-align:left;font-size:18px;color:var(--carbon);line-height:1.5;padding-left:24px;margin:4px 0 6px;max-width:460px}
+.pasos b{color:var(--terracota)}
+button.fila-r{width:100%;text-align:left;background:none;color:inherit}
+button.fila-r:active{background:var(--arena-suave)}
 .hoja{background:#fff;width:min(640px,100%);text-align:center;border-radius:28px 28px 0 0;padding:34px 34px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:sube .22s ease-out}
 @keyframes sube{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .hoja h2{font-size:32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -310,6 +316,16 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
   </div>
 </div>
 
+<div class="velo" id="veloReservar">
+  <div class="hoja" style="align-items:center">
+    <h2 id="rTitulo" style="justify-content:center"></h2>
+    <p id="rSub"></p>
+    <div class="qr-bonito" id="rQR" aria-label="Código QR para reservar"></div>
+    <ol class="pasos" id="rPasos"></ol>
+    <button class="btn sec" id="rCerrar" style="width:100%">Listo</button>
+  </div>
+</div>
+
 <div class="exito" id="exito" role="status" aria-live="polite">
   <div class="cabeza"><div class="palomita"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <h1 id="eTitulo"></h1></div>
@@ -464,7 +480,7 @@ function red(ok, txt){
 /* --------------------------------------------------------------- contraseña */
 function irClave(msg){
   $('velo').classList.remove('abierto'); $('exito').classList.remove('abierto'); claseAbierta = null;
-  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
+  $('veloVerif').classList.remove('abierto'); $('veloReservar').classList.remove('abierto'); verif = null; cuentaActual = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
   const ya = $('vClave').classList.contains('activa');
   if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
   if (msg) $('claveError').textContent = msg;
@@ -666,6 +682,42 @@ function arrancarCuenta(ms){
 function cerrarExito(){ clearTimeout(cierre); turno++; $('exito').classList.remove('abierto'); }
 
 let qrLib = null;
+/* --------------------------------------------------------------- reservar desde su celular (QR bonito) */
+// Liga de invitación de Hera en la app Fit by Wix (Wix → Mobile App → Share invite code). Vacía = agenda web de la disciplina.
+const URL_APP_FIT = '';
+const AGENDA_WEB = { Reformer: 'pilates-reformer', Mat: 'pilates-mat', Barre: 'barre', Yoga: 'yoga' };
+const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
+function abrirReservar(disciplina, inicio){
+  const url = URL_APP_FIT || (AGENDA_WEB[disciplina] ? `https://www.herazenter.com/booking-calendar/${AGENDA_WEB[disciplina]}` : 'https://www.herazenter.com/classes');
+  const cuando = `${diaRelativo(inicio)} · ${hhmm(inicio)}`;
+  $('rTitulo').textContent = `Reserva ${disciplina}`;
+  $('rSub').textContent = `${cuando} — escanea con tu celular`;
+  $('rPasos').innerHTML = URL_APP_FIT
+    ? `<li>Escanea: se abre Hera en la app <b>Fit by Wix</b>.</li><li>Entra a <b>Agenda</b> → <b>${esc(disciplina)}</b> → <b>${esc(cuando)}</b>.</li><li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`
+    : `<li>Escanea: se abre la agenda de <b>${esc(disciplina)}</b>.</li><li>Elige <b>${esc(cuando)}</b> e inicia sesión con tu cuenta.</li><li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`;
+  $('rQR').innerHTML = '<span class="cargando">…</span>';
+  $('veloReservar').classList.add('abierto');
+  cargarQRLib().then(() => { $('rQR').innerHTML = qrBonito(url); }).catch(() => { $('rQR').innerHTML = '<p style="font-size:16px;color:var(--gris)">No se pudo dibujar el código. Pide ayuda en recepción.</p>'; });
+}
+/** QR con puntos redondos, ojos redondeados en terracota y el ícono de Hera al centro (corrección alta, H). */
+function qrBonito(texto){
+  const tmp = document.createElement('div');
+  const q = new QRCode(tmp, { text: texto, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.H });
+  const m = q._oQRCode, n = m.getModuleCount(), M = 2, T = n + 2 * M;
+  const enOjo = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  const centro = Math.round(n * 0.24), c0 = Math.floor((n - centro) / 2);
+  const enCentro = (r, c) => r >= c0 - 1 && r <= c0 + centro && c >= c0 - 1 && c <= c0 + centro;
+  let puntos = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+    if (m.isDark(r, c) && !enOjo(r, c) && !enCentro(r, c)) puntos += `<circle cx="${c + M + .5}" cy="${r + M + .5}" r=".43"/>`;
+  const ojo = (r, c) => `<rect x="${c + M + .5}" y="${r + M + .5}" width="6" height="6" rx="1.9" fill="none" stroke="#9A4215" stroke-width="1"/>
+    <rect x="${c + M + 2}" y="${r + M + 2}" width="3" height="3" rx="1" fill="#9A4215"/>`;
+  const lado = centro + 1, x0 = c0 + M - .5;
+  return `<svg viewBox="0 0 ${T} ${T}" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+    <g fill="#424949">${puntos}</g>${ojo(0, 0)}${ojo(0, n - 7)}${ojo(n - 7, 0)}
+    <rect x="${x0}" y="${x0}" width="${lado}" height="${lado}" rx="${lado * .28}" fill="#fff"/>
+    <image href="${ICONO_HERA}" x="${x0 + lado * .1}" y="${x0 + lado * .1}" width="${lado * .8}" height="${lado * .8}" preserveAspectRatio="xMidYMid meet"/></svg>`;
+}
 function cargarQRLib(){
   if (window.QRCode) return Promise.resolve();
   if (qrLib) return qrLib;
@@ -842,10 +894,10 @@ function pintarCuenta(u){
   // Lugares libres en los próximos 7 días, por cada disciplina que ya toma y solo en horarios que ya ha hecho.
   if (u.lugares) html += `<div class="tarjeta"><h3>Lugares libres en tus horarios</h3>${u.lugares.map(g => `
       <div class="fila-r compacta" style="padding-bottom:2px"><b style="color:var(--terracota)">${esc(g.disciplina)}</b></div>
-      ${g.clases.map(l => `<div class="fila-r compacta">
+      ${g.clases.map(l => `<button class="fila-r compacta" data-ul="${esc(g.disciplina)}|${esc(l.inicio)}">
         <span><b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b>${l.suHorario ? '<small>tu día y hora de siempre</small>' : '<small>tu hora de siempre</small>'}</span>
-        <span class="etiqueta" style="${l.lugares <= 2 ? 'background:#F3E3E1;color:#9A3B2E' : ''}">${l.lugares} lugar${l.lugares === 1 ? '' : 'es'}</span></div>`).join('')}`).join('')}
-      <div class="fila-r compacta"><small>Reserva con el código de abajo.</small></div></div>`;
+        <span class="etiqueta" style="${l.lugares <= 2 ? 'background:#F3E3E1;color:#9A3B2E' : 'background:var(--terracota);color:#fff'}">${l.lugares} lugar${l.lugares === 1 ? '' : 'es'} · Reservar</span></button>`).join('')}`).join('')}
+      <div class="fila-r compacta"><small>Toca un horario y resérvalo desde tu celular con tu plan.</small></div></div>`;
   const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
   const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
   if (pas.length) html += `<div class="tarjeta"><h3>${pas.length === 1 ? 'Tu clase anterior' : `Tus últimas ${pas.length} clases`}</h3>${pas.map(a => `<div class="fila-r compacta">
@@ -863,6 +915,7 @@ function pintarCuenta(u){
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
+  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => { const [d, ini] = b.dataset.ul.split('|'); abrirReservar(d, ini); });
   cargarQRLib().then(() => {
     if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
@@ -881,7 +934,7 @@ function checkinDesdeCuenta(r){
   if (!hit.r.llego) marcarCheckin(hit.r, hit.c);
 }
 function salirCuenta(volver = true){
-  cuentaActual = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
+  cuentaActual = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = ''; $('veloReservar').classList.remove('abierto');
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
@@ -1014,12 +1067,15 @@ if (fs && !standalone) { $('pantallaCompleta').hidden = false; $('pantallaComple
 if (!almacenOk) $('sinAlmacen').hidden = false;
 if (!DEMO) $('manifest').href = 'manifest.json';
 
+$('rCerrar').onclick = () => $('veloReservar').classList.remove('abierto');
+$('veloReservar').addEventListener('click', e => { if (e.target.id === 'veloReservar') $('veloReservar').classList.remove('abierto'); });
 ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
 setInterval(() => {                                          // inactividad: vuelve al inicio
   const quieto = Date.now() - ultimoToque;
   if (claseAbierta && quieto > 45000 && !$('exito').classList.contains('abierto')) { claseAbierta = null; ir('vInicio'); pintarInicio(); }
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
+  if ($('veloReservar').classList.contains('abierto') && quieto > 60000) $('veloReservar').classList.remove('abierto');
   if ($('veloVerif').classList.contains('abierto') && quieto > 45000) cerrarVerificacion();
   if ($('vCuenta').classList.contains('activa') && quieto > 45000) salirCuenta();   // sus datos no se quedan en pantalla
 }, 5000);
