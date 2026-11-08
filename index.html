@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sz8ZZgpWUGMDI5ZPa2lWAb1ttJvR0ICg6cA9jtM8vI=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oV8R9idn2uO8zmjNiCJptSVEYDcYLLB7lcvCaVdqfLo=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -823,19 +823,42 @@ function pintarCuenta(u){
   }
   let html = datos.length ? `<div class="datos" style="max-width:none">${datos.join('')}</div>` : '';
   if (u.aviso) html += `<div class="aviso" style="--c:#B5651D;max-width:none">${esc(u.aviso.texto)}</div>`;
+  // Tu progreso: próximo hito, este mes contra el anterior, racha de semanas.
+  const pg = u.progresoHera;
+  if (pg && pg.total) {
+    const d2 = [];
+    if (pg.hito) d2.push(`<div class="dato">${svgEstrella(pg.hito.siguiente, 52)}<div><div class="num">${pg.hito.faltan}</div><span>clase${pg.hito.faltan === 1 ? '' : 's'} para tu estrella de ${pg.hito.siguiente}</span></div></div>`);
+    const dif = pg.mes.este - pg.mes.pasado;
+    d2.push(`<div class="dato"><div><div class="num">${pg.mes.este}</div><span>clase${pg.mes.este === 1 ? '' : 's'} este mes · ${pg.mes.pasado} el anterior${dif > 0 ? ' ↑' : ''}</span></div></div>`);
+    if (pg.racha >= 2) d2.push(`<div class="dato"><div><div class="num">${pg.racha}</div><span>semanas seguidas viniendo 🔥</span></div></div>`);
+    html += `<div class="tarjeta"><h3>Tu progreso · ${pg.total} clase${pg.total === 1 ? '' : 's'} en Hera</h3><div class="datos" style="max-width:none;justify-content:flex-start">${d2.join('')}</div></div>`;
+  }
   const fut = u.futuras || [];
   html += `<div class="tarjeta"><h3>Tus próximas clases</h3>${fut.length ? fut.map((r, i) => `<div class="fila-r">
       <span><b>${diaRelativo(r.inicio)} · ${hhmm(r.inicio)}</b> · ${esc(r.disciplina)}<small>${r.coach ? 'con ' + esc(r.coach) : esc(r.titulo)}</small></span>
       ${r.checkin ? `<button class="btn pri" data-uc="${i}">Hacer check-in</button>` : ''}</div>`).join('')
       + (u.masFuturas ? `<div class="fila-r"><small>y ${u.masFuturas} más</small></div>` : '')
     : '<div class="fila-r"><span>No tienes clases reservadas.<small>Escanea el código de abajo para reservar.</small></span></div>'}</div>`;
+  // Lugares libres en su clase favorita (próximos 7 días).
+  if (u.lugares) html += `<div class="tarjeta"><h3>Lugares libres en ${esc(u.lugares.disciplina)}</h3>${u.lugares.clases.map(l => `<div class="fila-r compacta">
+      <span><b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b>${l.suHorario ? '<small>tu horario de siempre</small>' : ''}</span>
+      <span class="etiqueta" style="${l.lugares <= 2 ? 'background:#F3E3E1;color:#9A3B2E' : ''}">${l.lugares} lugar${l.lugares === 1 ? '' : 'es'}</span></div>`).join('')}
+      <div class="fila-r compacta"><small>Reserva con el código de abajo.</small></div></div>`;
   const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
   const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
   if (pas.length) html += `<div class="tarjeta"><h3>${pas.length === 1 ? 'Tu clase anterior' : `Tus últimas ${pas.length} clases`}</h3>${pas.map(a => `<div class="fila-r compacta">
       <span><b>${diaRelativo(a.inicio)} · ${hhmm(a.inicio)}</b> · ${esc(a.disciplina)}<small>${a.coach ? 'con ' + esc(a.coach) : ''}</small></span>
       <span class="etiqueta" style="${(ETQ[a.estado] || ETQ['sin-marcar'])[1]}">${(ETQ[a.estado] || ETQ['sin-marcar'])[0]}</span></div>`).join('')}</div>`;
+  // Tus favoritas (últimos 90 días) y cumpleaños faltante.
+  const fv = u.favoritas;
+  if (fv) html += `<div class="tarjeta"><h3>Tus favoritas</h3>
+      ${fv.disciplina ? `<div class="fila-r compacta"><span>Clase<small>la que más tomas</small></span><b>${esc(fv.disciplina)}</b></div>` : ''}
+      ${fv.coach ? `<div class="fila-r compacta"><span>Coach<small>con quien más entrenas</small></span><b>${esc(fv.coach)}</b></div>` : ''}
+      ${fv.horario ? `<div class="fila-r compacta"><span>Horario<small>el que más repites</small></span><b>${esc(fv.horario.dia)} · ${esc(fv.horario.hora)}</b></div>` : ''}</div>`;
+  if (u.pedirCumple) html += `<div class="aviso" style="--c:#9A4215;max-width:none">🎂 ¿Cuándo es tu cumpleaños? Díselo a recepción y te consentimos ese día.</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
-    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea y elige horario.</small></div></div></div>`;
+    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea y elige horario.</small></div></div>
+    ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
   cargarQRLib().then(() => {
@@ -843,6 +866,7 @@ function pintarCuenta(u){
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
     if (u.qr) dibuja('uQrRenovar', u.qr.url);
     dibuja('uQrReservar', u.reservar);
+    if (u.aMembresia) dibuja('uQrMembresia', u.aMembresia.url);
   }).catch(() => {});
 }
 function checkinDesdeCuenta(r){
@@ -905,10 +929,10 @@ let vaciando = false;
 async function vaciarCola(){
   if (vaciando) return; vaciando = true;
   try {
-    const vistos = new Set();
+    const vistos = new Set(), bloqueados = new Set();               // si una operación de una reserva falla, las siguientes de esa reserva esperan
     for (;;) {
       if (!DEMO && !ls.get(TOKEN_KEY)) break;
-      const op = leerCola().find(x => !vistos.has(x.id + x.tipo));     // se relee cada vuelta: nada se pisa
+      const op = leerCola().find(x => !vistos.has(x.id + x.tipo) && !bloqueados.has(x.id));     // se relee cada vuelta: nada se pisa
       if (!op) break;
       vistos.add(op.id + op.tipo); op.tipo = op.tipo || 'checkin';
       if (ahoraMs() - op.ts > 12 * 3600e3) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'vencido'); continue; }
@@ -923,6 +947,7 @@ async function vaciarCola(){
         const err = e.resp.error;
         if (['no-encontrada', 'fuera-de-horario', 'tolerancia', 'wix-rechazo', 'bookingId', 'sin-sesion'].includes(err)) { quitarDeCola(op.id, op.tipo); noRegistrado(op, err); continue; }
         // Error pasajero (Wix 502, secretos 503…): se reintenta (unos 30 min de respuestas de error) y luego va a la lista.
+        bloqueados.add(op.id);                                   // se respeta el orden: check-in → quitar → check-in…
         const c = leerCola(), x = c.find(y => y.id === op.id && y.tipo === op.tipo);
         if (x) { x.intentos = (x.intentos || 0) + 1; if (x.intentos >= 90) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'wix'); continue; } guardarCola(c); }
         const n = leerCola().length;
