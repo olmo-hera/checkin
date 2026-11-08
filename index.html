@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gC41HMa4D+Bj2uh5hPhyzlh8gW4riRH7LLq/XD34Lgc=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+PJId7Wr0k8qP7Eg13IISZzOXo6ihG9PM/DfI0WPNs8=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -133,6 +133,12 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .velo.abierto{display:flex}
 .qr-bonito{width:280px;height:280px;background:#fff;border-radius:28px;padding:14px;box-shadow:0 6px 24px rgba(154,66,21,.18);display:grid;place-items:center}
 .qr-bonito svg{width:100%;height:100%;display:block}
+.etiqueta.cupo.bien{background:#3F8A4F;color:#fff}
+.etiqueta.cupo.llenando{background:#F2C14E;color:#4A3500}
+.etiqueta.cupo.poco{background:#C8432B;color:#fff}
+.etiqueta.cupo.lleno{background:#A9A9A9;color:#fff}
+.punto-cupo{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px;vertical-align:middle}
+.punto-cupo.bien{background:#3F8A4F}.punto-cupo.llenando{background:#F2C14E}.punto-cupo.poco{background:#C8432B}.punto-cupo.lleno{background:#A9A9A9}
 .pasos{text-align:left;font-size:18px;color:var(--carbon);line-height:1.5;padding-left:24px;margin:4px 0 6px;max-width:460px}
 .pasos b{color:var(--terracota)}
 button.fila-r{width:100%;text-align:left;background:none;color:inherit}
@@ -683,18 +689,18 @@ function cerrarExito(){ clearTimeout(cierre); turno++; $('exito').classList.remo
 
 let qrLib = null;
 /* --------------------------------------------------------------- reservar desde su celular (QR bonito) */
-// Liga de invitación de Hera en la app Fit by Wix (Wix → Mobile App → Share invite code). Vacía = agenda web de la disciplina.
-const URL_APP_FIT = 'https://fitness.wix.app/mobile.apps/Y5wDoPZ?ref=mam';
+// La app Fit by Wix no abre filtrada por disciplina y su invitación pide aprobación (probado 8-nov): el QR va a la página
+// web del servicio, que sí enseña solo sus sesiones (reservar o lista de espera). La liga de la app queda guardada aquí.
+const URL_APP_FIT = 'https://fitness.wix.app/mobile.apps/Y5wDoPZ?ref=mam', USAR_APP = false;
 const AGENDA_WEB = { Reformer: 'pilates-reformer', Mat: 'pilates-mat', Barre: 'barre', Yoga: 'yoga' };
 const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
-function abrirReservar(disciplina, inicio){
-  const url = URL_APP_FIT || (AGENDA_WEB[disciplina] ? `https://www.herazenter.com/booking-calendar/${AGENDA_WEB[disciplina]}` : 'https://www.herazenter.com/classes');
+function abrirReservar(disciplina, inicio, lleno = false){
+  const url = USAR_APP ? URL_APP_FIT : (AGENDA_WEB[disciplina] ? `https://www.herazenter.com/service-page/${AGENDA_WEB[disciplina]}` : 'https://www.herazenter.com/classes');
   const cuando = `${diaRelativo(inicio)} · ${hhmm(inicio)}`;
-  $('rTitulo').textContent = `Reserva ${disciplina}`;
+  $('rTitulo').textContent = lleno ? `Lista de espera · ${disciplina}` : `Reserva ${disciplina}`;
   $('rSub').textContent = `${cuando} — escanea con tu celular`;
-  $('rPasos').innerHTML = URL_APP_FIT
-    ? `<li>Escanea: se abre Hera en la app <b>Fit by Wix</b>.</li><li>Entra a <b>Agenda</b> → <b>${esc(disciplina)}</b> → <b>${esc(cuando)}</b>.</li><li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`
-    : `<li>Escanea: se abre la agenda de <b>${esc(disciplina)}</b>.</li><li>Elige <b>${esc(cuando)}</b> e inicia sesión con tu cuenta.</li><li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`;
+  $('rPasos').innerHTML = `<li>Escanea: se abren las clases de <b>${esc(disciplina)}</b>.</li><li>Toca <b>${esc(cuando)}</b> e inicia sesión si te lo pide.</li>`
+    + (lleno ? `<li>Toca <b>Unirse a la lista de espera</b>: si se libera un lugar, te avisa Wix.</li>` : `<li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`);
   $('rQR').innerHTML = '<span class="cargando">…</span>';
   $('veloReservar').classList.add('abierto');
   cargarQRLib().then(() => { $('rQR').innerHTML = qrBonito(url); }).catch(() => { $('rQR').innerHTML = '<p style="font-size:16px;color:var(--gris)">No se pudo dibujar el código. Pide ayuda en recepción.</p>'; });
@@ -894,10 +900,10 @@ function pintarCuenta(u){
   // Lugares libres en los próximos 7 días, por cada disciplina que ya toma y solo en horarios que ya ha hecho.
   if (u.lugares) html += `<div class="tarjeta"><h3>Lugares libres en tus horarios</h3>${u.lugares.map(g => `
       <div class="fila-r compacta" style="padding-bottom:2px"><b style="color:var(--terracota)">${esc(g.disciplina)}</b></div>
-      ${g.clases.map(l => `<button class="fila-r compacta" data-ul="${esc(g.disciplina)}|${esc(l.inicio)}">
+      ${g.clases.map(l => `<button class="fila-r compacta" data-ul="${esc(g.disciplina)}|${esc(l.inicio)}|${l.nivel === 'lleno' ? 1 : 0}">
         <span><b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b>${l.suHorario ? '<small>tu día y hora de siempre</small>' : '<small>tu hora de siempre</small>'}</span>
-        <span class="etiqueta" style="${l.lugares <= 2 ? 'background:#F3E3E1;color:#9A3B2E' : 'background:var(--terracota);color:#fff'}">${l.lugares} lugar${l.lugares === 1 ? '' : 'es'} · Reservar</span></button>`).join('')}`).join('')}
-      <div class="fila-r compacta"><small>Toca un horario y resérvalo desde tu celular con tu plan.</small></div></div>`;
+        <span class="etiqueta cupo ${esc(l.nivel || 'bien')}">${l.nivel === 'lleno' ? (l.espera ? 'Lleno · Lista de espera' : 'Lleno') : `${l.lugares} lugar${l.lugares === 1 ? '' : 'es'} · Reservar`}</span></button>`).join('')}`).join('')}
+      <div class="fila-r compacta"><small><span class="punto-cupo bien"></span>buen cupo <span class="punto-cupo llenando"></span>se está llenando <span class="punto-cupo poco"></span>poco lugar <span class="punto-cupo lleno"></span>lleno · Toca un horario y resérvalo desde tu celular.</small></div></div>`;
   const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
   const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
   if (pas.length) html += `<div class="tarjeta"><h3>${pas.length === 1 ? 'Tu clase anterior' : `Tus últimas ${pas.length} clases`}</h3>${pas.map(a => `<div class="fila-r compacta">
@@ -915,7 +921,7 @@ function pintarCuenta(u){
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
-  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => { const [d, ini] = b.dataset.ul.split('|'); abrirReservar(d, ini); });
+  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => { const [d, ini, lleno] = b.dataset.ul.split('|'); abrirReservar(d, ini, lleno === '1'); });
   cargarQRLib().then(() => {
     if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
