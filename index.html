@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Vt5j0ezWMUFN7myeqq8i/AESItNPqCykWoYdkW7m/8k=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NMSC48RmK3daPTuM1dupsjq82O3QpIWMZ0zHSpdthJs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -96,8 +96,8 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .resultados{display:flex;flex-direction:column;gap:10px;width:min(760px,100%)}
 .grupo{font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:8px 4px 0}
 .reservar{display:flex;align-items:center;gap:18px;background:var(--arena-suave);border:1px solid var(--crema);border-radius:var(--radio);padding:14px 20px;width:min(760px,100%);font-size:18px;color:var(--carbon)}
-.reservar .cod{width:96px;height:96px;flex:none}
-.reservar .cod img,.reservar .cod canvas{width:96px!important;height:96px!important}
+.reservar .cod{width:132px;height:132px;flex:none;background:#fff;border-radius:16px;padding:7px;box-shadow:var(--sombra)}
+.reservar .cod svg{width:100%;height:100%;display:block}
 .res{background:#fff;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:19px;box-shadow:var(--sombra);gap:12px}
 .res > span:first-child{text-align:left}
 .res small{color:var(--gris);font-size:15px;display:block}
@@ -186,6 +186,7 @@ button.fila-r:active{background:var(--arena-suave)}
 .qr{display:flex;align-items:center;gap:18px;background:#fff;border-radius:16px;padding:14px 20px;box-shadow:var(--sombra);text-align:left;font-size:18px;max-width:520px}
 .qr .cod{width:132px;height:132px;flex:none}
 .qr .cod img,.qr .cod canvas{width:132px!important;height:132px!important}
+.qr .cod svg{width:100%;height:100%;display:block}
 .cuenta-atras{width:240px;height:5px;border-radius:3px;background:var(--crema);overflow:hidden}
 .cuenta-atras i{display:block;height:100%;background:var(--carbon);width:100%}
 .cargando{color:var(--gris);font-size:16px}
@@ -260,7 +261,7 @@ button.fila-r:active{background:var(--arena-suave)}
     </div>
     <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
     <div class="resultados" id="resultados"></div>
-    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea y reserva tu clase desde tu celular.</div></div>
+    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea y reserva tu clase en la app <b>Fit by Wix</b>.</div></div>
   </section>
 
   <!-- MI CUENTA (después de confirmar con su celular) -->
@@ -927,7 +928,7 @@ function pintarCuenta(u){
       ${fv.horario ? `<div class="fila-r compacta"><span>Horario<small>el que más repites</small></span><b>${esc(fv.horario.dia)} · ${esc(fv.horario.hora)}</b></div>` : ''}</div>`;
   if (u.pedirCumple) html += `<div class="aviso" style="--c:#9A4215;max-width:none">🎂 ¿Cuándo es tu cumpleaños? Díselo a recepción y te consentimos ese día.</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
-    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea y elige horario.</small></div></div>
+    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea: se abre la app Fit by Wix → Agenda.</small></div></div>
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
@@ -936,7 +937,7 @@ function pintarCuenta(u){
     if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
     if (u.qr) dibuja('uQrRenovar', u.qr.url);
-    dibuja('uQrReservar', u.reservar);
+    { const el = $('uQrReservar'); if (el && !el.childElementCount) try { el.innerHTML = qrBonito(URL_RESERVAR); } catch (_) {} }
     if (u.aMembresia) dibuja('uQrMembresia', u.aMembresia.url);
   }).catch(() => {});
 }
@@ -957,11 +958,12 @@ $('salirCuenta').onclick = () => salirCuenta();
 $('uListo').onclick = () => salirCuenta();
 
 /* --------------------------------------------------------------- QR de "reserva tu clase" en el inicio */
-const URL_RESERVAR = 'https://www.herazenter.com/classes';
+// Olmo (8-nov): el QR general de reservar abre la app Fit by Wix (con Agenda como primera pestaña); la web queda de respaldo.
+const URL_RESERVAR = USAR_APP ? URL_APP_FIT : 'https://www.herazenter.com/classes';
 function pintarQRReservar(){
   cargarQRLib().then(() => {
     const el = $('qrReservar'); if (!el || el.childElementCount) return;
-    try { new QRCode(el, { text: URL_RESERVAR, width: 192, height: 192, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); $('reservarHome').hidden = false; } catch (_) {}
+    try { el.innerHTML = qrBonito(URL_RESERVAR); $('reservarHome').hidden = false; } catch (_) {}
   }).catch(() => {});
 }
 
