@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-YTvcjvzR30Xvv+NwCyCn0ZaJttKViW6Nu1FBBKrguo4=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sz8ZZgpWUGMDI5ZPa2lWAb1ttJvR0ICg6cA9jtM8vI=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -184,6 +184,8 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .fila-r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--arena);font-size:19px}
 .fila-r:first-of-type{border-top:0}
 .fila-r small{display:block;font-size:15px;color:var(--gris)}
+.fila-r.compacta{padding:8px 0;font-size:17px}
+.fila-r.compacta small{font-size:14px}
 .fila-r .btn{padding:12px 18px;min-height:0;font-size:17px}
 .qrs{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
 .teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(360px,100%);margin:6px auto 0}
@@ -827,9 +829,11 @@ function pintarCuenta(u){
       ${r.checkin ? `<button class="btn pri" data-uc="${i}">Hacer check-in</button>` : ''}</div>`).join('')
       + (u.masFuturas ? `<div class="fila-r"><small>y ${u.masFuturas} más</small></div>` : '')
     : '<div class="fila-r"><span>No tienes clases reservadas.<small>Escanea el código de abajo para reservar.</small></span></div>'}</div>`;
-  if (u.anterior) html += `<div class="tarjeta"><h3>Tu clase anterior</h3><div class="fila-r">
-      <span><b>${diaRelativo(u.anterior.inicio)} · ${hhmm(u.anterior.inicio)}</b> · ${esc(u.anterior.disciplina)}<small>${u.anterior.coach ? 'con ' + esc(u.anterior.coach) : ''}</small></span>
-      <span class="etiqueta" style="${u.anterior.asistio ? 'background:var(--ok);color:#fff' : ''}">${u.anterior.asistio ? 'Asististe ✓' : 'Sin check-in'}</span></div></div>`;
+  const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
+  const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
+  if (pas.length) html += `<div class="tarjeta"><h3>${pas.length === 1 ? 'Tu clase anterior' : `Tus últimas ${pas.length} clases`}</h3>${pas.map(a => `<div class="fila-r compacta">
+      <span><b>${diaRelativo(a.inicio)} · ${hhmm(a.inicio)}</b> · ${esc(a.disciplina)}<small>${a.coach ? 'con ' + esc(a.coach) : ''}</small></span>
+      <span class="etiqueta" style="${(ETQ[a.estado] || ETQ['sin-marcar'])[1]}">${(ETQ[a.estado] || ETQ['sin-marcar'])[0]}</span></div>`).join('')}</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
     <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea y elige horario.</small></div></div></div>`;
   $('uCuerpo').innerHTML = html;
