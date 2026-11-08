@@ -1,0 +1,23 @@
+{
+  "name": "Check-in Hera Zenter",
+  "short_name": "Check-in",
+  "lang": "es-MX",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#EFE7DE",
+  "theme_color": "#EFE7DE",
+  "icons": [
+    {
+      "src": "https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_192,h_192/icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_512,h_512/icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Lz/Sqtf5mAlS3n3bczOQn9e81dfqC3W2uz/3vbcA28=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Check-in Hera">
+<meta name="theme-color" content="#EFE7DE">
+<link rel="manifest" id="manifest">
+<link rel="apple-touch-icon" href="https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_180,h_180/icono.png">
+<title>Check-in · Hera Zenter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#6F6F6F;
+  --arena:#EFE7DE; --arena-suave:#F7F2EC; --crema:#E8DCD0; --pizarra:#788991;
+  --salvia:#7F866F; --tierra:#7A6A4F; --ok:#4F7A5A; --alerta:#B5651D; --laurel:#8C6630; --oro:#D4A23C; --oro-borde:#A97A1F; --oro-tallo:#B8862B;
+  --fuego:#E8613C; --agua:#3C8FD6; --aire:#6F9CCB; --tierra-el:#7A6A4F;
+  --radio:18px; --sombra:0 1px 2px rgba(66,73,73,.08),0 6px 24px rgba(66,73,73,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--arena);color:var(--texto);font-family:Jost,Helvetica,Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+h1,h2,h3,.num{font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;color:var(--carbon);letter-spacing:-.01em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;font-size:20px;-webkit-user-select:text;user-select:text}
+[hidden]{display:none!important}
+
+.top{display:flex;flex-direction:column;align-items:center;padding:22px 28px 2px;position:relative;gap:6px}
+.top .logo{height:96px;display:block}
+.reloj{font-size:18px;color:var(--gris);text-align:center}
+.reloj b{font-family:Poppins;font-weight:600;color:var(--carbon)}
+.red{position:absolute;top:18px;right:24px;font-size:13px;color:var(--gris);display:flex;align-items:center;gap:6px}
+.punto{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.punto.off{background:var(--alerta)}
+
+main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;max-width:1080px;margin:0 auto}
+.vista{display:none;flex-direction:column;align-items:center;gap:22px;animation:entra .22s ease-out;width:100%}
+.vista.activa{display:flex}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Contraseña */
+.candado{margin:auto;max-width:440px;width:100%;text-align:center;display:flex;flex-direction:column;gap:16px;padding-top:6vh}
+.candado img{height:70px;margin:0 auto}
+.candado h1{font-size:30px}
+.candado p{color:var(--gris);font-size:17px}
+.campo{border:1.5px solid var(--crema);background:#fff;border-radius:15px;padding:16px 18px;outline:0;text-align:center;letter-spacing:.08em}
+.campo:focus{border-color:var(--pizarra)}
+.error{color:var(--alerta);font-size:16px;min-height:22px}
+.mini-btn{font-size:15px;color:var(--gris);text-decoration:underline;padding:8px}
+
+/* Inicio */
+.saludo{text-align:center}
+.saludo h1{font-size:38px;line-height:1.1}
+.saludo p{font-size:20px;color:var(--gris);margin-top:6px}
+.bloques{display:flex;flex-direction:column;align-items:center;gap:26px;width:100%}
+.bloque{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.bloque h3{font-family:Poppins;font-size:15px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gris);display:flex;align-items:center;gap:12px;width:min(980px,100%)}
+.bloque h3::before,.bloque h3::after{content:'';flex:1;height:1px;background:var(--crema)}
+.bloque.ahora h3{color:var(--carbon);font-size:17px}
+.bloque.sig .clase{min-height:118px;padding:16px 18px 14px;opacity:.82}
+.bloque.sig .clase .hora{font-size:26px}
+.bloque.sig .clase .nombre{font-size:20px}
+.bloque.cerradas .clase{min-height:96px;padding:14px 18px}
+.bloque.cerradas .clase .hora{font-size:22px}
+.bloque.cerradas .clase .nombre{font-size:18px}
+.clases{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;width:100%}
+.clases > *{width:min(310px,100%)}
+.clases > .vacio{width:min(720px,100%)}
+.clase{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:22px 22px 18px;text-align:left;position:relative;overflow:hidden;min-height:170px;display:flex;flex-direction:column;gap:6px;transition:transform .12s}
+.clase:active{transform:scale(.98)}
+.clase .tol{position:absolute;left:0;top:0;bottom:0;width:9px;background:#fff}
+.clase .tol i{position:absolute;left:0;right:0;bottom:0;transition:height .6s linear,background .6s}
+.clase.terminada{background:#FBFAF8}
+.clase.terminada .hora,.clase.terminada .nombre{color:var(--gris)}
+.clase .hora{font-family:Poppins;font-weight:600;font-size:34px;color:var(--carbon);line-height:1}
+.clase .nombre{font-size:24px;font-weight:500;color:var(--c)}
+.clase .coach{font-size:17px;color:var(--gris)}
+.clase .pie{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:16px;color:var(--gris)}
+.etiqueta{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--arena-suave);color:var(--carbon)}
+.etiqueta.ya{background:var(--c);color:#fff}
+.barra{height:6px;border-radius:3px;background:var(--arena);overflow:hidden;margin-top:8px}
+.barra i{display:block;height:100%;background:var(--c);border-radius:3px;transition:width .3s}
+.vacio{background:var(--arena-suave);border-radius:var(--radio);padding:40px;text-align:center;color:var(--gris);font-size:20px;line-height:1.5}
+.buscar{display:flex;align-items:center;gap:12px;background:#fff;border-radius:999px;padding:8px 10px 8px 24px;box-shadow:var(--sombra);width:min(760px,100%)}
+.buscar input{flex:1;border:0;outline:0;padding:14px 0;background:transparent;font-size:21px}
+.pista{font-size:16px;color:var(--gris);text-align:center;margin-top:-10px}
+.resultados{display:flex;flex-direction:column;gap:10px;width:min(760px,100%)}
+.grupo{font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:8px 4px 0}
+.reservar{display:flex;align-items:center;gap:18px;background:var(--arena-suave);border:1px solid var(--crema);border-radius:var(--radio);padding:14px 20px;width:min(760px,100%);font-size:18px;color:var(--carbon)}
+.reservar .cod{width:96px;height:96px;flex:none}
+.reservar .cod img,.reservar .cod canvas{width:96px!important;height:96px!important}
+.res{background:#fff;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:19px;box-shadow:var(--sombra);gap:12px}
+.res > span:first-child{text-align:left}
+.res small{color:var(--gris);font-size:15px;display:block}
+
+/* Clase */
+.cab{display:flex;align-items:center;gap:18px;width:100%}
+.volver{width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:var(--sombra);display:grid;place-items:center;flex:none}
+.cab h2{font-size:32px;line-height:1.1}
+.cab p{font-size:18px;color:var(--gris)}
+.cab .cuenta{margin-left:auto;text-align:right}
+.cab .cuenta .num{font-size:34px;line-height:1}
+.cab .cuenta span{font-size:15px;color:var(--gris)}
+.nombres{display:flex;flex-direction:column;gap:0;width:min(760px,100%);background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden}
+.persona{background:#fff;padding:14px 22px;text-align:left;color:var(--carbon);min-height:76px;display:flex;align-items:center;gap:14px;border-top:1px solid var(--arena);width:100%;transition:background .12s}
+.persona:first-child{border-top:0}
+.persona:active{background:var(--arena-suave)}
+.persona .marca{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--crema);display:grid;place-items:center;flex:none;transition:background .15s,border-color .15s}
+.persona.ya .marca{background:var(--ok);border-color:var(--ok)}
+.persona.ya .marca svg{animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+.persona .txt{flex:1;min-width:0}
+.persona .n{font-size:22px;font-weight:500;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.persona small{display:block;font-size:14px;color:var(--gris);margin-top:2px}
+.persona.ya{background:#F4F8F4}
+.persona.ya small{color:var(--ok)}
+.ok{width:34px;height:34px;border-radius:50%;background:var(--ok);display:grid;place-items:center;flex:none}
+.ayuda{font-size:17px;color:var(--gris);text-align:center}
+.ins{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-left:4px}
+.anios{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--laurel);border:1.5px solid var(--laurel);border-radius:999px;padding:2px 9px;line-height:1.3;white-space:nowrap}
+.ins svg{display:block}
+
+/* Hoja de confirmación */
+.velo{position:fixed;inset:0;background:rgba(43,43,43,.35);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.velo.abierto{display:flex}
+.hoja{background:#fff;width:min(640px,100%);text-align:center;border-radius:28px 28px 0 0;padding:34px 34px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:sube .22s ease-out}
+@keyframes sube{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.hoja h2{font-size:32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hoja p{font-size:19px;color:var(--gris)}
+.btn{border-radius:15px;padding:20px 24px;font-size:21px;font-weight:500;text-align:center;min-height:64px}
+.btn.pri{background:var(--terracota);color:#fff}
+.btn.sec{background:#fff;color:var(--terracota);border:1.5px solid var(--terracota)}
+.btn:active{filter:brightness(.92)}
+.btn[disabled]{opacity:.6}
+
+/* Éxito */
+.exito{position:fixed;left:0;right:0;margin:0 auto;bottom:18px;width:min(860px,94vw);max-height:62vh;background:#fff;border-radius:26px;
+  box-shadow:0 10px 40px rgba(43,43,43,.22);z-index:20;display:none;flex-direction:column;align-items:center;gap:10px;padding:18px 22px 14px;text-align:center;overflow:auto;cursor:pointer}
+.exito > *{flex-shrink:0}
+.exito .cabeza{display:flex;align-items:center;gap:14px;justify-content:center}
+.plan{display:inline-flex;align-items:center;gap:8px;font-size:18px;color:var(--carbon);background:#fff;border-radius:999px;padding:6px 16px 6px 10px;box-shadow:var(--sombra)}
+.exito.abierto{display:flex;animation:sube .22s ease-out}
+.palomita{width:52px;height:52px;border-radius:50%;background:var(--ok);display:grid;place-items:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1);flex:none}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.exito h1{font-size:30px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap}
+.exito .sub{font-size:17px;color:var(--gris)}
+.exito .dato{padding:10px 16px;min-width:0}
+.exito .dato .num{font-size:22px}
+.exito .aviso{font-size:17px;padding:12px 18px}
+.datos{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:860px;min-height:10px}
+.dato{background:#fff;border-radius:16px;padding:14px 22px;box-shadow:var(--sombra);min-width:170px;display:flex;align-items:center;gap:14px;text-align:left}
+.dato .num{font-size:28px;line-height:1.1}
+.dato span{display:block;font-size:15px;color:var(--gris)}
+.aviso{max-width:680px;border-radius:16px;padding:18px 24px;font-size:20px;background:var(--arena-suave);border:1.5px solid var(--c,var(--pizarra));color:var(--carbon)}
+.qr{display:flex;align-items:center;gap:18px;background:#fff;border-radius:16px;padding:14px 20px;box-shadow:var(--sombra);text-align:left;font-size:18px;max-width:520px}
+.qr .cod{width:132px;height:132px;flex:none}
+.qr .cod img,.qr .cod canvas{width:132px!important;height:132px!important}
+.cuenta-atras{width:240px;height:5px;border-radius:3px;background:var(--crema);overflow:hidden}
+.cuenta-atras i{display:block;height:100%;background:var(--carbon);width:100%}
+.cargando{color:var(--gris);font-size:16px}
+
+.toast{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:28px;background:var(--carbon);color:#fff;padding:14px 22px;border-radius:999px;font-size:16px;display:none;z-index:30;max-width:90vw;text-align:center}
+.toast.ver{display:block;animation:entra .2s}
+.demo{position:fixed;right:12px;bottom:12px;font-size:12px;color:var(--gris);background:var(--arena-suave);border:1px dashed var(--crema);padding:6px 10px;border-radius:8px}
+.cuenta-v{width:min(860px,100%);display:flex;flex-direction:column;gap:18px}
+#vCuenta .cab{width:min(860px,100%)}
+.tarjeta{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:18px 22px}
+.tarjeta h3{font-size:14px;font-family:Jost;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin-bottom:10px}
+.fila-r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--arena);font-size:19px}
+.fila-r:first-of-type{border-top:0}
+.fila-r small{display:block;font-size:15px;color:var(--gris)}
+.fila-r .btn{padding:12px 18px;min-height:0;font-size:17px}
+.qrs{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(360px,100%);margin:6px auto 0}
+.teclado button{background:var(--arena-suave);border-radius:16px;font-family:Poppins;font-weight:600;font-size:28px;color:var(--carbon);min-height:68px}
+.teclado button:active{background:var(--crema)}
+.puntos{display:flex;gap:14px;justify-content:center;margin:6px 0}
+.puntos i{width:18px;height:18px;border-radius:50%;border:2px solid var(--carbon)}
+.puntos i.lleno{background:var(--carbon)}
+.temblor{animation:tiembla .35s}
+@keyframes tiembla{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.noreg{font-size:14px;font-weight:500;color:#fff;background:var(--alerta);border-radius:999px;padding:8px 14px;margin-left:8px}
+.lista-noreg{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto}
+.lista-noreg div{background:var(--arena-suave);border-radius:12px;padding:12px 16px;font-size:17px;text-align:left}
+.lista-noreg small{display:block;color:var(--gris);font-size:14px}
+.res.gris{opacity:.6}
+
+@media (max-width:700px){
+  .top{padding:14px 16px 4px} main{padding:8px 16px 20px}
+  .saludo h1{font-size:28px} .clase .hora{font-size:28px} .exito h1{font-size:34px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="red"><span class="punto" id="punto"></span><span id="estadoTxt"></span><button class="noreg" id="noregBtn" hidden></button></div>
+  <img class="logo" src="https://static.wixstatic.com/media/9d6afa_882d2a3243604a24a1b6a47b0ad5fdbf~mv2.png/v1/fill/w_400,h_197/logo.png" alt="Hera Zenter" id="logo">
+  <div class="reloj"><span id="fecha"></span> · <b id="hora">--:--</b></div>
+</header>
+
+<main>
+  <!-- CONTRASEÑA -->
+  <section class="vista" id="vClave">
+    <div class="candado">
+      <img src="https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png" alt="">
+      <h1>Check-in Hera</h1>
+      <p>Esta pantalla es solo para la tablet de la entrada.</p>
+      <input class="campo" id="clave" type="password" placeholder="Contraseña" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="error" id="claveError"></div>
+      <p class="error" id="sinAlmacen" hidden>Este navegador no guarda datos (¿modo privado?). Ábrela en Safari o Chrome normal, o desde el icono de inicio.</p>
+      <button class="btn pri" id="claveOk">Entrar</button>
+      <button class="mini-btn" id="pantallaCompleta" hidden>Pantalla completa</button>
+    </div>
+  </section>
+
+  <!-- INICIO -->
+  <section class="vista" id="vInicio">
+    <div class="saludo">
+      <h1>Te damos la bienvenida a Hera 🌿</h1>
+      <p>Toca tu clase para hacer check-in</p>
+    </div>
+    <div class="bloques" id="clasesAhora"></div>
+    <div class="buscar">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6F6F6F" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Tu nombre, tu correo o los 4 últimos de tu cel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    </div>
+    <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
+    <div class="resultados" id="resultados"></div>
+    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea y reserva tu clase desde tu celular.</div></div>
+  </section>
+
+  <!-- MI CUENTA (después de confirmar con su celular) -->
+  <section class="vista" id="vCuenta">
+    <div class="cab">
+      <button class="volver" id="salirCuenta" aria-label="Volver">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#424949" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div><h2 id="uTitulo"></h2><p id="uSub"></p></div>
+    </div>
+    <div class="cuenta-v" id="uCuerpo"></div>
+    <button class="btn sec" id="uListo" style="min-width:240px">Listo</button>
+  </section>
+
+  <!-- CLASE -->
+  <section class="vista" id="vClase">
+    <div class="cab">
+      <button class="volver" id="volver" aria-label="Volver">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#424949" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div><h2 id="cTitulo"></h2><p id="cSub"></p></div>
+      <div class="cuenta"><div class="num" id="cCuenta"></div><span>ya llegaron</span></div>
+    </div>
+    <p class="ayuda" id="ayudaClase" style="margin-top:-8px">Toca tu nombre para hacer check-in. Si te equivocas, tócalo otra vez.</p>
+    <div class="nombres" id="nombres"></div>
+    <p class="ayuda">¿No apareces? Avísale a recepción.</p>
+  </section>
+</main>
+
+<div class="velo" id="velo">
+  <div class="hoja">
+    <h2 id="hNombre"></h2>
+    <p id="hClase"></p>
+    <button class="btn pri" id="hSi">Sí, soy yo · Hacer check-in</button>
+    <button class="btn sec" id="hNo">No soy yo</button>
+  </div>
+</div>
+
+<div class="velo" id="veloVerif">
+  <div class="hoja">
+    <h2 id="vNombre" style="justify-content:center"></h2>
+    <p id="vTexto">Para ver tus clases, escribe los 4 últimos números de tu celular</p>
+    <div id="vCel">
+      <div class="puntos" id="vPuntos"><i></i><i></i><i></i><i></i></div>
+      <div class="teclado" id="vTeclado"></div>
+    </div>
+    <div id="vMail" hidden>
+      <input class="campo" id="vCorreo" type="email" placeholder="tu correo completo" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn pri" id="vCorreoOk" style="margin-top:10px;width:100%">Ver mis clases</button>
+    </div>
+    <div class="error" id="vError"></div>
+    <button class="btn sec" id="vCancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="velo" id="veloNoreg">
+  <div class="hoja">
+    <h2>Check-ins sin registrar</h2>
+    <p>Estas alumnas tocaron su nombre pero Wix no lo guardó. Márcalas a mano en el panel de Wix.</p>
+    <div class="lista-noreg" id="listaNoreg"></div>
+    <button class="btn pri" id="noregOk">Mantén presionado: ya los marqué</button>
+    <button class="btn sec" id="noregCerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="exito" id="exito" role="status" aria-live="polite">
+  <div class="cabeza"><div class="palomita"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  <h1 id="eTitulo"></h1></div>
+  <div class="sub" id="eSub"></div>
+  <div id="ePlan"></div>
+  <div class="datos" id="eDatos"></div>
+  <div id="eAviso"></div>
+  <div id="eQR"></div>
+  <div class="cuenta-atras"><i id="eBarra"></i></div>
+  <small style="color:#6F6F6F">Toca para cerrar</small>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Kiosco de check-in de Hera Zenter.
+   Vive en GitHub Pages (Wix bloquea el JavaScript de las páginas que salen de
+   una HTTP function) y habla con el API de herazenter.com/_functions/checkinApi.
+   ?dev=1 usa /_functions-dev (el código del Editor, sin publicar).
+   En *.localhost habla con el servidor local; en localhost, datos inventados.
+   ===================================================================== */
+const DEMO = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const LOCAL = /\.localhost$/.test(location.hostname);
+const DEV = new URLSearchParams(location.search).has('dev');
+const API_URL = LOCAL ? '/_functions/checkinApi' : `https://www.herazenter.com/${DEV ? '_functions-dev' : '_functions'}/checkinApi`;
+const TOKEN_KEY = 'hera_checkin_token', COLA_KEY = 'hera_checkin_cola', CACHE_KEY = 'hera_checkin_hoy', NOREG_KEY = 'hera_checkin_noreg';
+const COLORES = { Reformer:'#9A4215', Barre:'#788991', Yoga:'#7F866F', Mat:'#7A6A4F', Jump:'#5D81AC' };
+// Elemento: insignia redonda de su color con un dibujo blanco (flama, gota, montaña, viento).
+const EL = { FUEGO:['var(--fuego)','Fuego','<path fill="#fff" d="M12 4.6c.5 2.6 4.3 4.6 4.3 8.6a4.3 4.3 0 0 1-8.6 0c0-2 1-3.2 2-4 .2 1.4.8 2.2 1.6 2.6-.2-2.6.1-5 .7-7.2Z"/>'],
+             AGUA:['var(--agua)','Agua','<path fill="#fff" d="M12 4.8C10 8 7.8 10.6 7.8 13.6a4.2 4.2 0 0 0 8.4 0C16.2 10.6 14 8 12 4.8Z"/>'],
+             TIERRA:['var(--tierra-el)','Tierra','<path fill="#fff" d="M4.8 16.6 10 8.4l2.8 4.4 1.9-2.4 4.5 6.2Z"/>'],
+             AIRE:['var(--aire)','Aire','<g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M5.5 9.4h7.8a2.1 2.1 0 1 0-2.1-2.1"/><path d="M5.5 12.6h10.6a2.1 2.1 0 1 1-2.1 2.1"/><path d="M5.5 15.8h4.6"/></g>'] };
+const QR_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+const QR_SRI = 'sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==';
+const REFRESCO_MS = 90000, MIN = 6e4;
+const RE_MARKET = /^(fitpass|totalpass|wellhub|gympass)/i;
+let VENT = { mostrarAntes: 60, mostrarDespues: 20, aceptarAntes: 90, tolerancia: 10, aceptarDespuesFin: 30 };   // la manda el servidor
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Horas con el desfase que manda el servidor (GDL = -360 min). No se usa la zona horaria de la tablet:
+// un iPad con datos de zona viejos todavía aplicaría el horario de verano que México quitó en 2022.
+let ZONA_MIN = -360;
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const enGDL = d => new Date(new Date(d).getTime() + ZONA_MIN * 60000);          // leer con getUTC*
+const hhmm = d => { const t = enGDL(d); let h = t.getUTCHours(); const ap = h < 12 ? 'am' : 'pm'; h = h % 12 || 12; return `${h}:${String(t.getUTCMinutes()).padStart(2, '0')} ${ap}`; };
+const fechaCorta = d => { const t = enGDL(d); return `${t.getUTCDate()} ${MESES[t.getUTCMonth()].slice(0, 3)}`; };
+const fechaLarga = d => { const t = enGDL(d); return `${DIAS[t.getUTCDay()]}, ${t.getUTCDate()} de ${MESES[t.getUTCMonth()]}`; };
+const primer = s => String(s || '').split(' ')[0];
+
+/* --------------------------------------------------------------- almacenamiento (con respaldo en memoria) */
+const memoria = {};
+const almacenOk = (() => { try { localStorage.setItem('__p', '1'); localStorage.removeItem('__p'); return true; } catch (_) { return false; } })();
+const ls = {
+  get(k){ if (!almacenOk) return memoria[k] ?? null; try { return localStorage.getItem(k); } catch (_) { return memoria[k] ?? null; } },
+  set(k, v){ memoria[k] = v; if (almacenOk) try { localStorage.setItem(k, v); } catch (_) {} },
+  del(k){ delete memoria[k]; if (almacenOk) try { localStorage.removeItem(k); } catch (_) {} }
+};
+const leerJSON = (k, def) => { try { return JSON.parse(ls.get(k) || 'null') ?? def; } catch (_) { return def; } };
+
+/* --------------------------------------------------------------- hora (manda la del servidor) */
+let desfase = 0;
+const ahoraMs = () => Date.now() + desfase;
+
+/* --------------------------------------------------------------- iconos */
+function svgElemento(el, t = 22) {
+  const e = EL[el]; if (!e) return '';
+  const [col, nombre, dibujo] = e;
+  return `<svg width="${t}" height="${t}" viewBox="0 0 24 24" role="img" aria-label="${nombre}"><title>${nombre}</title><circle cx="12" cy="12" r="11.5" fill="${col}"/>${dibujo}</svg>`;
+}
+// Estrella de hito (25, 50, 100…) con el número adentro.
+const ESTRELLA = Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6.4 : 12;
+  return `${(12 + r * Math.cos(a)).toFixed(2)},${(12.6 + r * Math.sin(a)).toFixed(2)}`; }).join(' ');
+function svgEstrella(n, t = 30) {
+  if (!n) return '';
+  const fs = n >= 1000 ? 4.6 : n >= 100 ? 5.6 : 7;
+  return `<svg width="${t}" height="${t}" viewBox="0 0 24 24" role="img" aria-label="${n} clases"><title>${n} clases en Hera</title>
+    <polygon points="${ESTRELLA}" fill="var(--oro)" stroke="var(--oro-borde)" stroke-width=".8" stroke-linejoin="round"/>
+    <text x="12" y="14.6" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600" font-size="${fs}" fill="#fff">${n}</text></svg>`;
+}
+// Corona de laurel: 5 hojas por lado sobre un arco (posiciones precalculadas).
+const LAUREL_HOJAS = [[8.24,19.46,96],[5.33,16.82,125],[4.03,13.1,153],[4.66,9.21,182],[7.07,6.1,210],
+  [15.76,19.46,84],[18.67,16.82,56],[19.97,13.1,27],[19.34,9.21,-1],[16.93,6.1,-30]]
+  .map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="1.8" ry="3.4" transform="rotate(${r} ${x} ${y})"/>`).join('');
+function svgLaurel(t = 24) {
+  return `<svg width="${t}" height="${t}" viewBox="0 0 24 24" role="img" aria-label="Miembro"><title>Miembro</title>
+    <g fill="none" stroke="var(--oro-tallo)" stroke-width="1.5" stroke-linecap="round"><path d="M10.6 20.3A8 8 0 0 1 6.6 6.3"/><path d="M13.4 20.3A8 8 0 0 0 17.4 6.3"/></g>
+    <g fill="var(--oro)" stroke="var(--oro-borde)" stroke-width=".5">${LAUREL_HOJAS}</g></svg>`;
+}
+function svgAnillo(p, t = 26, col = 'var(--carbon)') {
+  if (!p || !p.total) return '';
+  const r = 10, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, p.usadas / p.total));
+  return `<svg width="${t}" height="${t}" viewBox="0 0 24 24" role="img" aria-label="${p.usadas} de ${p.total} clases"><title>${p.usadas} de ${p.total} clases</title>
+    <circle cx="12" cy="12" r="${r}" fill="none" stroke="var(--crema)" stroke-width="3"/>
+    <circle cx="12" cy="12" r="${r}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"
+      stroke-dasharray="${(c * f).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 12 12)"/></svg>`;
+}
+/** Junto al nombre: elemento, laureles (miembro), estrella de hito y años en Hera. Sin anillo (Olmo, 8-nov). */
+function insignias(ins, t = 26) {
+  if (!ins) return '';
+  const anios = ins.anios ? `<span class="anios" title="${ins.anios} año${ins.anios === 1 ? '' : 's'} en Hera">${ins.anios} año${ins.anios === 1 ? '' : 's'}</span>` : '';
+  return `<span class="ins">${svgElemento(ins.elemento, t)}${ins.miembro ? svgLaurel(t + 8) : ''}${svgEstrella(ins.estrella, t + 6)}${anios}</span>`;
+}
+
+/* --------------------------------------------------------------- red */
+function errorAuth(){ const e = new Error('sin-acceso'); e.auth = true; return e; }
+async function api(accion, datos = {}) {
+  if (DEMO) return demoApi(accion, datos);
+  if (accion !== 'entrar' && !ls.get(TOKEN_KEY)) throw errorAuth();          // sin token no se llama al servidor
+  const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 15000);
+  try {
+    // text/plain: petición "simple" entre dominios, sin preflight (Wix responde con CORS solo a la página del kiosco)
+    const r = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=UTF-8' }, cache:'no-store', credentials:'omit',
+      body: JSON.stringify({ accion, token: ls.get(TOKEN_KEY), ...datos }), signal: ctl.signal });
+    let j = null; try { j = await r.json(); } catch (_) {}
+    if (r.status === 401 && accion !== 'entrar') {
+      ls.del(TOKEN_KEY); ls.del(CACHE_KEY); irClave('La tablet necesita la contraseña otra vez.'); throw errorAuth();
+    }
+    if (!r.ok || !j || !j.ok) { const e = new Error((j && j.error) || ('http ' + r.status)); e.resp = j || { error: 'http-' + r.status }; e.status = r.status; throw e; }
+    return j;
+  } finally { clearTimeout(to); }
+}
+
+/* --------------------------------------------------------------- estado */
+let clases = [], diaCargado = null, finDiaMs = 0, siguiente = null, ultimaCargaOk = 0, ultimoIntentoCarga = 0;
+let claseAbierta = null, ultimoToque = Date.now();
+const perfiles = new Map();                // bookingId → { t, p }
+const locales = new Map();                 // bookingId → { llego, t }: lo que tocó la tablet manda 15 min sobre lo que dice Wix
+let turno = 0;
+
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('ver'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('ver'),3200); }
+function ir(v){ document.querySelectorAll('.vista').forEach(x=>x.classList.toggle('activa',x.id===v)); window.scrollTo(0,0); }
+function reloj(){
+  const d = ahoraMs(); $('hora').textContent = hhmm(d);
+  const f = fechaLarga(d);
+  $('fecha').textContent = f.charAt(0).toUpperCase() + f.slice(1);
+}
+let estadoRed = { ok: true, txt: '' };
+function red(ok, txt){
+  estadoRed = { ok, txt };
+  const n = leerJSON(COLA_KEY, []).length;
+  $('punto').classList.toggle('off', !ok);
+  const reloj = Math.abs(desfase) > 2 * MIN ? ' · revisa la hora de la tablet' : '';
+  $('estadoTxt').textContent = (txt || (ok ? (n ? `Enviando ${n}…` : 'En línea') : `Sin conexión${n ? ' · ' + n + ' pendiente' + (n>1?'s':'') : ''}`)) + reloj;
+}
+
+/* --------------------------------------------------------------- contraseña */
+function irClave(msg){
+  $('velo').classList.remove('abierto'); $('exito').classList.remove('abierto'); claseAbierta = null;
+  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
+  const ya = $('vClave').classList.contains('activa');
+  if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
+  if (msg) $('claveError').textContent = msg;
+}
+async function entrar(){
+  const clave = $('clave').value; if (!clave) return;
+  $('claveOk').disabled = true; $('claveError').textContent = '';
+  try {
+    const j = await api('entrar', { clave });
+    ls.set(TOKEN_KEY, j.token); $('clave').value = '';
+    ir('vInicio'); cargar(); vaciarCola(); pedirWakeLock();
+  } catch (e) {
+    const err = e.resp && e.resp.error;
+    $('claveError').textContent = err === 'clave' ? 'Contraseña incorrecta.'
+      : err === 'demasiados-intentos' ? 'Demasiados intentos. Espera 10 minutos.'
+      : err === 'sin-clave' ? 'Falta poner la contraseña en Wix (Secrets Manager: checkin_clave).'
+      : err === 'sin-firma' ? 'Falta la llave checkin_firma en Wix (Secrets Manager). La contraseña está bien.'
+      : 'No se pudo entrar. Revisa el internet.';
+  } finally { $('claveOk').disabled = false; }
+}
+
+/* --------------------------------------------------------------- pantallas */
+const abre = iniISO => new Date(iniISO).getTime() - VENT.aceptarAntes * MIN;
+function enMostrar(c, a){ const t = new Date(c.inicio).getTime(); return a >= t - VENT.mostrarAntes * MIN && a <= t + VENT.mostrarDespues * MIN; }
+const datosDeHoy = () => !!diaCargado && ahoraMs() < finDiaMs;
+/** Barra de la tarjeta: llena (verde) antes de la clase; se vacía en los 10 min de tolerancia (verde → ámbar → rojo
+ *  en los últimos 2 min); al terminar queda blanca con solo el 2 % de abajo en negro. */
+function tolerancia(c, a){
+  const t = new Date(c.inicio).getTime(), tol = (VENT.tolerancia || 10) * MIN;
+  // La esquina redondeada tapa los últimos ~6 px: por eso el pie mínimo se da en px y no en %.
+  if (a < t) return { fase: 'antes', alto: '100%', color: '#639922' };
+  const resta = (t + tol - a) / tol;
+  if (resta > 0) return { fase: 'tolerancia', alto: `max(${(resta * 100).toFixed(1)}%, 18px)`, color: resta > 0.5 ? '#639922' : resta > 0.2 ? '#EF9F27' : '#E24B4A' };
+  return { fase: 'terminada', alto: '14px', color: '#2C2C2A' };
+}
+const checkinAbierto = (c, a) => a >= abre(c.inicio) && a <= new Date(c.inicio).getTime() + (VENT.tolerancia || 10) * MIN;
+const fresco = () => Date.now() - ultimaCargaOk < 5 * MIN;          // lo que hay en pantalla tiene menos de 5 min
+function cargarLimitado(){ if (Date.now() - ultimoIntentoCarga > 30000) cargar(); }
+
+function pintarInicio(){
+  const ahora = ahoraMs();
+  if (diaCargado && !datosDeHoy()) { clases = []; diaCargado = null; siguiente = null; cargarLimitado(); }   // cambió el día
+  const enVentana = clases.filter(c => c.abierta && enMostrar(c, ahora));
+  const sig = siguiente && new Date(siguiente.inicio).getTime() > ahora ? siguiente : null;
+  let vacio;
+  if (!datosDeHoy() || !fresco()) vacio = 'Sin conexión por ahora.<br><b>Pasa a recepción para tu check-in.</b>';
+  else vacio = `No hay clases por empezar.${sig ? `<br>La siguiente es <b>${esc(sig.disciplina)} a las ${hhmm(sig.inicio)}</b>; aparece 1 hora antes.` : '<br>Por hoy ya no hay más clases. ¡Gracias!'}`;
+  // Bloques por horario: «Ahora» = el primer horario con check-in todavía abierto; «Siguiente» = el horario que sigue.
+  // Las que ya pasaron la tolerancia quedan abajo, chiquitas.
+  const tarjeta = c => {
+    const ya = c.reservas.filter(r => r.llego).length, col = COLORES[c.disciplina] || 'var(--pizarra)', tl = tolerancia(c, ahora);
+    return `<button class="clase ${tl.fase === 'terminada' ? 'terminada' : ''}" style="--c:${col}" data-id="${esc(c.id)}">
+      <span class="tol" aria-hidden="true"><i style="height:${tl.alto};background:${tl.color}"></i></span>
+      <div class="hora">${hhmm(c.inicio)}</div>
+      <div class="nombre">${esc(c.disciplina)}</div>
+      <div class="coach">${c.coach ? 'con ' + esc(c.coach) : ''}</div>
+      <div class="pie"><span>${ya} de ${c.reservas.length} llegaron</span></div>
+      <div class="barra"><i style="width:${c.reservas.length ? ya / c.reservas.length * 100 : 0}%"></i></div>
+    </button>`; };
+  const fin = c => new Date(c.inicio).getTime() + (VENT.tolerancia || 10) * MIN;
+  const cerradas = enVentana.filter(c => ahora > fin(c));
+  const porVenir = clases.filter(c => c.abierta && ahora <= fin(c)).sort((x, y) => new Date(x.inicio) - new Date(y.inicio));
+  const horarios = [...new Set(porVenir.map(c => c.inicio))];
+  const ahoraC = horarios[0] && enMostrar({ inicio: horarios[0] }, ahora) ? porVenir.filter(c => c.inicio === horarios[0]) : [];
+  const sigIni = horarios[ahoraC.length ? 1 : 0];
+  const sigC = sigIni ? porVenir.filter(c => c.inicio === sigIni) : [];
+  const bloque = (cls, titulo, lista) => `<section class="bloque ${cls}"><h3>${titulo}</h3><div class="clases">${lista.map(tarjeta).join('')}</div></section>`;
+  if (!ahoraC.length && sigC.length && datosDeHoy() && fresco()) vacio = 'No hay clase en este momento.<br>Si vienes a la siguiente, ya puedes hacer check-in.';
+  let html = ahoraC.length ? bloque('ahora', `Ahora · ${hhmm(ahoraC[0].inicio)}`, ahoraC) : `<div class="vacio">${vacio}</div>`;
+  if (sigC.length) html += bloque('sig', `Siguiente · ${hhmm(sigIni)}`, sigC);
+  else if (ahoraC.length && sig) html += `<p class="pista" style="margin-top:0">Siguiente: <b>${esc(sig.disciplina)} a las ${hhmm(sig.inicio)}</b></p>`;
+  if (cerradas.length) html += bloque('cerradas', 'Ya pasó la tolerancia · pasa a recepción', cerradas);
+  $('clasesAhora').innerHTML = html;
+  document.querySelectorAll('.clase').forEach(b => b.onclick = () => abrirClase(b.dataset.id));
+}
+
+function abrirClase(id){ claseAbierta = clases.find(c => c.id === id) || null; if (!claseAbierta) return; pintarClase(); ir('vClase'); }
+function pintarClase(){
+  const c = claseAbierta; if (!c) return;
+  const ya = c.reservas.filter(r => r.llego).length;
+  $('cTitulo').textContent = `${c.disciplina} · ${hhmm(c.inicio)}`;
+  $('cSub').textContent = c.coach ? `con ${c.coach}` : c.titulo;
+  $('cCuenta').textContent = `${ya}/${c.reservas.length}`;
+  // Orden alfabético fijo: nada se mueve bajo el dedo al marcar.
+  const orden = [...c.reservas].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  $('nombres').innerHTML = orden.map(r => `<button class="persona ${r.llego?'ya':''}" data-id="${esc(r.id)}" aria-pressed="${r.llego}">
+      <span class="txt"><span class="n">${esc(r.nombre)} ${insignias(r.ins)}</span>${r.llego ? '<small>Check-in hecho</small>' : ''}</span>
+      <span class="marca">${r.llego ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</span>
+    </button>`).join('');
+  const cerrada = !checkinAbierto(c, ahoraMs()) && ahoraMs() > new Date(c.inicio).getTime();
+  $('ayudaClase').textContent = cerrada ? 'La tolerancia de 10 minutos terminó. Si llegas tarde, pasa a recepción.'
+    : 'Toca tu nombre para hacer check-in. Si te equivocas, tócalo otra vez.';
+  document.querySelectorAll('.persona').forEach(b => b.onclick = () => {
+    const r = c.reservas.find(x => x.id === b.dataset.id); if (!r) return;
+    alternar(r, c);
+  });
+}
+/** Repintar sin comerse un toque: si alguien acaba de tocar, espera un momento. */
+function repintar(){
+  if (Date.now() - ultimoToque < 2000) { clearTimeout(repintar._t); repintar._t = setTimeout(repintar, 2000); return; }
+  if ($('vInicio').classList.contains('activa')) pintarInicio();
+  if ($('vClase').classList.contains('activa')) pintarClase();
+}
+
+/** Toque en un nombre: si no ha llegado, check-in; si ya llegó, se quita. Sin ventana de confirmación. */
+function alternar(r, c){
+  if (alternar._t && Date.now() - alternar._t < 600 && alternar._id === r.id) return;    // doble toque accidental
+  alternar._t = Date.now(); alternar._id = r.id;
+  if (r.llego) quitarCheckin(r, c);
+  else if (!checkinAbierto(c, ahoraMs())) toast(ahoraMs() < abre(c.inicio) ? `El check-in de esta clase abre a las ${hhmm(abre(c.inicio))}` : 'La tolerancia de 10 min ya terminó. Pasa a recepción, por favor.');
+  else marcarCheckin(r, c);
+}
+
+function pedirPerfil(id){
+  const g = perfiles.get(id);
+  if (g && Date.now() - g.t < 5 * MIN) return g.p;
+  const p = api('perfil', { bookingId: id }).then(j => j.perfil).catch(() => { perfiles.delete(id); return null; });
+  perfiles.set(id, { t: Date.now(), p }); return p;
+}
+
+function marcarLocal(id, llego){
+  locales.set(id, { llego, t: Date.now() });
+  clases.forEach(c => c.reservas.forEach(x => { if (x.id === id) x.llego = llego; }));
+  repintarYa();
+}
+function repintarYa(){ if ($('vClase').classList.contains('activa')) pintarClase(); if ($('vInicio').classList.contains('activa')) pintarInicio(); }
+
+function marcarCheckin(r, c){
+  const mio = perfiles.get(r.id); perfiles.clear(); if (mio) perfiles.set(r.id, mio);   // su número cambia si toma otra clase hoy
+  marcarLocal(r.id, true);                             // optimista: la palomita sale al instante
+  pedirPerfil(r.id);
+  mostrarExito(r, c);
+  encolar({ tipo:'checkin', id:r.id, ts: ahoraMs(), nombre: r.nombre, clase: `${c.disciplina} · ${hhmm(c.inicio)}` });
+}
+function quitarCheckin(r, c){
+  marcarLocal(r.id, false);
+  if ($('exito').classList.contains('abierto')) cerrarExito();
+  toast(`Se quitó el check-in de ${primer(r.nombre)}`);
+  encolar({ tipo:'deshacer', id:r.id, ts: ahoraMs(), nombre: r.nombre, clase: `${c.disciplina} · ${hhmm(c.inicio)}` });
+}
+
+/* --------------------------------------------------------------- éxito */
+let cierre = null;
+function mostrarExito(r, c){
+  const mio = ++turno;
+  $('eTitulo').innerHTML = RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}! ${insignias(r.ins, 30)}`;
+  $('eSub').textContent = `${c.disciplina} · ${hhmm(c.inicio)}${c.coach ? ' con ' + c.coach : ''}`;
+  $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
+  $('exito').classList.add('abierto');
+  arrancarCuenta(6000);
+  Promise.resolve(pedirPerfil(r.id)).then(p => { if (mio === turno && $('exito').classList.contains('abierto')) pintarPerfil(p); });
+}
+function pintarPerfil(p){
+  if (!p) { $('eDatos').innerHTML = ''; return; }
+  const col = p.elemento && EL[p.elemento] ? EL[p.elemento][0] : 'var(--carbon)';
+  const d = [];
+  if (p.numeroClase) d.push(`<div class="dato"><div><div class="num">#${p.numeroClase}</div><span>clase en Hera</span></div></div>`);
+  if (p.progreso) {
+    const n = p.progreso.restantes, res = p.progreso.reservadas || 0;
+    d.push(`<div class="dato">${svgAnillo(p.progreso, 52, col)}<div><div class="num">${n}</div><span>clase${n===1?'':'s'} por usar de ${p.progreso.total}${res ? ` · ${res} ya reservada${res===1?'':'s'}` : ''}</span></div></div>`);
+  }
+  if (p.vigencia) {
+    const txt = p.vigencia.tipo === 'renueva' ? 'se renueva tu membresía'
+      : (p.vigencia.tipo === 'termina' || p.tipo === 'membresia') ? 'termina tu membresía' : 'vence tu paquete';
+    d.push(`<div class="dato"><div><div class="num">${fechaCorta(p.vigencia.fecha)}</div><span>${txt}</span></div></div>`);
+  }
+  if (p.tipo === 'membresia' || p.tipo === 'paquete') {
+    const nom = p.elemento ? ' ' + EL[p.elemento][3] : '';
+    $('ePlan').innerHTML = `<span class="plan">${svgElemento(p.elemento, 24)}${p.miembro ? svgLaurel(28) : ''}<span>${p.miembro ? 'Miembro' : 'Paquete'}${nom}</span></span>`;
+  }
+  $('eDatos').innerHTML = d.join('');
+  const colores = { cumple:'#9A4215', hito:'#7F866F', bienvenida:'#788991', ultima:'#B5651D', vence:'#B5651D', pocas:'#B5651D', ciclo:'#788991', termina:'#788991' };
+  const emoji = { cumple:'🎂 ', hito:'🎉 ' };
+  if (p.aviso) $('eAviso').innerHTML = `<div class="aviso" style="--c:${colores[p.aviso.tipo] || '#788991'}">${emoji[p.aviso.tipo] || ''}${esc(p.aviso.texto)}</div>`;
+  if (p.qr) { pintarQR(p.qr); arrancarCuenta(10000); }
+}
+function arrancarCuenta(ms){
+  const b = $('eBarra'); b.style.transition = 'none'; b.style.width = '100%';
+  requestAnimationFrame(() => requestAnimationFrame(() => { b.style.transition = `width ${ms}ms linear`; b.style.width = '0%'; }));
+  clearTimeout(cierre); cierre = setTimeout(cerrarExito, ms);
+}
+function cerrarExito(){ clearTimeout(cierre); turno++; $('exito').classList.remove('abierto'); }
+
+let qrLib = null;
+function cargarQRLib(){
+  if (window.QRCode) return Promise.resolve();
+  if (qrLib) return qrLib;
+  qrLib = new Promise((ok, mal) => {
+    const s = document.createElement('script');
+    s.src = QR_SRC; s.integrity = QR_SRI; s.crossOrigin = 'anonymous'; s.referrerPolicy = 'no-referrer';
+    const to = setTimeout(() => { mal(new Error('timeout')); }, 4000);
+    s.onload = () => { clearTimeout(to); ok(); }; s.onerror = () => { clearTimeout(to); mal(new Error('qr')); };
+    document.head.appendChild(s);
+  }).catch(e => { qrLib = null; throw e; });         // si falla, el siguiente QR lo vuelve a intentar
+  return qrLib;
+}
+function pintarQR(qr){
+  const mio = turno;
+  $('eQR').innerHTML = `<div class="qr"><div class="cod" id="qrCod"></div><div>${esc(qr.texto)}<br><small style="color:#6F6F6F">Se abre la página de planes de Hera.</small></div></div>`;
+  cargarQRLib().then(() => { if (mio !== turno || !$('qrCod')) return;
+      try { new QRCode($('qrCod'), { text: qr.url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} })
+    .catch(() => { if (mio === turno) $('eQR').innerHTML = ''; });
+}
+
+/* --------------------------------------------------------------- búsqueda (en memoria) */
+let busqTimer = null, busqSeq = 0;
+const cacheBusq = new Map();                         // q → { t, r }
+function buscar(){
+  const crudo = $('q').value.trim(), q = norm(crudo);
+  clearTimeout(busqTimer);
+  const seq = ++busqSeq;                             // cualquier búsqueda anterior en vuelo queda vieja
+  if (q.length < 2) { $('resultados').innerHTML = ''; return; }
+  const numerico = /^[\d\s-]+$/.test(crudo), dig = crudo.replace(/\D/g, '');
+  if (numerico && dig.length < 4) { $('resultados').innerHTML = '<div class="res"><span>Escribe los <b>4 últimos</b> números de tu celular</span></div>'; return; }
+  if (numerico && dig.length > 4) { $('resultados').innerHTML = '<div class="res"><span>Solo los <b>4 últimos</b> números de tu celular</span></div>'; return; }
+  const ahora = ahoraMs(), hits = [];
+  // 1) Al instante, por nombre: reservas de las clases que aceptan check-in ahora
+  if (!numerico) clases.filter(c => c.abierta && checkinAbierto(c, ahora))
+    .forEach(c => c.reservas.forEach(r => {
+      const n = norm(r.nombre);
+      if (n.startsWith(q) || n.split(/\s+/).some(t => t.startsWith(q))) hits.push({ r, c });
+    }));
+  if (!numerico && q.length < 3) { pintarResultados(hits, [], 'Escribe al menos 3 letras de tu nombre o de tu correo'); return; }
+  // 2) En el servidor: 4 dígitos (clases abiertas) o nombre / apellido / correo (consultar aunque no tenga clase)
+  const g = cacheBusq.get(q);
+  if (g && Date.now() - g.t < 60000) { pintarResultados(hits.concat(deCheckins(g.r.checkins)), g.r.candidatas); return; }
+  pintarResultados(hits, null);
+  busqTimer = setTimeout(() => {
+    api('buscar', { q: crudo }).then(j => {
+      cacheBusq.set(q, { t: Date.now(), r: j });
+      if (seq === busqSeq && norm($('q').value.trim()) === q) pintarResultados(hits.concat(deCheckins(j.checkins)), j.candidatas || []);
+    }).catch(e => {
+      if (e.auth || seq !== busqSeq || norm($('q').value.trim()) !== q) return;
+      pintarResultados(hits, false, e.resp && e.resp.error === 'despacio' ? 'Espera unos segundos y vuelve a intentar' : null);
+    });
+  }, numerico ? 150 : 450);
+}
+/** bookingIds que encontró el servidor → renglones de la lista local (la tablet ya tiene esas clases). */
+function deCheckins(ids){
+  const out = [];
+  for (const x of ids || []) for (const c of clases) { const r = c.reservas.find(y => y.id === x.bookingId); if (r) { out.push({ r, c }); break; } }
+  return out;
+}
+
+function filaCheckin(h, i){
+  return `<button class="res" data-ci="${i}">
+    <span>${esc(h.r.nombre)} ${insignias(h.r.ins)}<small>${esc(h.c.disciplina)} · ${hhmm(h.c.inicio)}</small></span>
+    <span class="etiqueta" style="${h.r.llego ? 'background:var(--ok);color:#fff' : 'background:#9A4215;color:#fff'}">${h.r.llego ? '✓ Llegó · quitar' : 'Check-in'}</span></button>`;
+}
+/** candidatas: null = buscando, false = no se pudo buscar, [] = nada */
+function pintarResultados(hits, candidatas, mensaje){
+  const ahora = ahoraMs();
+  const vistos = new Set(); hits = hits.filter(h => !vistos.has(h.r.id) && vistos.add(h.r.id));
+  let html = '';
+  if (hits.length) html += `<div class="grupo">Check-in ahora · toca tu nombre</div>` + hits.slice(0, 5).map(filaCheckin).join('');
+  if (candidatas && candidatas.length) html += `<div class="grupo">Consultar mis clases y mi plan</div>` + candidatas.map((cd, i) => `<button class="res" data-cu="${i}">
+      <span>${esc(cd.nombre)}<small>${esc(cd.correo || '')}</small></span>
+      <span class="etiqueta">Ver mis clases</span></button>`).join('');
+  if (mensaje && !hits.length) html += `<div class="res"><span>${esc(mensaje)}</span></div>`;
+  else if (!html) {
+    const abreSig = siguiente ? abre(siguiente.inicio) : 0;
+    const pista = !fresco() ? 'Sin conexión por ahora. ' : (abreSig > ahora ? `El check-in abre 90 min antes de cada clase (la siguiente abre a las ${hhmm(abreSig)}). ` : '');
+    html = candidatas === null ? '<div class="res"><span class="cargando">Buscando…</span></div>'
+      : `<div class="res"><span>No te encontramos${candidatas === false ? ' (sin conexión)' : ''}<small>${pista}Prueba con tu nombre y apellido, o pasa a recepción.</small></span></div>`;
+  } else if (candidatas === null) html += '<div class="res"><span class="cargando">Buscando tu cuenta…</span></div>';
+  $('resultados').innerHTML = html;
+  document.querySelectorAll('.res[data-ci]').forEach(b => b.onclick = () => {
+    const h = hits[+b.dataset.ci]; limpiarBusqueda(); alternar(h.r, h.c);
+  });
+  document.querySelectorAll('.res[data-cu]').forEach(b => b.onclick = () => { const cd = candidatas[+b.dataset.cu]; limpiarBusqueda(); pedirVerificacion(cd); });
+}
+function limpiarBusqueda(){ ++busqSeq; clearTimeout(busqTimer); $('q').value = ''; $('resultados').innerHTML = ''; $('q').blur(); }
+
+/* --------------------------------------------------------------- consulta "mis clases" (con verificación) */
+let verif = null;                                    // { cd, digitos, ocupado }
+function pedirVerificacion(cd){
+  if (!cd.conTel) { toast('Para ver tus clases pasa a recepción, por favor'); return; }
+  verif = { cd, digitos: '', ocupado: false };
+  $('vNombre').textContent = `Hola, ${cd.nombre}`;
+  $('vError').textContent = '';
+  $('vCel').hidden = false; $('vMail').hidden = true;
+  $('vTexto').textContent = 'Para ver tus clases, escribe los 4 últimos números de tu celular';
+  pintarPuntos();
+  $('veloVerif').classList.add('abierto');
+}
+function pintarPuntos(){ [...$('vPuntos').children].forEach((p, i) => p.classList.toggle('lleno', !!verif && i < verif.digitos.length)); }
+function cerrarVerificacion(){ verif = null; $('veloVerif').classList.remove('abierto'); }
+$('vTeclado').innerHTML = ['1','2','3','4','5','6','7','8','9','','0','⌫'].map(k => k ? `<button data-k="${k}">${k}</button>` : '<span></span>').join('');
+$('vTeclado').addEventListener('click', e => {
+  const k = e.target && e.target.dataset && e.target.dataset.k; if (!k || !verif || verif.ocupado) return;   // mientras revisa, el teclado no responde
+  if (k === '⌫') verif.digitos = verif.digitos.slice(0, -1);
+  else if (verif.digitos.length < 4) verif.digitos += k;
+  pintarPuntos();
+  if (verif.digitos.length === 4) consultarCuenta({ ult4: verif.digitos });
+});
+$('vCancelar').onclick = cerrarVerificacion;
+
+async function consultarCuenta(prueba){
+  const mio = verif;
+  if (!mio || mio.ocupado) return;
+  mio.ocupado = true; $('vError').textContent = 'Revisando…';
+  try {
+    const j = await api('cuenta', { ref: mio.cd.ref, ...prueba });
+    if (verif !== mio) return;                        // canceló o ya es otra persona: no se abre nada
+    cerrarVerificacion(); pintarCuenta(j.cuenta); ir('vCuenta');
+  } catch (e) {
+    if (e.auth || verif !== mio) return;
+    const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
+    mio.digitos = ''; pintarPuntos();
+    $('vError').textContent = err === 'verificacion' ? (seg > 2 ? `No coincide. Espera ${seg} s e intenta otra vez.` : 'No coincide. Intenta otra vez.')
+      : err === 'espera' ? `Espera ${seg || 'unos'} segundos e intenta otra vez.`
+      : err === 'ocupado' ? 'Por ahora no se puede consultar. Pasa a recepción.'
+      : err === 'sin-telefono' ? 'Para ver tus clases pasa a recepción, por favor.'
+      : (err === 'no-encontrada' || err === 'ref') ? 'Vuelve a buscar tu nombre, por favor.'
+      : 'No se pudo consultar. Revisa el internet.';
+    const h = $('veloVerif').querySelector('.hoja'); h.classList.remove('temblor'); void h.offsetWidth; h.classList.add('temblor');
+  } finally { mio.ocupado = false; }
+}
+
+const DIA3 = d => DIAS[enGDL(d).getUTCDay()].slice(0, 3);
+function diaRelativo(d){
+  const hoy = enGDL(ahoraMs()), x = enGDL(d);
+  const dif = Math.round((Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()) - Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())) / 864e5);
+  if (dif === 0) return 'Hoy'; if (dif === 1) return 'Mañana'; if (dif === -1) return 'Ayer';
+  return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
+}
+let cuentaActual = null;
+function pintarCuenta(u){
+  cuentaActual = u;
+  const pl = u.plan, col = pl && pl.elemento && EL[pl.elemento] ? EL[pl.elemento][0] : 'var(--carbon)';
+  $('uTitulo').innerHTML = `Hola, ${esc(u.nombre)} ${pl ? insignias({ elemento: pl.elemento, miembro: pl.miembro, progreso: pl.progreso }, 28) : ''}`;
+  $('uSub').textContent = pl ? pl.nombre : 'Sin plan activo';
+  const datos = [];
+  if (pl && pl.progreso) datos.push(`<div class="dato">${svgAnillo(pl.progreso, 52, col)}<div><div class="num">${pl.progreso.restantes}</div><span>clase${pl.progreso.restantes === 1 ? '' : 's'} por usar de ${pl.progreso.total}${pl.progreso.reservadas ? ` · ${pl.progreso.reservadas} ya reservada${pl.progreso.reservadas === 1 ? '' : 's'}` : ''}</span></div></div>`);
+  if (pl && pl.vigencia) {
+    const txt = pl.vigencia.tipo === 'renueva' ? 'se renueva tu membresía' : (pl.vigencia.tipo === 'termina' || pl.tipo === 'membresia') ? 'termina tu membresía' : 'vence tu paquete';
+    datos.push(`<div class="dato"><div><div class="num">${fechaCorta(pl.vigencia.fecha)}</div><span>${txt}</span></div></div>`);
+  }
+  let html = datos.length ? `<div class="datos" style="max-width:none">${datos.join('')}</div>` : '';
+  if (u.aviso) html += `<div class="aviso" style="--c:#B5651D;max-width:none">${esc(u.aviso.texto)}</div>`;
+  const fut = u.futuras || [];
+  html += `<div class="tarjeta"><h3>Tus próximas clases</h3>${fut.length ? fut.map((r, i) => `<div class="fila-r">
+      <span><b>${diaRelativo(r.inicio)} · ${hhmm(r.inicio)}</b> · ${esc(r.disciplina)}<small>${r.coach ? 'con ' + esc(r.coach) : esc(r.titulo)}</small></span>
+      ${r.checkin ? `<button class="btn pri" data-uc="${i}">Hacer check-in</button>` : ''}</div>`).join('')
+      + (u.masFuturas ? `<div class="fila-r"><small>y ${u.masFuturas} más</small></div>` : '')
+    : '<div class="fila-r"><span>No tienes clases reservadas.<small>Escanea el código de abajo para reservar.</small></span></div>'}</div>`;
+  if (u.anterior) html += `<div class="tarjeta"><h3>Tu clase anterior</h3><div class="fila-r">
+      <span><b>${diaRelativo(u.anterior.inicio)} · ${hhmm(u.anterior.inicio)}</b> · ${esc(u.anterior.disciplina)}<small>${u.anterior.coach ? 'con ' + esc(u.anterior.coach) : ''}</small></span>
+      <span class="etiqueta" style="${u.anterior.asistio ? 'background:var(--ok);color:#fff' : ''}">${u.anterior.asistio ? 'Asististe ✓' : 'Sin check-in'}</span></div></div>`;
+  html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
+    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea y elige horario.</small></div></div></div>`;
+  $('uCuerpo').innerHTML = html;
+  document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
+  cargarQRLib().then(() => {
+    if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
+    const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
+    if (u.qr) dibuja('uQrRenovar', u.qr.url);
+    dibuja('uQrReservar', u.reservar);
+  }).catch(() => {});
+}
+function checkinDesdeCuenta(r){
+  // Ya se identificó con su celular: check-in directo, y la tablet regresa al inicio (sus datos no se quedan en pantalla)
+  let hit = null;
+  for (const c of clases) { const x = c.reservas.find(y => y.id === r.id); if (x) { hit = { r: x, c }; break; } }
+  const nombre = cuentaActual ? cuentaActual.nombreCorto : '';
+  salirCuenta();
+  if (!hit) hit = { r: { id: r.id, nombre, ins: null, llego: false }, c: { id: 'x', disciplina: r.disciplina, inicio: r.inicio, coach: r.coach } };
+  if (!hit.r.llego) marcarCheckin(hit.r, hit.c);
+}
+function salirCuenta(volver = true){
+  cuentaActual = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
+  if (volver) { ir('vInicio'); pintarInicio(); }
+}
+$('salirCuenta').onclick = () => salirCuenta();
+$('uListo').onclick = () => salirCuenta();
+
+/* --------------------------------------------------------------- QR de "reserva tu clase" en el inicio */
+const URL_RESERVAR = 'https://www.herazenter.com/classes';
+function pintarQRReservar(){
+  cargarQRLib().then(() => {
+    const el = $('qrReservar'); if (!el || el.childElementCount) return;
+    try { new QRCode(el, { text: URL_RESERVAR, width: 192, height: 192, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); $('reservarHome').hidden = false; } catch (_) {}
+  }).catch(() => {});
+}
+
+/* --------------------------------------------------------------- cola (si se cae el internet) */
+const leerCola = () => leerJSON(COLA_KEY, []);
+const guardarCola = c => ls.set(COLA_KEY, JSON.stringify(c));
+const quitarDeCola = (id, tipo) => guardarCola(leerCola().filter(x => !(x.id === id && (!tipo || x.tipo === tipo))));
+let enVuelo = null;                                    // { id, tipo } que se está mandando ahora
+/** Encola marcar o quitar. Si lo opuesto sigue sin mandarse, se anulan los dos (nada que decirle a Wix). */
+function encolar(op){
+  const c = leerCola();
+  const opuesto = op.tipo === 'checkin' ? 'deshacer' : 'checkin';
+  const i = c.findIndex(x => x.id === op.id && x.tipo === opuesto && !(enVuelo && enVuelo.id === x.id && enVuelo.tipo === x.tipo));
+  if (i >= 0) c.splice(i, 1);
+  else if (!c.some(x => x.id === op.id && x.tipo === op.tipo)) c.push({ ...op, intentos: 0 });
+  guardarCola(c); red(estadoRed.ok); vaciarCola();
+}
+const MOTIVOS = { 'fuera-de-horario': 'llegó a Wix después de 3 h sin conexión', 'no-encontrada': 'la reserva ya no existe (¿se canceló?)',
+  'wix-rechazo': 'Wix no lo aceptó', 'wix': 'Wix no respondió en todo ese tiempo', 'vencido': 'no hubo conexión en 12 h',
+  'otro-dia': 'se quedó pendiente de otro día', 'sin-sesion': 'la clase no tiene sesión en Wix',
+  'tolerancia': 'llegó a Wix después de la tolerancia (sin conexión)' };
+const ETIQUETA_OP = { checkin: 'check-in', deshacer: 'quitar check-in' };
+const leerNoReg = () => leerJSON(NOREG_KEY, []).filter(x => ahoraMs() - x.ts < 24 * 3600e3);   // caducan a las 24 h
+function noRegistrado(op, motivo){
+  const l = leerNoReg();
+  if (!l.some(x => x.id === op.id && x.tipo === op.tipo)) l.push({ id: op.id, tipo: op.tipo || 'checkin', nombre: op.nombre, clase: op.clase, ts: op.ts, motivo });
+  ls.set(NOREG_KEY, JSON.stringify(l.slice(-50))); pintarNoReg();
+}
+function pintarNoReg(){
+  const l = leerNoReg();
+  $('noregBtn').hidden = !l.length;
+  $('noregBtn').textContent = `⚠ ${l.length} sin registrar`;
+  $('listaNoreg').innerHTML = l.map(x => `<div><b>${esc(x.nombre)}</b> · ${esc(x.clase || '')} · <b>${esc(ETIQUETA_OP[x.tipo] || 'check-in')}</b><small>${hhmm(x.ts)} · ${esc(MOTIVOS[x.motivo] || x.motivo || '')}</small></div>`).join('');
+}
+let vaciando = false;
+async function vaciarCola(){
+  if (vaciando) return; vaciando = true;
+  try {
+    const vistos = new Set();
+    for (;;) {
+      if (!DEMO && !ls.get(TOKEN_KEY)) break;
+      const op = leerCola().find(x => !vistos.has(x.id + x.tipo));     // se relee cada vuelta: nada se pisa
+      if (!op) break;
+      vistos.add(op.id + op.tipo); op.tipo = op.tipo || 'checkin';
+      if (ahoraMs() - op.ts > 12 * 3600e3) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'vencido'); continue; }
+      if (finDiaMs && op.ts < finDiaMs - 24 * 3600e3) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'otro-dia'); continue; }   // de ayer: Wix ya no lo acepta
+      enVuelo = { id: op.id, tipo: op.tipo };
+      try {
+        await api(op.tipo, { bookingId: op.id, ts: op.ts });
+        quitarDeCola(op.id, op.tipo); red(true);
+      } catch (e) {
+        if (e.auth) break;
+        if (!e.resp) { red(false); break; }                    // sin red: se intenta después
+        const err = e.resp.error;
+        if (['no-encontrada', 'fuera-de-horario', 'tolerancia', 'wix-rechazo', 'bookingId', 'sin-sesion'].includes(err)) { quitarDeCola(op.id, op.tipo); noRegistrado(op, err); continue; }
+        // Error pasajero (Wix 502, secretos 503…): se reintenta (unos 30 min de respuestas de error) y luego va a la lista.
+        const c = leerCola(), x = c.find(y => y.id === op.id && y.tipo === op.tipo);
+        if (x) { x.intentos = (x.intentos || 0) + 1; if (x.intentos >= 90) { quitarDeCola(op.id, op.tipo); noRegistrado(op, 'wix'); continue; } guardarCola(c); }
+        const n = leerCola().length;
+        red(false, `Wix no responde · ${n} pendiente${n === 1 ? '' : 's'}`);
+      }
+    }
+  } finally { vaciando = false; enVuelo = null; red(estadoRed.ok, estadoRed.txt); }
+}
+
+/* --------------------------------------------------------------- carga */
+async function cargar(){
+  if (!DEMO && !ls.get(TOKEN_KEY)) { irClave(); return; }
+  ultimoIntentoCarga = Date.now();
+  try {
+    const j = await api('hoy');
+    if (j.token) ls.set(TOKEN_KEY, j.token);            // el servidor lo renueva solo
+    if (j.ahora) desfase = Date.parse(j.ahora) - Date.now();
+    if (Number.isFinite(j.zonaMin)) ZONA_MIN = j.zonaMin;
+    if (j.ventana) VENT = { ...VENT, ...j.ventana };
+    const cola = leerCola();
+    const estado = (id, deWix) => {
+      const ult = [...cola].reverse().find(x => x.id === id);
+      if (ult) return ult.tipo !== 'deshacer';
+      const l = locales.get(id);
+      if (l && Date.now() - l.t < 15 * MIN) { if (l.llego === deWix) locales.delete(id); return l.llego; }
+      return deWix;
+    };
+    clases = (j.clases || []).map(c => ({ ...c, reservas: (c.reservas || []).map(r => ({ ...r, llego: estado(r.id, r.llego) })) }));
+    diaCargado = j.dia || 'hoy'; finDiaMs = Date.parse(j.finDia) || (ahoraMs() + 3600e3); siguiente = j.siguiente || null;
+    ultimaCargaOk = Date.now(); pintarQRReservar();
+    ls.set(CACHE_KEY, JSON.stringify({ dia: diaCargado, finDia: finDiaMs, siguiente, clases, desfase, zonaMin: ZONA_MIN, t: ultimaCargaOk }));
+    red(true);
+  } catch (e) {
+    if (e.auth) return;
+    red(false);
+  }
+  if ($('vClave').classList.contains('activa')) ir('vInicio');
+  if (claseAbierta) { const nueva = clases.find(c => c.id === claseAbierta.id); if (nueva) claseAbierta = nueva; }
+  repintar();
+}
+
+/* --------------------------------------------------------------- tablet */
+let wakeLock = null;
+async function pedirWakeLock(){ try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (_) {} }
+
+/* --------------------------------------------------------------- eventos */
+$('claveOk').onclick = entrar;
+$('clave').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+$('volver').onclick = () => { claseAbierta = null; ir('vInicio'); pintarInicio(); };
+$('exito').onclick = cerrarExito;
+$('q').oninput = buscar;
+$('noregBtn').onclick = () => $('veloNoreg').classList.add('abierto');
+$('noregCerrar').onclick = () => $('veloNoreg').classList.remove('abierto');
+// Borrar la lista pide mantener presionado 2 s (que no la borre cualquiera de un toque).
+let presion = null;
+$('noregOk').addEventListener('pointerdown', () => { $('noregOk').textContent = 'Sigue presionando…';
+  presion = setTimeout(() => { ls.del(NOREG_KEY); pintarNoReg(); $('veloNoreg').classList.remove('abierto'); $('noregOk').textContent = 'Mantén presionado: ya los marqué'; }, 2000); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $('noregOk').addEventListener(ev, () => { clearTimeout(presion); if ($('veloNoreg').classList.contains('abierto')) $('noregOk').textContent = 'Mantén presionado: ya los marqué'; }));
+const fs = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+if (fs && !standalone) { $('pantallaCompleta').hidden = false; $('pantallaCompleta').onclick = () => fs.call(document.documentElement); }
+if (!almacenOk) $('sinAlmacen').hidden = false;
+if (!DEMO) $('manifest').href = 'manifest.json';
+
+['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
+setInterval(() => {                                          // inactividad: vuelve al inicio
+  const quieto = Date.now() - ultimoToque;
+  if (claseAbierta && quieto > 45000 && !$('exito').classList.contains('abierto')) { claseAbierta = null; ir('vInicio'); pintarInicio(); }
+  if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
+  if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
+  if ($('veloVerif').classList.contains('abierto') && quieto > 45000) cerrarVerificacion();
+  if ($('vCuenta').classList.contains('activa') && quieto > 45000) salirCuenta();   // sus datos no se quedan en pantalla
+}, 5000);
+setInterval(reloj, 10000); reloj();
+setInterval(() => { if (!document.hidden) cargar(); }, REFRESCO_MS);
+setInterval(repintar, 15000);
+setInterval(vaciarCola, 20000);
+window.addEventListener('online', vaciarCola);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { cargar(); vaciarCola(); pedirWakeLock(); } });
+pintarNoReg();
+if (DEMO || ls.get(TOKEN_KEY)) {
+  const c = leerJSON(CACHE_KEY, null);
+  if (c && c.finDia && Date.now() + (c.desfase || 0) < c.finDia) {
+    clases = c.clases || []; diaCargado = c.dia; finDiaMs = c.finDia; siguiente = c.siguiente || null;
+    desfase = c.desfase || 0; if (Number.isFinite(c.zonaMin)) ZONA_MIN = c.zonaMin; ultimaCargaOk = c.t || 0;
+  }
+  ir('vInicio'); pintarInicio(); cargar(); vaciarCola();
+} else irClave();
+
+/* =====================================================================
+   Modo demostración (solo en localhost): datos inventados, sin red.
+   ===================================================================== */
+function demoApi(accion, datos){
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  if (!window.__demo) window.__demo = demoDatos();
+  const D = window.__demo;
+  const falla = error => Promise.reject(Object.assign(new Error(error), { resp: { error } }));
+  if (accion === 'entrar') return espera(300).then(() => datos.clave === 'demo' ? { ok:true, token:'demo' } : falla('clave'));
+  if (accion === 'hoy') return espera(250).then(() => {
+    const fin = new Date(); fin.setHours(24, 0, 0, 0);
+    const abiertas = D.clases.filter(c => Date.now() >= new Date(c.inicio).getTime() - VENT.aceptarAntes * 6e4);
+    const sig = D.clases.find(c => !abiertas.includes(c));
+    return { ok:true, ahora: new Date().toISOString(), dia: 'demo', finDia: fin.toISOString(), zonaMin: -new Date().getTimezoneOffset(), ventana: VENT,
+      siguiente: sig ? { disciplina: sig.disciplina, inicio: sig.inicio } : null, clases: abiertas };
+  });
+  if (accion === 'checkin' || accion === 'deshacer') return espera(300).then(() => { D.clases.forEach(c => c.reservas.forEach(r => { if (r.id === datos.bookingId) r.llego = accion === 'checkin'; })); return { ok:true }; });
+  if (accion === 'perfil') return espera(500).then(() => ({ ok:true, perfil: D.perfiles[datos.bookingId] || null }));
+  if (accion === 'buscar') return espera(350).then(() => {
+    const q = norm(datos.q);
+    const c = D.cuentas.filter(x => norm(x.nombre).split(' ').some(t => t.startsWith(q)) || x.correoReal.startsWith(q))
+      .map(x => ({ ref: x.ref, nombre: x.nombre, correo: x.correo, conTel: true }));
+    return { ok:true, checkins: [], candidatas: c };
+  });
+  if (accion === 'cuenta') return espera(500).then(() => {
+    const x = D.cuentas.find(y => y.ref === datos.ref);
+    if (!x) return falla('no-encontrada');
+    if (datos.ult4 !== x.ult4) return falla('verificacion');
+    return { ok:true, cuenta: x.cuenta };
+  });
+  return falla('accion');
+}
+function demoDatos(){
+  const ahora = new Date(); ahora.setSeconds(0, 0);
+  const base = new Date(ahora); base.setMinutes(Math.floor(ahora.getMinutes() / 30) * 30);
+  const plan = [[-10,'Barre','Coach B'],[20,'Reformer','Coach C'],[20,'Yoga','Coach D'],[150,'Mat','Coach A']];
+  const gente = [
+    ['Ana E.','FUEGO',true,{u:5,t:8},48,null],['Sofía M.','AGUA',true,{u:7,t:8},9,null],['Lucía H.','TIERRA',false,{u:4,t:4},33,'ultima'],
+    ['Regina P.','AIRE',true,{u:2,t:12},120,'cumple'],['Camila V.',null,false,null,0,'bienvenida'],['Valeria G.','FUEGO',false,{u:2,t:4},14,'pocas'],
+    ['Paola C.','AGUA',true,null,62,null],['Fitpass · 1',null,false,null,null,null],['Renata B.','TIERRA',true,{u:3,t:8},49,'hito'],
+    ['Elena W.','AIRE',false,{u:6,t:8},18,'vence'],['Jimena Z.','FUEGO',true,{u:1,t:4},5,null],['Carla I.','AGUA',false,{u:3,t:4},27,null]];
+  let n = 0; const perfiles = {};
+  const textos = { cumple:'¡Feliz cumpleaños! Pasa a recepción, tenemos algo para ti.', hito:'¡Tu clase número 50! Gracias por entrenar con nosotras.',
+    bienvenida:'Bienvenida a tu primera clase en Hera 🌿 Al terminar, recepción te cuenta los planes.', ultima:'Es tu última clase de este paquete. Renueva para seguir sin pausa.',
+    pocas:'Te quedan 2 clases por usar. Renueva cuando quieras desde tu celular.', vence:'Tu paquete vence en 3 días. Renuévalo para seguir sin pausa.' };
+  const clases = plan.map(([min, disc, coach], i) => {
+    const ini = new Date(base.getTime() + min * 6e4), abierta = min <= 90;
+    const reservas = !abierta ? [] : Array.from({ length: 3 + (i % 2) }, (_, j) => {
+      const [nombre, el, miembro, prog, visitas, aviso] = gente[(n++) % gente.length];
+      const id = `b${i}-${j}`, market = /^Fitpass/.test(nombre);
+      const tipo = market ? 'marketplace' : visitas === 0 ? 'prueba' : (miembro ? 'membresia' : 'paquete');
+      const progreso = prog ? { usadas: prog.u, total: prog.t, restantes: prog.t - prog.u, reservadas: 0 } : null;
+      perfiles[id] = market ? { numeroClase:null, tipo:'marketplace', elemento:null, miembro:false, progreso:null, vigencia:null, aviso:null, qr:null } :
+        { numeroClase: visitas + 1, hito: aviso === 'hito' ? 50 : null, cumple: aviso === 'cumple', tipo, elemento: el, miembro, progreso,
+          vigencia: el ? { fecha: new Date(ahora.getTime() + (aviso === 'vence' ? 3 : 15) * 864e5).toISOString(), tipo: miembro ? 'renueva' : 'vence' } : null,
+          aviso: aviso ? { tipo: aviso, texto: textos[aviso] } : null,
+          qr: ['ultima','pocas','vence'].includes(aviso) ? { url:'https://www.herazenter.com/pricing-plans/plans-pricing', texto:'Escanea para renovar desde tu celular' } : null };
+      return { id, nombre, ult4: market ? '' : String(1000 + (i + 1) * (j + 3) * 137 % 9000).slice(-4), llego: min < 0 && j === 0,
+        ins: market ? null : { elemento: el, miembro, estrella: visitas >= 100 ? 100 : visitas >= 50 ? 50 : visitas >= 25 ? 25 : null, anios: visitas >= 100 ? 2 : visitas >= 40 ? 1 : null } };
+    });
+    return { id: 'e' + i, titulo: disc, disciplina: disc, coach, inicio: ini.toISOString(), fin: new Date(ini.getTime() + 50 * 6e4).toISOString(), abierta, total: reservas.length, llegaron: 0, reservas };
+  });
+  const h = (dias, hora) => { const d = new Date(); d.setDate(d.getDate() + dias); d.setHours(hora, 0, 0, 0); return d.toISOString(); };
+  const cuentas = [{ ref: 'demo-ref-1', nombre: 'Mariana T.', correo: 'ma•••@gm•••.com', correoReal: 'mariana.demo', ult4: '4321',
+    cuenta: { nombre: 'Mariana', nombreCorto: 'Mariana T.',
+      plan: { nombre: 'FUEGO - Paquete 8 Clases', tipo: 'paquete', elemento: 'FUEGO', miembro: false,
+        progreso: { usadas: 6, total: 8, restantes: 2, reservadas: 1 }, vigencia: { fecha: h(5, 12), tipo: 'vence' } },
+      aviso: { tipo: 'pocas', texto: 'Te quedan 2 clases por usar. Renueva cuando quieras desde tu celular.' },
+      qr: { url: 'https://www.herazenter.com/pricing-plans/plans-pricing', texto: 'Escanea para renovar desde tu celular' },
+      anterior: { titulo: 'Pilates Reformer', disciplina: 'Reformer', coach: 'Coach A', inicio: h(-2, 8), asistio: true },
+      futuras: [{ id: 'f1', disciplina: 'Barre', titulo: 'Barre', coach: 'Coach B', inicio: h(1, 19), checkin: false }],
+      masFuturas: 0, reservar: 'https://www.herazenter.com/classes' } }];
+  return { clases, perfiles, cuentas };
+}
+if (DEMO) document.body.insertAdjacentHTML('beforeend', '<div class="demo">DEMO · datos inventados · contraseña: demo</div>');
+</script>
+</body>
+</html>
