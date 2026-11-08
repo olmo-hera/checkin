@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NMSC48RmK3daPTuM1dupsjq82O3QpIWMZ0zHSpdthJs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dSarBZJ4f0aRVkQ14H0J4VZNykUtjAl7ImHHMRWZkK8=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -261,7 +261,7 @@ button.fila-r:active{background:var(--arena-suave)}
     </div>
     <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
     <div class="resultados" id="resultados"></div>
-    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea y reserva tu clase en la app <b>Fit by Wix</b>.</div></div>
+    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
   </section>
 
   <!-- MI CUENTA (después de confirmar con su celular) -->
@@ -699,7 +699,10 @@ let qrLib = null;
 // La app Fit by Wix no abre filtrada por disciplina y su invitación pide aprobación (probado 8-nov): el QR va a la página
 // web del servicio, que sí enseña solo sus sesiones (reservar o lista de espera). La liga de la app queda guardada aquí.
 // Olmo (8-nov): QR grande a la app (con Agenda como primera pestaña en Fit by Wix abre directo ahí) y QR chico a la web filtrada.
-const URL_APP_FIT = 'https://fitness.wix.app/mobile.apps/Y5wDoPZ?ref=mam', USAR_APP = true;
+// Liga directa a la pestaña «Agenda» de Hera en Fit by Wix: es el mismo deepLink que usan las notificaciones push del panel
+// (platform/club/<tabId de Agenda>/<siteId>; sacado el 8-nov de la lista de notificaciones enviadas). Si cambian las pestañas
+// de la app, el tabId sale de manage.wix.com → App móvil → notificaciones (businesses/structures/tabs).
+const URL_APP_FIT = 'https://fitness.wix.app/platform/club/3aca4561-2d36-464a-803b-e87cbf0b6a97/21d18206-19d9-4b9f-9cc4-3c7a471ae6c4', USAR_APP = true;
 const AGENDA_WEB = { Reformer: 'pilates-reformer', Mat: 'pilates-mat', Barre: 'barre', Yoga: 'yoga' };
 const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
 function abrirReservar(disciplina, inicio, lleno = false){
@@ -710,7 +713,7 @@ function abrirReservar(disciplina, inicio, lleno = false){
   $('rSub').textContent = `${cuando} — escanea con tu celular`;
   const accion = lleno ? `<li>Toca <b>Unirse a la lista de espera</b>: si se libera un lugar, te avisa Wix.</li>` : `<li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`;
   $('rPasos').innerHTML = USAR_APP
-    ? `<li>Escanea: se abre Hera en la app <b>Fit by Wix</b> (si te pide unirte, acepta).</li><li>Ve a <b>Agenda</b> → <b>${esc(disciplina)}</b> → <b>${esc(cuando)}</b>.</li>${accion}`
+    ? `<li>Escanea: se abre la <b>Agenda</b> de Hera en la app <b>Fit by Wix</b>.</li><li>Busca <b>${esc(disciplina)}</b> · <b>${esc(cuando)}</b>.</li>${accion}`
     : `<li>Escanea: se abren las clases de <b>${esc(disciplina)}</b>.</li><li>Toca <b>${esc(cuando)}</b> e inicia sesión si te lo pide.</li>${accion}`;
   $('rQR').innerHTML = '<span class="cargando">…</span>'; $('rWeb').hidden = !USAR_APP; $('rQRWeb').innerHTML = '';
   $('veloReservar').classList.add('abierto');
@@ -928,7 +931,7 @@ function pintarCuenta(u){
       ${fv.horario ? `<div class="fila-r compacta"><span>Horario<small>el que más repites</small></span><b>${esc(fv.horario.dia)} · ${esc(fv.horario.hora)}</b></div>` : ''}</div>`;
   if (u.pedirCumple) html += `<div class="aviso" style="--c:#9A4215;max-width:none">🎂 ¿Cuándo es tu cumpleaños? Díselo a recepción y te consentimos ese día.</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
-    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea: se abre la app Fit by Wix → Agenda.</small></div></div>
+    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea: se abre la Agenda en la app Fit by Wix.</small></div></div>
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
