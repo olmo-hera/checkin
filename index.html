@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JoCNZ2oeX9Z0whw9nlVhSRqW551GrH1NPOPdETfKQfk=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3RCgc29S5gZHGo9WiBtqvzvz5U7iaGGRQZpEp4w9O7s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -139,6 +139,12 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .etiqueta.cupo.llenando{background:#F2C14E;color:#4A3500}
 .etiqueta.cupo.poco{background:#C8432B;color:#fff}
 .etiqueta.cupo.lleno{background:#A9A9A9;color:#fff}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:2px 0 10px}
+.chip-lugar{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px 10px 14px;border-radius:14px;background:#fff;border:1.5px solid var(--arena);border-left:6px solid #3F8A4F;font-size:16px;color:var(--carbon)}
+.chip-lugar b{font-size:16px}.chip-lugar span{font-size:14px;color:var(--gris)}
+.chip-lugar:active{background:var(--arena-suave)}
+.chip-lugar.llenando{border-left-color:#F2C14E}.chip-lugar.poco{border-left-color:#C8432B}.chip-lugar.lleno{border-left-color:#A9A9A9;opacity:.85}
+.leyenda{display:block;font-size:13px;color:var(--gris)}
 .punto-cupo{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px;vertical-align:middle}
 .punto-cupo.bien{background:#3F8A4F}.punto-cupo.llenando{background:#F2C14E}.punto-cupo.poco{background:#C8432B}.punto-cupo.lleno{background:#A9A9A9}
 .qr-web{display:flex;align-items:center;gap:14px;text-align:left;font-size:16px;color:var(--carbon);max-width:460px}
@@ -920,13 +926,21 @@ function pintarCuenta(u){
       ${r.checkin ? `<button class="btn pri" data-uc="${i}">Hacer check-in</button>` : ''}</div>`).join('')
       + (u.masFuturas ? `<div class="fila-r"><small>y ${u.masFuturas} más</small></div>` : '')
     : '<div class="fila-r"><span>No tienes clases reservadas.<small>Escanea el código de abajo para reservar.</small></span></div>'}</div>`;
-  // Lugares libres en los próximos 7 días, por cada disciplina que ya toma y solo en horarios que ya ha hecho.
-  if (u.lugares) html += `<div class="tarjeta"><h3>Lugares libres en tus horarios</h3>${u.lugares.map(g => `
-      <div class="fila-r compacta" style="padding-bottom:2px"><b style="color:var(--terracota)">${esc(g.disciplina)}</b></div>
-      ${g.clases.map(l => `<button class="fila-r compacta" data-ul="${esc(g.disciplina)}|${esc(l.inicio)}|${l.nivel === 'lleno' ? 1 : 0}|${esc(g.serviceId || '')}">
-        <span><b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b>${l.suHorario ? '<small>tu día y hora de siempre</small>' : '<small>tu hora de siempre</small>'}</span>
-        <span class="etiqueta cupo ${esc(l.nivel || 'bien')}">${l.nivel === 'lleno' ? (l.espera ? 'Lleno · Lista de espera' : 'Lleno') : `${l.lugares} lugar${l.lugares === 1 ? '' : 'es'} · Reservar`}</span></button>`).join('')}`).join('')}
-      <div class="fila-r compacta"><small><span class="punto-cupo bien"></span>buen cupo <span class="punto-cupo llenando"></span>se está llenando <span class="punto-cupo poco"></span>poco lugar <span class="punto-cupo lleno"></span>lleno · Toca un horario y resérvalo desde tu celular.</small></div></div>`;
+  // Lugares libres (Olmo, 8-nov): chips compactos. Menos sugerencias si ya tiene clases reservadas (0 → 6, 1 → 4, 2+ → 2)
+  // y nunca en un día en que ya tiene clase. Primero su día y hora de siempre, luego por fecha.
+  if (u.lugares) {
+    const diaDe = d => { const x = enGDL(d); return `${x.getUTCFullYear()}-${x.getUTCMonth()}-${x.getUTCDate()}`; };
+    const ocupados = new Set(fut.map(r => diaDe(r.inicio)));
+    const max = fut.length === 0 ? 6 : fut.length === 1 ? 4 : 2;
+    const sug = u.lugares.flatMap(g => g.clases.map(l => ({ ...l, disciplina: g.disciplina, serviceId: g.serviceId })))
+      .filter(l => !ocupados.has(diaDe(l.inicio)))
+      .sort((a, b) => (b.suHorario - a.suHorario) || (new Date(a.inicio) - new Date(b.inicio)))
+      .slice(0, max).sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+    if (sug.length) html += `<div class="tarjeta"><h3>${fut.length ? 'Otro día con lugar' : '¿Cuándo vienes? Hay lugar'}</h3><div class="chips">${sug.map(l => `
+      <button class="chip-lugar ${esc(l.nivel || 'bien')}" data-ul="${esc(l.disciplina)}|${esc(l.inicio)}|${l.nivel === 'lleno' ? 1 : 0}|${esc(l.serviceId || '')}">
+        <b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b><span>${esc(l.disciplina)} · ${l.nivel === 'lleno' ? 'lista de espera' : `${l.lugares} lugar${l.lugares === 1 ? '' : 'es'}`}</span></button>`).join('')}</div>
+      <small class="leyenda"><span class="punto-cupo bien"></span>buen cupo <span class="punto-cupo llenando"></span>llenándose <span class="punto-cupo poco"></span>poco lugar <span class="punto-cupo lleno"></span>lleno · Toca para reservar desde tu celular</small></div>`;
+  }
   const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
   const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
   if (pas.length) html += `<div class="tarjeta"><h3>${pas.length === 1 ? 'Tu clase anterior' : `Tus últimas ${pas.length} clases`}</h3>${pas.map(a => `<div class="fila-r compacta">
