@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+D/fEJFkzqPBMi6ArRIRbDHTs4rBeZ1a96c/pGqTs7w=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jlsTI4O8b8It9oeXSLmcGYXcBOuyDJz5MhQLmmy1TQw=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -253,6 +253,12 @@ button.fila-r:active{background:var(--arena-suave)}
 /* Olmo 9-nov: en la esquina derecha, para clientas nuevas: código para bajar la app y cómo reservar. */
 .app-boton{position:fixed;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));font-size:14px;color:var(--terracota);background:#fff;border:1.5px solid var(--terracota);border-radius:999px;padding:8px 14px;z-index:5;box-shadow:var(--sombra)}
 .app-boton:active{filter:brightness(.95)}
+/* Olmo 9-nov: en medio, reservar directo con correo + 4 dígitos (abre su sesión en el sitio y la cierra al reservar). */
+.reserva-boton{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));font-size:15px;font-weight:600;color:#fff;background:var(--terracota);border:0;border-radius:999px;padding:9px 18px;z-index:5;box-shadow:var(--sombra);white-space:nowrap}
+.reserva-boton:active{filter:brightness(.92)}
+.reservar-cuenta{width:100%;max-width:none;font-size:20px}
+#vInicio{padding-bottom:64px}
+#vMail{width:100%} #vCorreo{width:100%;font-size:22px;text-align:center}   /* que los 3 botones fijos de abajo no tapen lo último de la página */
 .app-codigo{font-size:17px;color:var(--gris)}
 .app-codigo b{font-size:26px;letter-spacing:.12em;color:var(--terracota)}
 #veloApp .hoja{width:min(900px,100%);max-height:96vh;overflow:auto;gap:10px;padding-top:24px}
@@ -261,6 +267,7 @@ button.fila-r:active{background:var(--arena-suave)}
 #veloApp .qr-bonito{width:230px;height:230px}
 @media (min-width:820px){ .app-grid{flex-direction:row;align-items:center;justify-content:center;gap:28px} .app-grid .pasos{margin:0} }
 @media (max-width:700px){
+  .reserva-boton{bottom:calc(52px + env(safe-area-inset-bottom))}
   .top{padding:14px 16px 4px} main{padding:8px 16px 20px}
   .saludo h1{font-size:28px} .clase .hora{font-size:28px} .exito h1{font-size:34px}
 }
@@ -308,6 +315,7 @@ button.fila-r:active{background:var(--arena-suave)}
     <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
     <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
     <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
+    <button class="reserva-boton" id="reservaBoton" aria-label="Reservar mi clase con mi correo y mi celular">📅 Reservar mi clase</button>
     <button class="app-boton" id="appBoton" aria-label="Baja la app de Hera: código y pasos para reservar">📱 ¿Eres nueva? Baja la app</button>
   </section>
 
@@ -359,6 +367,7 @@ button.fila-r:active{background:var(--arena-suave)}
       <input class="campo" id="vCorreo" type="email" placeholder="tu correo completo" autocomplete="off" autocapitalize="off" spellcheck="false">
       <button class="btn pri" id="vCorreoOk" style="margin-top:10px;width:100%">Ver mis clases</button>
     </div>
+    <button class="btn pri" id="vAbrir" style="width:100%" hidden>📅 Abrir el calendario</button>
     <div class="error" id="vError"></div>
     <button class="btn sec" id="vCancelar">Cancelar</button>
   </div>
@@ -392,20 +401,6 @@ button.fila-r:active{background:var(--arena-suave)}
     </ol>
     </div>
     <button class="btn sec" id="appCerrar" style="width:100%">Listo</button>
-  </div>
-</div>
-
-<div class="velo" id="veloReservar">
-  <div class="hoja" style="align-items:center">
-    <h2 id="rTitulo" style="justify-content:center"></h2>
-    <p id="rSub"></p>
-    <div class="qr-bonito" id="rQR" aria-label="Código QR para reservar en la app"></div>
-    <div class="qr-web" id="rWeb" hidden><div class="qr-chico" id="rQRWeb" aria-label="Código QR para reservar en el navegador"></div>
-      <div><b>¿No tienes la app?</b><br><small>Escanea este y reserva en el navegador: ya sale filtrado por clase.</small></div></div>
-    <ol class="pasos" id="rPasos"></ol>
-    <button class="btn pri" id="rPedir" style="width:100%" hidden>Pedir a recepción que me lo aparte</button>
-    <p id="rPedirMsg" class="pedir-msg"></p>
-    <button class="btn sec" id="rCerrar" style="width:100%">Listo</button>
   </div>
 </div>
 
@@ -565,7 +560,7 @@ function red(ok, txt){
 /* --------------------------------------------------------------- contraseña */
 function irClave(msg){
   $('velo').classList.remove('abierto'); cerrarExito(); claseAbierta = null;
-  $('veloVerif').classList.remove('abierto'); $('veloReservar').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
+  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
   const ya = $('vClave').classList.contains('activa');
   if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
   if (msg) $('claveError').textContent = msg;
@@ -868,35 +863,10 @@ let qrLib = null;
 // (platform/club/<tabId de Agenda>/<siteId>; sacado el 8-nov de la lista de notificaciones enviadas). Si cambian las pestañas
 // de la app, el tabId sale de manage.wix.com → App móvil → notificaciones (businesses/structures/tabs).
 const URL_APP_FIT = 'https://fitness.wix.app/platform/club/3aca4561-2d36-464a-803b-e87cbf0b6a97/21d18206-19d9-4b9f-9cc4-3c7a471ae6c4', USAR_APP = true;
-const AGENDA_WEB = { Reformer: 'pilates-reformer', Mat: 'pilates-mat', Barre: 'barre', Yoga: 'yoga' };
 const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
 // Liga a UN servicio en Fit by Wix: la misma que arma el panel para notificaciones de tipo «Ítem» (bookings/<sitio>/service/<id>/details).
 const SITIO_WIX = '21d18206-19d9-4b9f-9cc4-3c7a471ae6c4';
 const RE_GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function abrirReservar(disciplina, inicio, lleno = false, serviceId = ''){
-  const web = AGENDA_WEB[disciplina] ? `https://www.herazenter.com/service-page/${AGENDA_WEB[disciplina]}` : 'https://www.herazenter.com/classes';
-  // Olmo (8-nov): mejor la Agenda general que la liga al servicio (esa abre «Detalles del servicio» y pide un toque más).
-  const POR_SERVICIO = false;
-  const aServicio = POR_SERVICIO && USAR_APP && RE_GUID.test(serviceId);
-  const url = !USAR_APP ? web : aServicio ? `https://fitness.wix.app/bookings/${SITIO_WIX}/service/${serviceId}/details` : URL_APP_FIT;
-  const cuando = `${diaRelativo(inicio)} · ${hhmm(inicio)}`;
-  $('rTitulo').textContent = lleno ? `Lista de espera · ${disciplina}` : `Reserva ${disciplina}`;
-  $('rSub').textContent = `${cuando} — escanea con tu celular`;
-  const accion = lleno ? `<li>Toca <b>Unirse a la lista de espera</b>: si se libera un lugar, te avisa Wix.</li>` : `<li>Toca <b>Reservar</b>: se descuenta de tu plan.</li>`;
-  $('rPasos').innerHTML = USAR_APP
-    ? (aServicio ? `<li>Escanea: se abre <b>${esc(disciplina)}</b> en la app <b>Fit by Wix</b>.</li><li>Toca <b>Seleccionar servicio</b> y elige <b>${esc(cuando)}</b>.</li>${accion}`
-                 : `<li>Escanea: se abre la <b>Agenda</b> de Hera en la app <b>Fit by Wix</b>.</li><li>Busca <b>${esc(disciplina)}</b> · <b>${esc(cuando)}</b>.</li>${accion}`)
-    : `<li>Escanea: se abren las clases de <b>${esc(disciplina)}</b>.</li><li>Toca <b>${esc(cuando)}</b> e inicia sesión si te lo pide.</li>${accion}`;
-  $('rQR').innerHTML = '<span class="cargando">…</span>'; $('rWeb').hidden = !USAR_APP; $('rQRWeb').innerHTML = '';
-  // «Pedir a recepción»: solo dentro de «Mis clases» (ya verificó su celular).
-  solicitudActual = cuentaPase ? { disciplina, inicio, lleno } : null;
-  const yaPedida = solicitudActual && pedidas.has(`${disciplina}|${inicio}`);
-  $('rPedir').hidden = !solicitudActual || yaPedida; $('rPedir').disabled = false;
-  $('rPedirMsg').style.color = 'var(--ok)'; $('rPedirMsg').textContent = yaPedida ? '✓ Ya se la pediste a recepción.' : '';
-  $('rPedir').textContent = lleno ? 'Pedir a recepción que me anote en espera' : 'Pedir a recepción que me lo aparte';
-  $('veloReservar').classList.add('abierto');
-  cargarQRLib().then(() => { $('rQR').innerHTML = qrBonito(url); if (USAR_APP) $('rQRWeb').innerHTML = qrBonito(web); }).catch(() => { $('rQR').innerHTML = '<p style="font-size:16px;color:var(--gris)">No se pudo dibujar el código. Pide ayuda en recepción.</p>'; });
-}
 /** QR con puntos redondos, ojos redondeados en terracota y el ícono de Hera al centro (corrección alta, H). */
 function qrBonito(texto){
   const tmp = document.createElement('div');
@@ -1009,10 +979,10 @@ function limpiarBusqueda(){ ++busqSeq; clearTimeout(busqTimer); $('q').value = '
 let verif = null;                                    // { cd, digitos, ocupado }
 function pedirVerificacion(cd){
   if (!cd.conTel) { toast('Para ver tus clases pasa a recepción, por favor'); return; }
-  verif = { cd, digitos: '', ocupado: false };
+  verif = { modo: 'cuenta', cd, digitos: '', ocupado: false };
   $('vNombre').textContent = `Hola, ${cd.nombre}`;
   $('vError').textContent = '';
-  $('vCel').hidden = false; $('vMail').hidden = true;
+  $('vCel').hidden = false; $('vMail').hidden = true; $('vAbrir').hidden = true;
   $('vTexto').textContent = 'Para ver tus clases, escribe los 4 últimos números de tu celular';
   pintarPuntos();
   $('veloVerif').classList.add('abierto');
@@ -1025,9 +995,138 @@ $('vTeclado').addEventListener('click', e => {
   if (k === '⌫') verif.digitos = verif.digitos.slice(0, -1);
   else if (verif.digitos.length < 4) verif.digitos += k;
   pintarPuntos();
-  if (verif.digitos.length === 4) consultarCuenta({ ult4: verif.digitos });
+  if (verif.digitos.length === 4) { if (verif.modo === 'reserva') pedirReserva(); else consultarCuenta({ ult4: verif.digitos }); }
 });
 $('vCancelar').onclick = cerrarVerificacion;
+
+/* --------------------------------------------------------------- reserva directa (Olmo, 9-nov): correo + 4 dígitos */
+// Abre SU sesión en www.herazenter.com solo para reservar en el calendario de clases; el sitio la cierra al confirmar
+// (o a los 5 min, más una prórroga única de 3 si va a media reserva o pago) y regresa por alta.html, que dice «clase reservada» y vuelve al check-in. Antes de irse se pone la
+// MARCA de sesión abierta (si alguien toca Atrás, la tablet primero cierra su sesión) y la de «reserva directa» (textos).
+const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+function abrirReserva(){
+  verif = { modo: 'reserva', correo: '', digitos: '', ocupado: false };
+  $('vNombre').textContent = '📅 Reserva tu clase';
+  $('vError').textContent = '';
+  $('vCorreo').value = ''; $('vCorreoOk').textContent = 'Siguiente';
+  $('vMail').hidden = false; $('vCel').hidden = true; $('vAbrir').hidden = true;
+  $('vTexto').textContent = 'Escribe el correo con el que te inscribiste en Hera';
+  pintarPuntos();
+  $('veloVerif').classList.add('abierto');
+  setTimeout(() => { try { $('vCorreo').focus(); } catch (_) {} }, 250);
+}
+function reservaCorreoOk(){
+  if (!verif || verif.modo !== 'reserva' || verif.ocupado) return;
+  const c = $('vCorreo').value.trim().toLowerCase();
+  if (!RE_CORREO.test(c)) { $('vError').textContent = 'Revisa tu correo: le falta algo (la @ o el «.com»).'; return; }
+  verif.correo = c; verif.digitos = '';
+  $('vError').textContent = ''; $('vCorreo').blur();
+  $('vMail').hidden = true; $('vCel').hidden = false;
+  $('vTexto').textContent = 'Ahora escribe los 4 últimos números de tu celular';
+  pintarPuntos();
+}
+function volverACorreo(msg){
+  if (!verif) return;
+  verif.digitos = ''; pintarPuntos();
+  $('vMail').hidden = false; $('vCel').hidden = true;
+  $('vTexto').textContent = 'Escribe el correo con el que te inscribiste en Hera';
+  $('vError').textContent = msg || '';
+}
+$('vCorreoOk').onclick = reservaCorreoOk;
+$('vCorreo').addEventListener('keydown', e => { if (e.key === 'Enter') reservaCorreoOk(); });
+$('reservaBoton').onclick = abrirReserva;
+$('vAbrir').onclick = () => {
+  const j = verif && verif.modo === 'reserva' && verif.listo;
+  if (!j) return;
+  cerrarVerificacion();
+  irAReservar(j.url, j.base, abrirVentanaReserva(j.url));
+};
+
+/* Olmo 9-nov: reservar con la cuenta de la clienta SIEMPRE en una ventana nueva; el check-in se queda en la suya.
+   - La ventana se abre en el MISMO toque (si se abre después de esperar al servidor, Safari la bloquea).
+   - Si el kiosco corre como app instalada (icono de inicio), una ventana nueva se abriría en otro navegador que no
+     comparte la marca de sesión: ahí, y si el navegador no deja abrirla, se usa esta misma pestaña (como antes).
+   - Marcas (localStorage compartido entre las dos ventanas): hera_alta_sesion = puede haber una sesión de clienta abierta;
+     hera_reserva_directa = 'ventana' | '1' (textos de regreso y si alta.html puede cerrar su ventana).
+   - Si la ventana se cierra y la marca sigue puesta (no alcanzó a cerrar su sesión), esta pestaña va a alta.html, que la
+     cierra con ?salir=1 y regresa. */
+const EN_APP = (() => { try { return ['fullscreen', 'standalone', 'minimal-ui'].some(m => matchMedia(`(display-mode: ${m})`).matches) || navigator.standalone === true; } catch (_) { return false; } })();
+const VENTANA_RESERVA = 'heraReserva';
+let ventanaReserva = null, vigiaVentana = null;
+function abrirVentanaReserva(url){
+  if (EN_APP) return null;
+  let w = null;
+  try { w = window.open(url || '', VENTANA_RESERVA); } catch (_) { w = null; }
+  if (w && !url) try { w.document.title = 'Hera Zenter'; w.document.body.innerHTML = '<p style="font:22px Helvetica,Arial,sans-serif;color:#424949;text-align:center;margin-top:35vh">Abriendo el calendario de clases…</p>'; } catch (_) {}
+  return w;
+}
+function irAReservar(url, base, w){
+  ls.set('hera_alta_sesion', base || 'https://www.herazenter.com');
+  if (!w || w.closed) { ls.set('hera_reserva_directa', '1'); location.href = url; return; }
+  ls.set('hera_reserva_directa', 'ventana');
+  try { if (w.location.href !== url) w.location.href = url; } catch (_) { try { w.location.href = url; } catch (__) {} }
+  try { w.focus(); } catch (_) {}
+  ventanaReserva = w;
+  clearInterval(vigiaVentana);
+  vigiaVentana = setInterval(() => {
+    if (!ventanaReserva || !ventanaReserva.closed) return;
+    clearInterval(vigiaVentana); ventanaReserva = null;
+    if (ls.get('hera_alta_sesion')) {               // se cerró sin cerrar su sesión: la cierra esta pestaña
+      ls.set('hera_reserva_directa', '1');           // esta pestaña es el kiosco: alta.html nunca debe intentar cerrarla
+      location.replace(LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href);
+    } else toast('Listo. Ya cerramos tu sesión ✓');
+  }, 1000);
+}
+/** «Mi cuenta» → reservar: con el pase de su consulta (ya verificó su celular), sin volver a pedir los 4 dígitos. */
+async function reservarDesdeCuenta(btn){
+  if (!cuentaPaseReserva) { toast('Para reservar con tu cuenta, toca «Reservar mi clase» en el inicio'); return; }
+  if (btn.disabled) return;
+  const w = abrirVentanaReserva('');
+  const txt = btn.innerHTML; btn.disabled = true;
+  try {
+    const j = await api('reservaPase', { pase: cuentaPaseReserva });
+    if (!j || !j.url) throw new Error('sin-url');
+    salirCuenta();
+    irAReservar(j.url, j.base, w);
+  } catch (e) {
+    try { if (w) w.close(); } catch (_) {}
+    btn.disabled = false; btn.innerHTML = txt;
+    if (e.auth) return;
+    const err = e.resp && e.resp.error;
+    toast(err === 'sin-cuenta' ? 'Tu cuenta todavía no tiene acceso en línea. Pasa a recepción, por favor.'
+      : err === 'pase' ? 'Se venció tu consulta. Vuelve a buscar tu nombre, por favor.'
+      : err === 'demasiadas' ? 'Espera unos minutos o pasa a recepción, por favor.'
+      : 'No se pudo abrir el calendario. Revisa el internet.');
+  }
+}
+async function pedirReserva(){
+  const mio = verif;
+  if (!mio || mio.ocupado) return;
+  mio.ocupado = true; $('vError').textContent = 'Revisando…';
+  try {
+    const j = await api('reservaPase', { email: mio.correo, ult4: mio.digitos });
+    if (verif !== mio || !j || !j.url) return;
+    // Ya se verificó: un toque más abre el calendario. Ese toque es el que deja abrir la ventana nueva (si se abre después
+    // de esperar al servidor, Safari la bloquea). El pase dura 90 s.
+    mio.listo = j;
+    $('vCel').hidden = true; $('vMail').hidden = true; $('vError').textContent = '';
+    $('vTexto').textContent = `¡Listo${j.nombre ? ', ' + j.nombre : ''}! Toca el botón para abrir el calendario con tu cuenta.`;
+    $('vAbrir').hidden = false;
+  } catch (e) {
+    if (e.auth || verif !== mio) return;
+    const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
+    mio.digitos = ''; pintarPuntos();
+    if (err === 'sin-cuenta') volverACorreo('No encontramos una cuenta con ese correo. Revisa que esté bien escrito o pasa a recepción.');
+    else if (err === 'correo') volverACorreo('Revisa tu correo, por favor.');
+    else $('vError').textContent = (err === 'agotado' || (err === 'verificacion' && e.resp.agotado)) ? 'Hoy ya no se puede con tu celular. Pasa a recepción, por favor.'
+      : err === 'verificacion' ? (seg > 2 ? `No coincide. Espera ${seg} s e intenta otra vez.` : 'No coincide. Intenta otra vez.')
+      : err === 'espera' ? `Espera ${seg || 'unos'} segundos e intenta otra vez.`
+      : (err === 'ocupado' || err === 'demasiadas') ? 'Por ahora no se puede. Pasa a recepción, por favor.'
+      : err === 'sin-telefono' ? 'Tu cuenta no tiene celular. Pasa a recepción, por favor.'
+      : 'No se pudo revisar. Revisa el internet.';
+    const h = $('veloVerif').querySelector('.hoja'); h.classList.remove('temblor'); void h.offsetWidth; h.classList.add('temblor');
+  } finally { mio.ocupado = false; }
+}
 
 async function consultarCuenta(prueba){
   const mio = verif;
@@ -1036,7 +1135,7 @@ async function consultarCuenta(prueba){
   try {
     const j = await api('cuenta', { ref: mio.cd.ref, ...prueba });
     if (verif !== mio) return;                        // canceló o ya es otra persona: no se abre nada
-    cerrarVerificacion(); cuentaPase = j.pase || null; pintarCuenta(j.cuenta); ir('vCuenta');
+    cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; pintarCuenta(j.cuenta); ir('vCuenta');
   } catch (e) {
     if (e.auth || verif !== mio) return;
     const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
@@ -1060,8 +1159,8 @@ function diaRelativo(d){
   if (dif === 0) return 'Hoy'; if (dif === 1) return 'Mañana'; if (dif === -1) return 'Ayer';
   return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
 }
-let cuentaActual = null, cuentaPase = null, solicitudActual = null, exitoIns = null, exitoVistazo = false;
-const pedidas = new Set();                 // «disciplina|inicio» ya pedidas a recepción en esta consulta
+// cuentaPaseReserva: solo llega si sus 4 dígitos fueron los de su celular PRINCIPAL (revisión 9-nov); sin él no se abre su sesión.
+let cuentaActual = null, cuentaPase = null, cuentaPaseReserva = null, exitoIns = null, exitoVistazo = false;
 function pintarCuenta(u){
   cuentaActual = u;
   const pl = u.plan, col = pl && pl.elemento && EL[pl.elemento] ? EL[pl.elemento][0] : 'var(--carbon)';
@@ -1091,7 +1190,7 @@ function pintarCuenta(u){
       <span><b>${diaRelativo(r.inicio)} · ${hhmm(r.inicio)}</b> · ${esc(r.disciplina)}<small>${r.coach ? 'con ' + esc(r.coach) : esc(r.titulo)}</small></span>
       ${r.checkin ? `<button class="btn pri" data-uc="${i}">Hacer check-in</button>` : ''}</div>`).join('')
       + (u.masFuturas ? `<div class="fila-r"><small>y ${u.masFuturas} más</small></div>` : '')
-    : '<div class="fila-r"><span>No tienes clases reservadas.<small>Escanea el código de abajo para reservar.</small></span></div>'}</div>`;
+    : '<div class="fila-r"><span>No tienes clases reservadas.<small>Toca «Reservar mi clase» abajo.</small></span></div>'}</div>`;
   // Lugares libres (Olmo, 8-nov): chips compactos. Menos sugerencias si ya tiene clases reservadas (0 → 6, 1 → 4, 2+ → 2)
   // y nunca en un día en que ya tiene clase. Primero su día y hora de siempre, luego por fecha.
   if (u.lugares) {
@@ -1105,7 +1204,7 @@ function pintarCuenta(u){
     if (sug.length) html += `<div class="tarjeta"><h3>${fut.length ? 'Otro día con lugar' : '¿Cuándo vienes? Hay lugar'}</h3><div class="chips">${sug.map(l => `
       <button class="chip-lugar ${esc(l.nivel || 'bien')}" data-ul="${esc(l.disciplina)}|${esc(l.inicio)}|${l.nivel === 'lleno' ? 1 : 0}|${esc(l.serviceId || '')}">
         <strong style="color:${COLORES[l.disciplina] || 'var(--terracota)'}">${esc(l.disciplina)}</strong><b>${diaRelativo(l.inicio)} · ${hhmm(l.inicio)}</b><span>${l.nivel === 'lleno' ? 'Lleno · lista de espera' : `${l.lugares} lugar${l.lugares === 1 ? '' : 'es'}`}</span></button>`).join('')}</div>
-      <small class="leyenda"><span class="punto-cupo bien"></span>buen cupo <span class="punto-cupo llenando"></span>llenándose <span class="punto-cupo poco"></span>poco lugar <span class="punto-cupo lleno"></span>lleno · Toca para reservar desde tu celular</small></div>`;
+      <small class="leyenda"><span class="punto-cupo bien"></span>buen cupo <span class="punto-cupo llenando"></span>llenándose <span class="punto-cupo poco"></span>poco lugar <span class="punto-cupo lleno"></span>lleno · Toca una para abrir el calendario con tu cuenta</small></div>`;
   }
   const pas = u.anteriores || (u.anterior ? [{ ...u.anterior, estado: u.anterior.asistio ? 'asistio' : 'sin-marcar' }] : []);
   const ETQ = { asistio: ['Asististe ✓', 'background:var(--ok);color:#fff'], falta: ['No se presentó', 'background:#F3E3E1;color:#9A3B2E'], 'sin-marcar': ['Sin check-in', ''] };
@@ -1119,17 +1218,19 @@ function pintarCuenta(u){
       ${fv.coach ? `<div class="fila-r compacta"><span>Coach<small>con quien más entrenas</small></span><b>${esc(fv.coach)}</b></div>` : ''}
       ${fv.horario ? `<div class="fila-r compacta"><span>Horario<small>el que más repites</small></span><b>${esc(fv.horario.dia)} · ${esc(fv.horario.hora)}</b></div>` : ''}</div>`;
   if (u.pedirCumple) html += `<div class="aviso" style="--c:#9A4215;max-width:none">🎂 ¿Cuándo es tu cumpleaños? Díselo a recepción y te consentimos ese día.</div>`;
+  // Olmo 9-nov: reservar con SU sesión (ya verificó su celular), en una ventana nueva; ya no hay QR ni aviso a recepción.
+  html += cuentaPaseReserva ? `<button class="btn pri reservar-cuenta" id="uReservar">📅 Reservar mi clase</button>`
+    : `<div class="aviso" style="--c:#9A4215;max-width:none">Para reservar con tu cuenta, toca «📅 Reservar mi clase» en el inicio.</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
-    <div class="qr"><div class="cod" id="uQrReservar"></div><div><b>Reserva tu próxima clase</b><br><small style="color:#6F6F6F">Escanea: se abre la Agenda en la app Fit by Wix.</small></div></div>
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
-  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => { const [d, ini, lleno, sv] = b.dataset.ul.split('|'); abrirReservar(d, ini, lleno === '1', sv); });
+  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => reservarDesdeCuenta(b));
+  if ($('uReservar')) $('uReservar').onclick = () => reservarDesdeCuenta($('uReservar'));
   cargarQRLib().then(() => {
     if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
     if (u.qr) dibuja('uQrRenovar', u.qr.url);
-    { const el = $('uQrReservar'); if (el && !el.childElementCount) try { el.innerHTML = qrBonito(URL_RESERVAR); } catch (_) {} }
     if (u.aMembresia) dibuja('uQrMembresia', u.aMembresia.url);
   }).catch(() => {});
 }
@@ -1144,7 +1245,7 @@ function checkinDesdeCuenta(r){
   else marcarCheckin(hit.r, hit.c);
 }
 function salirCuenta(volver = true){
-  cuentaActual = null; cuentaPase = null; pedidas.clear(); $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = ''; $('veloReservar').classList.remove('abierto');
+  cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
@@ -1315,7 +1416,6 @@ $('btnRefrescar').onclick = async () => {
 if (!almacenOk) $('sinAlmacen').hidden = false;
 if (!DEMO) $('manifest').href = 'manifest.json';
 
-$('rCerrar').onclick = () => $('veloReservar').classList.remove('abierto');
 // Botón «¿Eres nueva? Baja la app»: QR a app.html (manda a la tienda según el celular; la liga de Wix caía en una página
 // rara si la app no estaba instalada, 9-nov) y los pasos para entrar con el mismo correo y reservar.
 const URL_APP_TIENDA = 'https://checkin.herazenter.com/app.html';
@@ -1327,27 +1427,6 @@ $('appBoton').onclick = () => {
 };
 $('appCerrar').onclick = () => $('veloApp').classList.remove('abierto');
 $('veloApp').addEventListener('click', e => { if (e.target.id === 'veloApp') $('veloApp').classList.remove('abierto'); });
-$('rPedir').onclick = async () => {
-  const s0 = solicitudActual; if (!s0 || !cuentaPase || $('rPedir').disabled) return;
-  $('rPedir').disabled = true; $('rPedir').textContent = 'Enviando…';
-  try {
-    await api('solicitar', { pase: cuentaPase, disciplina: s0.disciplina, inicio: s0.inicio, lleno: s0.lleno });
-    pedidas.add(`${s0.disciplina}|${s0.inicio}`);
-    if (solicitudActual !== s0) return;
-    $('rPedir').hidden = true; $('rPedirMsg').style.color = 'var(--ok)';
-    $('rPedirMsg').textContent = '✓ Listo. Recepción ya recibió tu solicitud y te la aparta con tu plan.';
-  } catch (e) {
-    if (e.auth || solicitudActual !== s0) return;
-    const err = e.resp && e.resp.error;
-    $('rPedir').disabled = err === 'demasiadas' || err === 'pase'; $('rPedir').textContent = 'Intentar otra vez';
-    $('rPedirMsg').style.color = 'var(--alerta)';
-    $('rPedirMsg').textContent = err === 'demasiadas' ? 'Ya enviaste varias solicitudes. Pasa a recepción, por favor.'
-      : err === 'pase' ? 'Vuelve a abrir «Mis clases» para pedirla.'
-      : (err === 'sin-slack' || err === 'slack' || err === 'datos') ? 'Por ahora pídelo directo en recepción, por favor.'
-      : 'No se pudo enviar. Revisa el internet o pide en recepción.';
-  }
-};
-$('veloReservar').addEventListener('click', e => { if (e.target.id === 'veloReservar') $('veloReservar').classList.remove('abierto'); });
 ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
 // Olmo (9-nov): leer con el dedo en la pantalla también cuenta como actividad (sobre todo en «Mi cuenta»). El pointerdown
 // solo llega al primer toque y el navegador cancela el puntero en cuanto empieza a desplazarse, así que se escuchan los
@@ -1365,7 +1444,6 @@ setInterval(() => {                                          // inactividad: vue
   if (claseAbierta && quieto > 45000 && !$('exito').classList.contains('abierto')) { claseAbierta = null; ir('vInicio'); pintarInicio(); }
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
-  if ($('veloReservar').classList.contains('abierto') && quieto > 60000) $('veloReservar').classList.remove('abierto');
   if ($('veloApp').classList.contains('abierto') && quieto > 90000) $('veloApp').classList.remove('abierto');
   if ($('veloVerif').classList.contains('abierto') && quieto > 45000) cerrarVerificacion();
   if ($('vCuenta').classList.contains('activa') && quieto > 45000) salirCuenta();   // sus datos no se quedan en pantalla
@@ -1377,12 +1455,18 @@ setInterval(vaciarCola, 20000);
 window.addEventListener('online', vaciarCola);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { cargar(); vaciarCola(); pedirWakeLock(); } });
 pintarNoReg();
-$('nuevaVenta').onclick = () => { location.href = LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href; };
+$('nuevaVenta').onclick = () => { try { if (ventanaReserva && !ventanaReserva.closed) ventanaReserva.close(); } catch (_) {} if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1'); location.href = LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href; };
 // Alta en mostrador (revisión 9-nov): al abrir el kiosco se descarta el sello «venta» de una venta a medias (recarga,
 // Atrás del navegador, kiosco abierto directo): la siguiente venta pide PIN otra vez. La marca de sesión NO se toca.
 ls.del('hera_alta_venta');
 // Alta en mostrador (revisión 8-nov): si quedó puesta la marca de una sesión de clienta abierta en el sitio, la tablet
 // primero va a alta.html, que la cierra (?salir=1) antes de seguir. La marca es solo una URL; nada de la clienta.
+// Reserva directa (revisión 9-nov): un kiosco nunca se toma por la ventana de reserva, y si la marca de reserva quedó sin
+// sesión abierta, se borra (si no, el regreso de otra cosa usaría sus textos).
+if (window.name === 'heraReserva') window.name = '';
+if (!ls.get('hera_alta_sesion')) ls.del('hera_reserva_directa');
+else if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1');   // esta pestaña es el kiosco: nunca se cierra sola
+window.addEventListener('pageshow', e => { if (e.persisted && !DEMO && ls.get('hera_alta_sesion')) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href); });   // «Atrás» desde el sitio
 if (!DEMO && ls.get('hera_alta_sesion')) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href);
 else if (DEMO || ls.get(TOKEN_KEY)) {
   const c = leerJSON(CACHE_KEY, null);
@@ -1417,11 +1501,13 @@ function demoApi(accion, datos){
       .map(x => ({ ref: x.ref, nombre: x.nombre, correo: x.correo, conTel: true }));
     return { ok:true, checkins: [], candidatas: c };
   });
+  if (accion === 'reservaPase' && datos.pase) return espera(400).then(() => ({ ok:true, url:'alta.html#reservada', base:'https://www.herazenter.com' }));
+  if (accion === 'reservaPase') return espera(500).then(() => { const x = D.cuentas.find(c => c.correoReal && datos.email.startsWith(c.correoReal)); if (!x) return falla('sin-cuenta'); if (datos.ult4 !== x.ult4) return falla('verificacion'); return { ok:true, url:'alta.html#reservada', base:'https://www.herazenter.com' }; });
   if (accion === 'cuenta') return espera(500).then(() => {
     const x = D.cuentas.find(y => y.ref === datos.ref);
     if (!x) return falla('no-encontrada');
     if (datos.ult4 !== x.ult4) return falla('verificacion');
-    return { ok:true, cuenta: x.cuenta };
+    return { ok:true, pase:'demo-pase', paseReserva:'demo-rsv', cuenta: x.cuenta };
   });
   return falla('accion');
 }
