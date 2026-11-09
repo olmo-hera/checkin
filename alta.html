@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OIB0NBEwHPlzByK2imE6uvn8HeFsxgQDolFk8CWN0Cg=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-idZf4hGTz/U9oiKRrIiGuigdWrVCDDjINGkOxijULuA=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -1492,6 +1492,11 @@ const TOKEN_KEY = 'hera_checkin_token', SESION_KEY = 'hera_alta_sesion', VENTA_K
 // Reserva directa del kiosco (Olmo, 9-nov): el kiosco la pone al mandar a la clienta a reservar sola; al volver, los textos
 // son para ella (no hubo venta). Se consume al leerla.
 const DIRECTA_KEY = 'hera_reserva_directa';
+// Olmo 9-nov: venta y reserva se abren en su propia pestaña (el check-in se queda en la suya). Al terminar, esta pestaña se
+// cierra sola; si el navegador no deja, vuelve al check-in como siempre.
+const PESTANA_APARTE = ['heraCliente', 'heraReserva'].includes(window.name) || !!window.opener;
+// Latido de la pestaña de venta: el check-in no le borra el sello «venta» mientras late (o latió hace < 20 min: pagando).
+if (PESTANA_APARTE) { const latir = () => { try { localStorage.setItem('hera_alta_pestana_t', String(Date.now())); } catch (_) {} }; latir(); setInterval(latir, 20000); }
 /** Revisión v4.1: «la última venta que se mandó a pagar es del plan de prueba RECURRENTE» (en `ls`, como la marca: por si
  *  altaApp falla al volver de Wix, la pantalla de la app igual recuerda CANCELAR la orden). Cada pago la pone o la quita,
  *  la app la consume al leerla, y manda lo que diga altaApp. */
@@ -1540,8 +1545,8 @@ const baseValida = b => (typeof b === 'string' && /^https:\/\/[a-z0-9.-]+(\/[A-Z
 const marca = {
   hay(){ return !!ls.get(SESION_KEY); },
   base(){ return baseValida(ls.get(SESION_KEY)) || SITIO; },
-  poner(base){ ls.set(SESION_KEY, baseValida(base) || SITIO); },
-  quitar(){ ls.del(SESION_KEY); }
+  poner(base){ ls.set(SESION_KEY, baseValida(base) || SITIO); ls.set(SESION_KEY + '_t', String(Date.now())); if (PESTANA_APARTE) ls.set(SESION_KEY + '_aparte', '1'); else ls.del(SESION_KEY + '_aparte'); },
+  quitar(){ ls.del(SESION_KEY); ls.del(SESION_KEY + '_t'); ls.del(SESION_KEY + '_aparte'); }
 };
 const pruebaRec = { poner(si){ if (si) ls.set(PRUEBA_REC_KEY, '1'); else ls.del(PRUEBA_REC_KEY); },
   tomar(){ const v = ls.get(PRUEBA_REC_KEY) === '1'; ls.del(PRUEBA_REC_KEY); return v; } };
@@ -1611,11 +1616,11 @@ function atras(){ const actual = (document.querySelector('.vista.activa') || {})
 document.querySelectorAll('[data-atras]').forEach(b => b.onclick = atras);
 
 /** De regreso al kiosco: se descarta el sello de venta (la siguiente venta pide PIN otra vez). */
-let ventanaAparte = false;
+let intentoCerrar = false;
 function volverKiosco(){
   clearTimeout(finTimer); venta.quitar(); A = null;
-  // Ventana aparte de una reserva directa: se cierra; si el navegador no deja, sigue como siempre (al check-in).
-  if (ventanaAparte) { ventanaAparte = false; try { window.close(); } catch (_) {} setTimeout(volverKiosco, 400); return; }
+  // Pestaña aparte (venta o reserva): se cierra; si el navegador no deja, sigue como siempre (al check-in).
+  if (PESTANA_APARTE && !intentoCerrar) { intentoCerrar = true; try { window.close(); } catch (_) {} setTimeout(volverKiosco, 400); return; }
   location.href = KIOSCO;
 }
 
@@ -2741,7 +2746,7 @@ function alRegresar(){
   // Una ventana olvidada cuyo flujo ya terminó en otra pestaña: se cierra (o vuelve al check-in) SIN tocar las marcas,
   // que son del otro flujo.
   if (h === '#cerrar') {
-    if (window.name === 'heraReserva' || window.opener) { try { window.close(); } catch (_) {} }
+    if (PESTANA_APARTE) { try { window.close(); } catch (_) {} }
     setTimeout(() => { location.href = KIOSCO; }, 400); return true;
   }
   // Revisión 9-nov: solo los regresos de una reserva (nunca #pagado de una venta) y nunca el bloqueo (la marca se queda).
@@ -2749,11 +2754,10 @@ function alRegresar(){
     // 'ventana' = el kiosco abrió esta pestaña aparte (Olmo 9-nov): tras el mensaje se cierra sola. Solo si de verdad es esa
     // ventana (su nombre o su opener): la pestaña del kiosco nunca intenta cerrarse. Si el navegador no deja cerrarla,
     // vuelve al check-in como siempre.
-    ventanaAparte = ls.get(DIRECTA_KEY) === 'ventana' && (window.name === 'heraReserva' || !!window.opener);
     ls.del(DIRECTA_KEY); marca.quitar();
     const par = h === '#reservada' ? RD.reservada : (m = /^#cancelado=([a-z-]{1,30})$/.exec(h)) ? (RD.motivos[m[1]] || RD.motivos.error) : RD.fin;
     fin(par[0], par[1]);
-    if (ventanaAparte) { clearTimeout(finTimer); finTimer = setTimeout(volverKiosco, 4000); }
+    if (PESTANA_APARTE) { clearTimeout(finTimer); finTimer = setTimeout(volverKiosco, 4000); }
     return true;
   }
   if ((m = /^#pagado=([A-Za-z0-9_.-]{20,2000})$/.exec(h))) { irApp(m[1]); return true; }

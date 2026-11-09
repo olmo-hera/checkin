@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jlsTI4O8b8It9oeXSLmcGYXcBOuyDJz5MhQLmmy1TQw=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2mEdzG2gIjSXDy8x5INtB2TxKAWfG+wh4gWGlBZuzBU=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -258,6 +258,8 @@ button.fila-r:active{background:var(--arena-suave)}
 .reserva-boton:active{filter:brightness(.92)}
 .reservar-cuenta{width:100%;max-width:none;font-size:20px}
 #vInicio{padding-bottom:64px}
+.aviso-sesion{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom));font-size:14px;color:#fff;background:var(--alerta);border:0;border-radius:999px;padding:8px 16px;z-index:6;box-shadow:var(--sombra);white-space:nowrap}
+@media (max-width:700px){ .aviso-sesion{bottom:calc(100px + env(safe-area-inset-bottom));white-space:normal;max-width:calc(100% - 32px);border-radius:16px} }
 #vMail{width:100%} #vCorreo{width:100%;font-size:22px;text-align:center}   /* que los 3 botones fijos de abajo no tapen lo último de la página */
 .app-codigo{font-size:17px;color:var(--gris)}
 .app-codigo b{font-size:26px;letter-spacing:.12em;color:var(--terracota)}
@@ -315,6 +317,7 @@ button.fila-r:active{background:var(--arena-suave)}
     <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
     <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
     <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
+    <button class="aviso-sesion" id="avisoSesion" hidden>⚠️ Hay una cuenta de clienta abierta en otra pestaña · <b>Cerrarla</b></button>
     <button class="reserva-boton" id="reservaBoton" aria-label="Reservar mi clase con mi correo y mi celular">📅 Reservar mi clase</button>
     <button class="app-boton" id="appBoton" aria-label="Baja la app de Hera: código y pasos para reservar">📱 ¿Eres nueva? Baja la app</button>
   </section>
@@ -560,7 +563,7 @@ function red(ok, txt){
 /* --------------------------------------------------------------- contraseña */
 function irClave(msg){
   $('velo').classList.remove('abierto'); cerrarExito(); claseAbierta = null;
-  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
+  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
   const ya = $('vClave').classList.contains('activa');
   if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
   if (msg) $('claveError').textContent = msg;
@@ -1005,6 +1008,7 @@ $('vCancelar').onclick = cerrarVerificacion;
 // MARCA de sesión abierta (si alguien toca Atrás, la tablet primero cierra su sesión) y la de «reserva directa» (textos).
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function abrirReserva(){
+  if (enfocarPestanaCliente()) return;
   verif = { modo: 'reserva', correo: '', digitos: '', ocupado: false };
   $('vNombre').textContent = '📅 Reserva tu clase';
   $('vError').textContent = '';
@@ -1038,49 +1042,102 @@ $('reservaBoton').onclick = abrirReserva;
 $('vAbrir').onclick = () => {
   const j = verif && verif.modo === 'reserva' && verif.listo;
   if (!j) return;
+  if (enfocarPestanaCliente()) { cerrarVerificacion(); return; }
   cerrarVerificacion();
   irAReservar(j.url, j.base, abrirVentanaReserva(j.url));
 };
 
-/* Olmo 9-nov: reservar con la cuenta de la clienta SIEMPRE en una ventana nueva; el check-in se queda en la suya.
-   - La ventana se abre en el MISMO toque (si se abre después de esperar al servidor, Safari la bloquea).
-   - Si el kiosco corre como app instalada (icono de inicio), una ventana nueva se abriría en otro navegador que no
-     comparte la marca de sesión: ahí, y si el navegador no deja abrirla, se usa esta misma pestaña (como antes).
-   - Marcas (localStorage compartido entre las dos ventanas): hera_alta_sesion = puede haber una sesión de clienta abierta;
-     hera_reserva_directa = 'ventana' | '1' (textos de regreso y si alta.html puede cerrar su ventana).
-   - Si la ventana se cierra y la marca sigue puesta (no alcanzó a cerrar su sesión), esta pestaña va a alta.html, que la
-     cierra con ?salir=1 y regresa. */
+/* Olmo 9-nov: «Reservar mi clase» y «Nueva venta» se abren SIEMPRE en una pestaña nueva; el check-in se queda en la suya.
+   - Una sola pestaña de clienta a la vez (nombre 'heraCliente'): solo puede haber UNA sesión de clienta en el navegador.
+     Si ya hay una abierta, se le pasa al frente en lugar de abrir otra.
+   - La pestaña se abre en el MISMO toque (si se abre después de esperar al servidor, Safari la bloquea).
+   - Si el kiosco corre como app instalada (icono de inicio), una pestaña nueva se abriría en otro navegador que no
+     comparte las marcas: ahí, y si el navegador no deja abrirla, se usa esta misma pestaña (como antes).
+   - Marcas (localStorage compartido): hera_alta_sesion (+ _t, cuándo) = puede haber una sesión de clienta abierta;
+     hera_reserva_directa = 'ventana' | '1' (textos de regreso).
+   - Vigía: si la pestaña se cierra y la marca sigue puesta (no alcanzó a cerrar su sesión), esta pestaña va a alta.html,
+     que la cierra con ?salir=1 y regresa. alta.html cierra sola su pestaña al terminar. */
 const EN_APP = (() => { try { return ['fullscreen', 'standalone', 'minimal-ui'].some(m => matchMedia(`(display-mode: ${m})`).matches) || navigator.standalone === true; } catch (_) { return false; } })();
-const VENTANA_RESERVA = 'heraReserva';
-let ventanaReserva = null, vigiaVentana = null;
-function abrirVentanaReserva(url){
+const PESTANA_CLIENTE = 'heraCliente';
+const URL_ALTA = () => LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href;
+let ventanaCliente = null, vigiaVentana = null;
+function hayPestanaCliente(){
+  try {
+    if (!ventanaCliente || ventanaCliente.closed) return false;
+    // Si esa pestaña ya regresó al check-in (no pudo cerrarse sola), ya no es de clienta: queda libre.
+    let ruta = null; try { ruta = ventanaCliente.location.pathname; } catch (_) { return true; }   // en el sitio (otro origen): viva
+    if (/(^|\/)(index\.html|kiosco\.html)?$/.test(ruta) || /\/_functions(-dev)?\/checkin$/.test(ruta)) { ventanaCliente = null; return false; }
+    return true;
+  } catch (_) { return false; }
+}
+/** Marca de una sesión que vive en OTRA pestaña (aparte) y es reciente: esa pestaña puede seguir viva aunque este
+ *  check-in ya no la conozca (se recargó). Mientras tanto no se abre otra (le cortaría la compra). */
+const marcaAparteReciente = () => !!ls.get('hera_alta_sesion') && ls.get('hera_alta_sesion_aparte') === '1'
+  && Date.now() - Number(ls.get('hera_alta_sesion_t') || 0) < VIDA_MARCA_MS;
+/** Si ya hay una pestaña de clienta abierta, la pasa al frente y avisa (true). */
+function enfocarPestanaCliente(){
+  if (hayPestanaCliente()) {
+    try { ventanaCliente.focus(); } catch (_) {}
+    toast('Ya hay una venta o reserva abierta en otra pestaña. Termínala, o toca el aviso rojo de abajo para cerrarla.');
+    pintarAvisoSesion(); return true;
+  }
+  if (!marcaAparteReciente()) return false;
+  toast('Hay una cuenta de clienta abierta en otra pestaña. Termínala, o toca el aviso rojo de abajo para cerrarla.');
+  pintarAvisoSesion(); return true;
+}
+function abrirPestana(url, texto){
   if (EN_APP) return null;
   let w = null;
-  try { w = window.open(url || '', VENTANA_RESERVA); } catch (_) { w = null; }
-  if (w && !url) try { w.document.title = 'Hera Zenter'; w.document.body.innerHTML = '<p style="font:22px Helvetica,Arial,sans-serif;color:#424949;text-align:center;margin-top:35vh">Abriendo el calendario de clases…</p>'; } catch (_) {}
+  try { w = window.open(url || '', PESTANA_CLIENTE); } catch (_) { w = null; }
+  if (w && !url) try { w.document.title = 'Hera Zenter'; w.document.body.innerHTML = `<p style="font:22px Helvetica,Arial,sans-serif;color:#424949;text-align:center;margin-top:35vh">${texto || 'Abriendo…'}</p>`; } catch (_) {}
   return w;
 }
+const abrirVentanaReserva = url => abrirPestana(url, 'Abriendo el calendario de clases…');
+function ponerMarca(base, aparte){ ls.set('hera_alta_sesion', base || 'https://www.herazenter.com'); ls.set('hera_alta_sesion_t', String(Date.now())); if (aparte) ls.set('hera_alta_sesion_aparte', '1'); else ls.del('hera_alta_sesion_aparte'); }
+function vigilarPestana(w){
+  ventanaCliente = w;
+  clearInterval(vigiaVentana);
+  vigiaVentana = setInterval(() => {
+    if (hayPestanaCliente()) return;
+    clearInterval(vigiaVentana); ventanaCliente = null;
+    if (ls.get('hera_alta_sesion')) {               // se cerró sin cerrar su sesión: la cierra esta pestaña
+      if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1');   // esta pestaña es el kiosco: nunca se cierra sola
+      location.replace(URL_ALTA());
+    } else { pintarAvisoSesion(); toast('Listo. Ya cerramos la sesión de la clienta ✓'); }
+  }, 1000);
+}
 function irAReservar(url, base, w){
-  ls.set('hera_alta_sesion', base || 'https://www.herazenter.com');
-  if (!w || w.closed) { ls.set('hera_reserva_directa', '1'); location.href = url; return; }
+  const aparte = !!w && !w.closed;
+  ponerMarca(base, aparte);
+  if (!aparte) { ls.set('hera_reserva_directa', '1'); location.href = url; return; }
   ls.set('hera_reserva_directa', 'ventana');
   try { if (w.location.href !== url) w.location.href = url; } catch (_) { try { w.location.href = url; } catch (__) {} }
   try { w.focus(); } catch (_) {}
-  ventanaReserva = w;
-  clearInterval(vigiaVentana);
-  vigiaVentana = setInterval(() => {
-    if (!ventanaReserva || !ventanaReserva.closed) return;
-    clearInterval(vigiaVentana); ventanaReserva = null;
-    if (ls.get('hera_alta_sesion')) {               // se cerró sin cerrar su sesión: la cierra esta pestaña
-      ls.set('hera_reserva_directa', '1');           // esta pestaña es el kiosco: alta.html nunca debe intentar cerrarla
-      location.replace(LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href);
-    } else toast('Listo. Ya cerramos tu sesión ✓');
-  }, 1000);
+  vigilarPestana(w);
+}
+/** «Nueva venta»: alta.html en su propia pestaña (en app instalada o si el navegador la bloquea, en esta). */
+function abrirNuevaVenta(){
+  if (enfocarPestanaCliente()) return;
+  const w = abrirPestana(URL_ALTA());
+  if (!w) { location.href = URL_ALTA(); return; }
+  try { w.focus(); } catch (_) {}
+  vigilarPestana(w);
+}
+/* Aviso cuando la marca está puesta pero esta pestaña no tiene la referencia (p. ej. se recargó el check-in con una
+   venta o reserva abierta en otra pestaña): no se cierra sola su sesión (le cortaría la compra); recepción decide. */
+const VIDA_MARCA_MS = 50 * 60000;   // más que lo que puede durar una sesión de clienta (compra 15 + abierta 30)
+function pintarAvisoSesion(){
+  const el = $('avisoSesion'); if (!el) return;
+  const viva = hayPestanaCliente(), marca = !!ls.get('hera_alta_sesion');
+  // Marca sin pestaña viva que la explique (vieja, o de esta misma pestaña): esa sesión ya no la vigila nadie → se cierra
+  // sola, como antes de las pestañas. Solo en la vista de inicio (no a media consulta de otra clienta).
+  if (!DEMO && marca && !viva && !marcaAparteReciente() && $('vInicio').classList.contains('activa')) { location.replace(URL_ALTA()); return; }
+  el.hidden = !(viva || marca);
 }
 /** «Mi cuenta» → reservar: con el pase de su consulta (ya verificó su celular), sin volver a pedir los 4 dígitos. */
 async function reservarDesdeCuenta(btn){
-  if (!cuentaPaseReserva) { toast('Para reservar con tu cuenta, toca «Reservar mi clase» en el inicio'); return; }
-  if (btn.disabled) return;
+  if (!cuentaPaseReserva) { toast(cuentaReservaNo === 'equipo' ? 'Las cuentas del equipo de Hera no se abren en la tablet. Reserva desde la app.' : 'Para reservar con tu cuenta, toca «Reservar mi clase» en el inicio'); return; }
+  if (btn.disabled || enfocarPestanaCliente()) return;
   const w = abrirVentanaReserva('');
   const txt = btn.innerHTML; btn.disabled = true;
   try {
@@ -1093,7 +1150,8 @@ async function reservarDesdeCuenta(btn){
     btn.disabled = false; btn.innerHTML = txt;
     if (e.auth) return;
     const err = e.resp && e.resp.error;
-    toast(err === 'sin-cuenta' ? 'Tu cuenta todavía no tiene acceso en línea. Pasa a recepción, por favor.'
+    toast(err === 'bloqueado' ? 'Las cuentas del equipo de Hera no se abren en la tablet. Reserva desde la app.'
+      : err === 'sin-cuenta' ? 'Tu cuenta todavía no tiene acceso en línea. Pasa a recepción, por favor.'
       : err === 'pase' ? 'Se venció tu consulta. Vuelve a buscar tu nombre, por favor.'
       : err === 'demasiadas' ? 'Espera unos minutos o pasa a recepción, por favor.'
       : 'No se pudo abrir el calendario. Revisa el internet.');
@@ -1118,6 +1176,7 @@ async function pedirReserva(){
     mio.digitos = ''; pintarPuntos();
     if (err === 'sin-cuenta') volverACorreo('No encontramos una cuenta con ese correo. Revisa que esté bien escrito o pasa a recepción.');
     else if (err === 'correo') volverACorreo('Revisa tu correo, por favor.');
+    else if (err === 'bloqueado') volverACorreo('Las cuentas del equipo de Hera no se abren en la tablet. Reserva desde la app o pasa a recepción.');
     else $('vError').textContent = (err === 'agotado' || (err === 'verificacion' && e.resp.agotado)) ? 'Hoy ya no se puede con tu celular. Pasa a recepción, por favor.'
       : err === 'verificacion' ? (seg > 2 ? `No coincide. Espera ${seg} s e intenta otra vez.` : 'No coincide. Intenta otra vez.')
       : err === 'espera' ? `Espera ${seg || 'unos'} segundos e intenta otra vez.`
@@ -1135,7 +1194,7 @@ async function consultarCuenta(prueba){
   try {
     const j = await api('cuenta', { ref: mio.cd.ref, ...prueba });
     if (verif !== mio) return;                        // canceló o ya es otra persona: no se abre nada
-    cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; pintarCuenta(j.cuenta); ir('vCuenta');
+    cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; cuentaReservaNo = j.reservaNo || null; pintarCuenta(j.cuenta); ir('vCuenta');
   } catch (e) {
     if (e.auth || verif !== mio) return;
     const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
@@ -1160,6 +1219,7 @@ function diaRelativo(d){
   return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
 }
 // cuentaPaseReserva: solo llega si sus 4 dígitos fueron los de su celular PRINCIPAL (revisión 9-nov); sin él no se abre su sesión.
+let cuentaReservaNo = null;
 let cuentaActual = null, cuentaPase = null, cuentaPaseReserva = null, exitoIns = null, exitoVistazo = false;
 function pintarCuenta(u){
   cuentaActual = u;
@@ -1220,6 +1280,7 @@ function pintarCuenta(u){
   if (u.pedirCumple) html += `<div class="aviso" style="--c:#9A4215;max-width:none">🎂 ¿Cuándo es tu cumpleaños? Díselo a recepción y te consentimos ese día.</div>`;
   // Olmo 9-nov: reservar con SU sesión (ya verificó su celular), en una ventana nueva; ya no hay QR ni aviso a recepción.
   html += cuentaPaseReserva ? `<button class="btn pri reservar-cuenta" id="uReservar">📅 Reservar mi clase</button>`
+    : cuentaReservaNo === 'equipo' ? `<div class="aviso" style="--c:#9A4215;max-width:none">Las cuentas del equipo de Hera no se abren en la tablet: reserva desde la app.</div>`
     : `<div class="aviso" style="--c:#9A4215;max-width:none">Para reservar con tu cuenta, toca «📅 Reservar mi clase» en el inicio.</div>`;
   html += `<div class="qrs">${u.qr ? `<div class="qr"><div class="cod" id="uQrRenovar"></div><div><b>Renueva tu paquete</b><br><small style="color:#6F6F6F">Escanea y paga desde tu celular.</small></div></div>` : ''}
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
@@ -1245,7 +1306,7 @@ function checkinDesdeCuenta(r){
   else marcarCheckin(hit.r, hit.c);
 }
 function salirCuenta(volver = true){
-  cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
+  cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
@@ -1455,19 +1516,29 @@ setInterval(vaciarCola, 20000);
 window.addEventListener('online', vaciarCola);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { cargar(); vaciarCola(); pedirWakeLock(); } });
 pintarNoReg();
-$('nuevaVenta').onclick = () => { try { if (ventanaReserva && !ventanaReserva.closed) ventanaReserva.close(); } catch (_) {} if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1'); location.href = LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href; };
+$('nuevaVenta').onclick = abrirNuevaVenta;
 // Alta en mostrador (revisión 9-nov): al abrir el kiosco se descarta el sello «venta» de una venta a medias (recarga,
 // Atrás del navegador, kiosco abierto directo): la siguiente venta pide PIN otra vez. La marca de sesión NO se toca.
-ls.del('hera_alta_venta');
+// Revisión 9-nov (pestañas): si una pestaña de venta latió hace poco, su venta sigue viva: no se le borra el sello.
+if (!(Date.now() - Number(ls.get('hera_alta_pestana_t') || 0) < 20 * 60000)) ls.del('hera_alta_venta');
 // Alta en mostrador (revisión 8-nov): si quedó puesta la marca de una sesión de clienta abierta en el sitio, la tablet
 // primero va a alta.html, que la cierra (?salir=1) antes de seguir. La marca es solo una URL; nada de la clienta.
 // Reserva directa (revisión 9-nov): un kiosco nunca se toma por la ventana de reserva, y si la marca de reserva quedó sin
 // sesión abierta, se borra (si no, el regreso de otra cosa usaría sus textos).
-if (window.name === 'heraReserva') window.name = '';
+if (window.name === 'heraReserva' || window.name === 'heraCliente') window.name = '';
 if (!ls.get('hera_alta_sesion')) ls.del('hera_reserva_directa');
 else if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1');   // esta pestaña es el kiosco: nunca se cierra sola
+$('avisoSesion').onclick = () => {
+  if (!window.confirm('¿Cerrar la venta o reserva que quedó abierta en otra pestaña? Si la clienta todavía está pagando o reservando, se le corta.')) return;
+  if (hayPestanaCliente()) { try { ventanaCliente.close(); } catch (_) {} return; }   // el vigía cierra su sesión si sigue abierta
+  location.href = URL_ALTA();
+};
+setInterval(pintarAvisoSesion, 5000); window.addEventListener('storage', pintarAvisoSesion); pintarAvisoSesion();
 window.addEventListener('pageshow', e => { if (e.persisted && !DEMO && ls.get('hera_alta_sesion')) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href); });   // «Atrás» desde el sitio
-if (!DEMO && ls.get('hera_alta_sesion')) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href);
+// Revisión 9-nov (pestañas): si la marca es RECIENTE, la venta o reserva puede seguir viva en otra pestaña: no se le cierra
+// la sesión a media compra; sale un aviso con botón para cerrarla. Si es vieja (o sin hora), se cierra como antes.
+const marcaT = Number(ls.get('hera_alta_sesion_t') || 0);
+if (!DEMO && ls.get('hera_alta_sesion') && (EN_APP || !marcaAparteReciente())) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href);
 else if (DEMO || ls.get(TOKEN_KEY)) {
   const c = leerJSON(CACHE_KEY, null);
   if (c && c.finDia && Date.now() + (c.desfase || 0) < c.finDia) {
