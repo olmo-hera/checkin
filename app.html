@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Descarga Fit by Wix · Hera Zenter</title>
+<!-- QR del alta en mostrador: manda directo a la tienda de Fit by Wix según el celular (iPhone o Android).
+     La liga de invitación de Wix (fitness.wix.app) solo sirve si la app ya está instalada; si no, cae en
+     invite.mobileappinvite.com, una página con otro QR que confunde a la clienta (prueba en vivo, 9-nov-2026). -->
+<style>
+  :root{--arena:#EFE6DF;--terracota:#9A4215;--carbon:#424949;--gris:#5F5F5F}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--arena);color:var(--carbon);font-family:Helvetica,Arial,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;text-align:center}
+  h1{font-size:24px;margin:0 0 8px}
+  p{font-size:17px;line-height:1.45;margin:0 0 20px;color:var(--gris);max-width:420px}
+  .tiendas{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+  a.btn{display:block;padding:16px;border-radius:14px;background:var(--terracota);color:#fff;text-decoration:none;
+    font-size:18px;font-weight:600}
+  a.btn.sec{background:#fff;color:var(--terracota);border:1.5px solid var(--terracota)}
+  .codigo{margin-top:28px;background:#fff;border-radius:16px;padding:18px 22px;max-width:340px;width:100%}
+  .codigo small{display:block;font-size:15px;color:var(--gris);margin-bottom:6px}
+  .codigo b{font-size:34px;letter-spacing:.12em;color:var(--terracota)}
+</style>
+</head>
+<body>
+  <h1>Descarga Fit by Wix</h1>
+  <p>Es la app de Hera Zenter para reservar tus clases. Al abrirla, entra con <b>el mismo correo</b> con el que te inscribiste.</p>
+  <div class="tiendas">
+    <a class="btn" id="ios" href="https://apps.apple.com/mx/app/fit-by-wix/id1552621043">iPhone · App Store</a>
+    <a class="btn sec" id="android" href="https://play.google.com/store/apps/details?id=com.wix.fitness&amp;hl=es_MX">Android · Google Play</a>
+  </div>
+  <div class="codigo"><small>Código para encontrar Hera Zenter en la app</small><b>XBVK52</b></div>
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  var esIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && 'ontouchend' in document);
+  var esAndroid = /Android/i.test(ua);
+  var destino = esIOS ? document.getElementById('ios').href : esAndroid ? document.getElementById('android').href : null;
+  if (destino) setTimeout(function () { location.href = destino; }, 1200);
+})();
+</script>
+</body>
+</html>
