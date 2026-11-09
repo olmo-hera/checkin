@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k3pGGMlvOtppAN9ObFJDGFuB065opLaqu7ybDi6bAOs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+D/fEJFkzqPBMi6ArRIRbDHTs4rBeZ1a96c/pGqTs7w=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -250,6 +250,16 @@ button.fila-r:active{background:var(--arena-suave)}
 
 .nueva-venta{position:fixed;left:14px;bottom:calc(10px + env(safe-area-inset-bottom));font-size:13px;color:var(--gris);background:transparent;border:1px solid var(--crema);border-radius:999px;padding:6px 12px;opacity:.6;z-index:5}
 .nueva-venta:active{opacity:1;background:#fff}
+/* Olmo 9-nov: en la esquina derecha, para clientas nuevas: código para bajar la app y cómo reservar. */
+.app-boton{position:fixed;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));font-size:14px;color:var(--terracota);background:#fff;border:1.5px solid var(--terracota);border-radius:999px;padding:8px 14px;z-index:5;box-shadow:var(--sombra)}
+.app-boton:active{filter:brightness(.95)}
+.app-codigo{font-size:17px;color:var(--gris)}
+.app-codigo b{font-size:26px;letter-spacing:.12em;color:var(--terracota)}
+#veloApp .hoja{width:min(900px,100%);max-height:96vh;overflow:auto;gap:10px;padding-top:24px}
+.app-grid{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.app-izq{display:flex;flex-direction:column;align-items:center;gap:8px}
+#veloApp .qr-bonito{width:230px;height:230px}
+@media (min-width:820px){ .app-grid{flex-direction:row;align-items:center;justify-content:center;gap:28px} .app-grid .pasos{margin:0} }
 @media (max-width:700px){
   .top{padding:14px 16px 4px} main{padding:8px 16px 20px}
   .saludo h1{font-size:28px} .clase .hora{font-size:28px} .exito h1{font-size:34px}
@@ -298,6 +308,7 @@ button.fila-r:active{background:var(--arena-suave)}
     <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
     <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
     <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
+    <button class="app-boton" id="appBoton" aria-label="Baja la app de Hera: código y pasos para reservar">📱 ¿Eres nueva? Baja la app</button>
   </section>
 
   <!-- MI CUENTA (después de confirmar con su celular) -->
@@ -360,6 +371,27 @@ button.fila-r:active{background:var(--arena-suave)}
     <div class="lista-noreg" id="listaNoreg"></div>
     <button class="btn pri" id="noregOk">Mantén presionado: ya los marqué</button>
     <button class="btn sec" id="noregCerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="velo" id="veloApp">
+  <div class="hoja" style="align-items:center">
+    <h2 style="justify-content:center">📱 Baja la app de Hera</h2>
+    <p>Escanea con la cámara de tu celular: te lleva a la tienda de tu teléfono (iPhone o Android).</p>
+    <div class="app-grid">
+    <div class="app-izq">
+    <div class="qr-bonito" id="appQR" aria-label="Código QR para bajar la app Fit by Wix"></div>
+    <p class="app-codigo">Código: <b>XBVK52</b></p>
+    </div>
+    <ol class="pasos">
+      <li>Escanea el código QR y baja la app <b>Fit by Wix</b>.</li>
+      <li>Toca <b>«Continuar con Google»</b> y elige el <b>mismo correo</b> con el que compraste tu plan. Si no es Gmail, toca «Entrar con correo» y «¿Olvidaste tu contraseña?» para crearla.</li>
+      <li>Escribe el código <b>XBVK52</b> para encontrar Hera Zenter.</li>
+      <li>Ve a <b>Agenda</b>, elige tu clase y toca <b>Reservar</b>: se descuenta de tu plan.</li>
+      <li>El día de tu clase, llega unos minutos antes y haz <b>check-in aquí</b> tocando tu nombre.</li>
+    </ol>
+    </div>
+    <button class="btn sec" id="appCerrar" style="width:100%">Listo</button>
   </div>
 </div>
 
@@ -1284,6 +1316,17 @@ if (!almacenOk) $('sinAlmacen').hidden = false;
 if (!DEMO) $('manifest').href = 'manifest.json';
 
 $('rCerrar').onclick = () => $('veloReservar').classList.remove('abierto');
+// Botón «¿Eres nueva? Baja la app»: QR a app.html (manda a la tienda según el celular; la liga de Wix caía en una página
+// rara si la app no estaba instalada, 9-nov) y los pasos para entrar con el mismo correo y reservar.
+const URL_APP_TIENDA = 'https://checkin.herazenter.com/app.html';
+$('appBoton').onclick = () => {
+  $('veloApp').classList.add('abierto');
+  const el = $('appQR');
+  if (!el.childElementCount) cargarQRLib().then(() => { el.innerHTML = qrBonito(URL_APP_TIENDA); })
+    .catch(() => { el.innerHTML = '<p style="font-size:16px;color:var(--gris)">No se pudo dibujar el código. Pide ayuda en recepción.</p>'; });
+};
+$('appCerrar').onclick = () => $('veloApp').classList.remove('abierto');
+$('veloApp').addEventListener('click', e => { if (e.target.id === 'veloApp') $('veloApp').classList.remove('abierto'); });
 $('rPedir').onclick = async () => {
   const s0 = solicitudActual; if (!s0 || !cuentaPase || $('rPedir').disabled) return;
   $('rPedir').disabled = true; $('rPedir').textContent = 'Enviando…';
@@ -1323,6 +1366,7 @@ setInterval(() => {                                          // inactividad: vue
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
   if ($('veloReservar').classList.contains('abierto') && quieto > 60000) $('veloReservar').classList.remove('abierto');
+  if ($('veloApp').classList.contains('abierto') && quieto > 90000) $('veloApp').classList.remove('abierto');
   if ($('veloVerif').classList.contains('abierto') && quieto > 45000) cerrarVerificacion();
   if ($('vCuenta').classList.contains('activa') && quieto > 45000) salirCuenta();   // sus datos no se quedan en pantalla
 }, 5000);
