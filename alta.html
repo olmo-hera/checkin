@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OckpnzsuyGrongOWScY39pmdnkKcyYiBCWPz7vePNFA=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2mXLcX47jg0/PQtNii5OGgPk8B3F4Pn2636yJQvdHSQ=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -452,6 +452,18 @@ body.sin-scroll{overflow:hidden}
 .grupo-btn{flex:1 1 200px;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid var(--crema);border-radius:14px;padding:12px 16px;font-size:18px;font-weight:500;color:var(--carbon);min-height:56px}
 .bien-franja:active,.grupo-btn:active{transform:scale(.99);background:var(--arena-suave)}
 .tile-regalo{font-size:16px;font-weight:500;color:var(--verde-texto);margin-top:2px}
+/* v9: el «+N de regalo» solo con el interruptor; debajo, «solo tu primer mes» (una sola vez). */
+.op.tile .tile-regalo{display:flex;flex-direction:column;align-items:center;gap:1px;background:var(--verde-suave);border:1px solid #B9D3BF;border-radius:10px;padding:4px 10px;margin-top:8px;font-size:17px}
+.op.tile .tile-regalo span{font-size:14px;font-weight:400;color:var(--verde-texto)}
+.regalo-caja{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;margin-top:-6px}
+.regalo-sw{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #B9D3BF;border-radius:999px;padding:8px 10px 8px 20px;min-height:52px;font-size:18px;font-weight:500;color:var(--verde-texto)}
+.regalo-sw .sw{position:relative;width:52px;height:30px;border-radius:999px;background:#C9CFC9;flex:none;transition:background .2s}
+.regalo-sw .sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.regalo-sw[aria-checked="true"]{background:var(--verde-suave);border-color:var(--ok)}
+.regalo-sw[aria-checked="true"] .sw{background:var(--ok)}
+.regalo-sw[aria-checked="true"] .sw i{transform:translateX(22px)}
+.regalo-nota{font-size:16px;line-height:1.4;color:var(--verde-texto);max-width:620px}
+.cond-in{font-size:16px;color:var(--verde-texto);text-decoration:underline;text-underline-offset:3px;padding:4px 2px}
 .emp-regalo{font-size:18px;line-height:1.35;text-align:center;color:var(--verde-texto)}
 .hoja table{width:100%;border-collapse:collapse;font-size:18px}
 .hoja th,.hoja td{text-align:left;padding:8px 6px;border-top:1px solid var(--arena)}
@@ -465,6 +477,95 @@ body.sin-scroll{overflow:hidden}
 .res-aviso{background:#FFF7E8;border:2px solid #E2C27A;border-radius:14px;padding:14px 18px;font-size:19px;line-height:1.4;max-width:640px;width:100%;text-align:left;color:var(--texto)}
 .casilla{display:flex;align-items:center;gap:12px;font-size:19px;color:var(--carbon);background:#fff;border:1.5px solid var(--crema);border-radius:14px;padding:12px 16px;max-width:640px;width:100%;text-align:left;min-height:56px}
 .casilla input{width:26px;height:26px;flex:none;accent-color:var(--terracota)}
+/* v9 (Olmo, 9-nov): cinta «★ El más elegido» en la ficha de 12 clases (la única cinta); «el más barato por clase», etiqueta
+   dentro de su ficha. */
+.op.tile.elegida{border-color:var(--terracota);background:linear-gradient(180deg,var(--terracota-suave) 0,#fff 55%);padding-top:52px}
+.op.tile .cinta{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--terracota);color:#fff;font-family:Poppins;font-weight:600;font-size:16px;letter-spacing:.02em;padding:6px 16px;border-radius:0 0 12px 12px;white-space:nowrap}
+.mejor-et{display:inline-block;margin-top:8px;background:#F5E7C8;color:#6A4708;border-radius:10px;padding:4px 10px;font-size:15px;font-weight:500;line-height:1.25}
+.mejor-et small{display:block;font-size:13px;font-weight:400;color:#6A4708}
+/* v9: bloque «Beneficios de membresía» dentro de la ficha (antes un enlace «+N beneficios más»). */
+.ben{background:linear-gradient(135deg,#FFF6E3,#FFFDF8);border:1.5px solid #E2C27A;border-radius:16px;padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px}
+.ben-tit{display:flex;align-items:center;gap:8px;font-family:Poppins;font-weight:600;font-size:17px;color:#7A5410;letter-spacing:.01em}
+.ben ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.carta .ben li{display:flex;align-items:center;gap:10px;font-size:17px;line-height:1.3;color:var(--texto);padding-left:0}
+.carta .ben li::before{content:none}
+.ben li > .ico{flex:none;width:34px;height:34px;padding:6px;border-radius:50%;background:#fff;border:1px solid #EBD3A0;color:var(--terracota)}
+.ben li span{display:flex;flex-direction:column}
+.ben .ben-ahorro b{font-family:Poppins;font-weight:600;font-size:18px;color:var(--verde-texto)}
+.ben .ben-ahorro b b{color:var(--verde-texto)}
+.ben .ben-ahorro > .ico{background:var(--verde-suave);border-color:#B9D3BF;color:var(--verde-texto)}
+.ben small{font-size:15px;color:var(--gris);line-height:1.3}
+.ben small b{font-family:Poppins;font-weight:600;color:var(--verde-texto)}
+.plan .cond{text-align:left}
+.tiles:has(.elegida) .op.tile{padding-top:52px}
+/* v9: carrusel (trimestral · semestral · anual, y la hoja de Dúo/Tribu): se desliza con el dedo, flechas y puntos. */
+.carr{width:100%;display:flex;flex-direction:column;gap:10px}
+.carr-pista{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:4px 2px 8px;outline:0}
+.carr-pista::-webkit-scrollbar{display:none}
+.carr-pista:focus-visible{box-shadow:0 0 0 3px var(--pizarra);border-radius:12px}
+.carr-item{flex:0 0 calc((100% - 16px) / 2.3);scroll-snap-align:start;display:flex;text-align:left}
+.carr-hoja .carr-item{flex-basis:100%}
+.carr-hoja .carr-pista{gap:24px;align-items:flex-start;overflow-y:hidden}
+.gr-dia{display:flex;flex-direction:column;gap:12px}
+.hoja .gr-tit{font-size:22px;margin:0;color:var(--terracota)}
+.gr-intro{font-size:18px}
+.gr-pcts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gr-pct{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--terracota-suave);border:1.5px solid #E8C9B4;border-radius:16px;padding:14px 8px;text-align:center}
+.gr-pct b{font-family:Poppins;font-weight:600;font-size:40px;line-height:1.05;color:var(--terracota)}
+.gr-pct span{font-size:18px;font-weight:500;color:var(--carbon)}
+.gr-pct small{font-size:15px;color:var(--gris)}
+.gr-plan{font-family:Poppins;font-weight:600;font-size:20px;color:var(--carbon)}
+.gr-filas{display:flex;flex-direction:column;background:var(--arena-suave);border-radius:14px;padding:4px 14px}
+.gr-fila{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--crema)}
+.gr-fila:first-child{border-top:0}
+.gr-q{font-size:18px;color:var(--carbon)}
+.gr-q i{font-style:normal;font-weight:600;color:var(--terracota);margin-left:4px}
+.gr-p{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.gr-p b{font-family:Poppins;font-weight:600;font-size:24px;color:var(--carbon)}
+.gr-p small{font-size:14px;color:var(--verde-texto)}
+.gr-claves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gr-clave{display:flex;gap:10px;align-items:flex-start;background:var(--arena-suave);border-radius:14px;padding:10px 12px}
+.gr-ico{flex:none;width:38px;height:38px;border-radius:50%;background:#fff;border:1.5px solid #E8C9B4;display:grid;place-items:center;font-family:Poppins;font-weight:600;font-size:16px;color:var(--terracota)}
+.gr-clave span:last-child{display:flex;flex-direction:column;gap:2px}
+.gr-clave b{font-size:17px;font-weight:600;color:var(--carbon);line-height:1.25}
+.gr-clave small{font-size:15px;line-height:1.35;color:var(--texto)}
+.hoja .gr-chica{font-size:15px;color:var(--gris)}
+.gr-pasos{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:none}
+.hoja .gr-pasos li{display:flex;gap:12px;align-items:flex-start;font-size:18px;line-height:1.4}
+.gr-n{flex:none;width:36px;height:36px;border-radius:50%;background:var(--terracota);color:#fff;display:grid;place-items:center;font-family:Poppins;font-weight:600;font-size:18px}
+@media (max-width:520px){ .gr-claves{grid-template-columns:1fr} .gr-pct b{font-size:34px} }
+.hoja .perks{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.hoja .perks li{display:flex;align-items:flex-start;gap:10px}
+.hoja .perks .ico{width:20px;height:20px;margin-top:3px}
+.carr-item > *{flex:1;min-width:0}
+.carr-ctl{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.carr.cabe .carr-ctl{display:none}
+.carr.fin .carr-pista-txt{visibility:hidden}
+.carr-fl{width:44px;height:44px;border-radius:50%;background:#fff;border:1.5px solid var(--crema);font-size:26px;line-height:1;color:var(--carbon)}
+.carr-fl[disabled]{opacity:.35}
+.carr-puntos{display:flex;gap:4px}
+.carr-p{width:28px;height:28px;display:grid;place-items:center}
+.carr-p::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--crema);transition:background .2s,transform .2s}
+.carr-p[aria-current="true"]::after{background:var(--terracota);transform:scale(1.25)}
+.carr-pista-txt{flex-basis:100%;text-align:center;font-size:16px;color:var(--terracota);font-weight:500}
+@media (prefers-reduced-motion:reduce){ .carr-pista{scroll-behavior:auto} }
+@media (max-width:700px){ .carr-item{flex-basis:86%} }
+/* v9: tarjeta anual (del PDF; se contrata en recepción) */
+.lg-anual{border:2px dashed var(--oro-borde);background:linear-gradient(180deg,#FFF8EA 0,#fff 50%)}
+.lg-fam-fila{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lg-anual .lg-fam{background:#F5E7C8;color:#6A4708}
+.an-recep{font-size:15px;font-weight:500;color:#6A4708;border:1px solid #E2C27A;border-radius:999px;padding:3px 10px}
+.lg-anual .el-pie{color:#7A5410}
+.hoja .an-aviso{background:#FFF7E8;border:1.5px solid #E2C27A;border-radius:12px;padding:10px 14px}
+.hoja .an-aviso + p,.hoja .an-msi,.hoja .an-msi + .nota{margin-top:10px}
+/* v9: celda anual del bloque «Si pagas por adelantado» */
+.adel-celdas.con-anual{grid-template-columns:repeat(3,minmax(0,1fr))}
+.adel-celdas .adel-anual{background:#FFF8EA;border:1.5px dashed var(--oro-borde)}
+.adel-anual .adel-dur{color:#6A4708;font-weight:500}
+.adel-anual-linea{display:block;font-size:17px;line-height:1.35;color:#5C4210;background:#FFF8EA;border:1.5px dashed var(--oro-borde);border-radius:12px;padding:10px 14px}
+/* Revisión v9: en celular las 3 celdas van una debajo de otra (deslizar dentro de un botón que abre otra pantalla no se descubre). */
+@media (max-width:520px){ .adel-celdas.con-anual{grid-template-columns:1fr} }
+@media (max-height:820px) and (min-width:701px){ .ben{padding:10px 12px 8px;gap:6px} .ben ul{gap:5px} .ben li > .ico{width:30px;height:30px;padding:5px} }
 </style>
 </head>
 <body>
@@ -596,6 +697,7 @@ body.sin-scroll{overflow:hidden}
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="clasesTitulo"></h1>
     <p id="clasesSub"></p>
+    <div class="regalo-caja" id="clasesRegalo" hidden></div><!-- v9: interruptor «Ver con mi regalo de bienvenida» -->
     <div class="ops tiles" id="clasesLista"></div>
     <div class="extra" id="clasesExtra"></div>
   </section>
@@ -615,6 +717,7 @@ body.sin-scroll{overflow:hidden}
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="durTitulo"></h1>
     <p id="durSub"></p>
+    <div class="regalo-caja" id="durRegalo" hidden></div>
     <div class="ops tiles dur" id="durLista"></div>
   </section>
 
@@ -736,6 +839,23 @@ const CONFIG_ALTA = {
   appLiga: 'https://checkin.herazenter.com/app.html' // página que manda a App Store o Google Play (9-nov: la liga de Wix caía en mobileappinvite si no tenía la app)
 };
 
+/* v9 (Olmo, 9-nov): membresías ANUALES. NO existen en Wix (verificado el 9-nov-2026: 0 planes «anual» en el catálogo): vienen
+   del PDF de Hera «Planes Largo Plazo 2026». Total por 1 año (un solo pago), por elemento y clases al mes. La tablet NO las
+   cobra: se contratan en recepción. Cuadran con 9 × la mensual de Wix (25 % de ahorro): test/alta-v9.test.js avisa si un
+   precio de Wix cambia y estos dejan de cuadrar. Si cambia el PDF, se cambia aquí. */
+const ANUALES_ALTA = {
+  fuente: 'PDF «Planes Largo Plazo 2026» (dato de Olmo, 9-nov-2026)',
+  precios: {
+    AIRE: { 8: 9810, 12: 12150, 18: 16470 },
+    TIERRA: { 8: 12510, 12: 15120, 18: 19710 },
+    FUEGO: { 8: 15210, 12: 21510, 18: 27450 },
+    AGUA: { 8: 15570, 12: 23310, 18: 30510 }
+  },
+  // Del mismo PDF (beneficios del plan anual) y sus meses sin intereses (3 MSI desde $8,000).
+  beneficios: ['1 mes de gracia', '3 pases de invitado al mes', 'Tote bag edición limitada', '+ Paquete Agua 8 clases', '+ 2 Esencia para regalar', 'Todos los beneficios de membresía'],
+  msi: { meses: 3, desde: 8000 }
+};
+
 const TEXTOS_ALTA = {
   // Orden (v3): primero el plan (sin dar datos), luego el correo (y los 4 dígitos o el registro), luego pagar.
   pasos: { vPin: 'Recepción', vTipo: 'Paso 1 · tu plan', vElemento: 'Paso 1 · elemento', vClases: 'Paso 1 · clases', vDuracion: 'Paso 1 · cada cuánto',
@@ -772,10 +892,18 @@ const TEXTOS_ALTA = {
       sello: 'Recomendada',
       lema: 'Se renueva sola. Tú solo vienes.',
       // Rediseño (Olmo, 8-nov): frases de 3 a 6 palabras, con su icono. Los números van en el precio grande.
+      // v9: en la ficha de membresía ya no se enseñan (lo dicen el bloque «Beneficios de membresía» y el ahorro); quedan en
+      // TEXTOS_ALTA.md como referencia.
       puntos: ['Se cobra sola con tu tarjeta', 'El menor precio por clase'],
       // El precio grande de la tarjeta es el de las membresías que se cobran cada ciclo; las trimestrales y semestrales
       // (más baratas) van en la franja de abajo con su propio «desde».
       sinLargo: 'sin contar trimestral y semestral',
+      // v9 (Olmo, 9-nov: «casi todos eligen 8 o 12»): el precio grande es el del plan de 12 clases que se paga cada mes (el
+      // más barato por clase de los 4 elementos), no el de 24: así, al llegar a la ficha de 12, no se siente caro.
+      doce: 'con {clases} clases al mes, pago mensual',
+      // v9: bloque destacado dentro de la ficha. Los beneficios salen de Wix (beneficiosPorTipo); el ahorro, del catálogo.
+      beneficiosTit: 'Beneficios de membresía',
+      masLargo: '+{n} beneficios en trimestral y semestral',
       // {pct}: el mayor ahorro por clase de una membresía contra el paquete de las MISMAS clases (centavos de Wix, redondeado
       // hacia abajo). Solo membresías que se cobran cada ciclo (las mismas del precio grande).
       ahorro: 'Ahorras hasta *{pct}%* por clase',
@@ -797,6 +925,7 @@ const TEXTOS_ALTA = {
       lema: 'Un solo pago, sin cargos automáticos.',
       // v5.1: «No se renueva solo» se quitó: el lema ya lo dice.
       puntos: ['Pagas una vez y listo', 'Cada paquete con su vigencia'],
+      doce: 'con el paquete de {clases} clases',
       vigencias: 'Cada paquete tiene su vigencia: {vigencias}.',
       unaVez: 'Pagas una vez y listo: no se renueva.',
       boton: 'Quiero paquete'
@@ -812,7 +941,9 @@ const TEXTOS_ALTA = {
     verHorarios: 'Ver horarios de la semana',
     // v7: el «desde» grande no cuenta trimestral y semestral (igual que la ficha de membresía); esas ya no van en la ficha, sino
     // en el bloque «Si pagas por adelantado» de debajo (adelantado.*).
-    elegir: 'Elegir {elemento}'
+    elegir: 'Elegir {elemento}',
+    // v9: el precio de la cabecera es el del plan de 12 clases de ese elemento (el mismo criterio que la primera pantalla).
+    doce: 'con {clases} clases'
   },
 
   // v6 (Olmo, 9-nov): agenda de la semana de un elemento, con el estilo de su «Weekly Schedule» de Instagram. Las horas van
@@ -849,7 +980,10 @@ const TEXTOS_ALTA = {
     mejor: '⭐ El más barato por clase de esta lista',
     // Revisión v6: en membresía, el sello va con el número GRANDE (el de las que se cobran cada mes o cada 45 días); si en la
     // lista hay trimestral o semestral (más baratas, en el bloque «Si pagas por adelantado»), el sello lo aclara.
-    mejorSinLargo: 'El más barato por clase', mejorSinLargoNota: 'sin contar trimestral y semestral',
+    mejorSinLargo: 'El más barato por clase', mejorSinLargoNota: 'sin contar los planes por adelantado (3, 6 o 12 meses)',
+    // v9 (Olmo, 9-nov): cinta en la ficha de 12 clases (la que casi todas eligen). Es la ÚNICA cinta: «el más barato por
+    // clase» baja a una etiqueta dentro de su ficha (dos cintas peleaban).
+    elegido: '★ El más elegido',
     membresia: 'membresía', paquete: 'paquete',
     // Plan al que Bookings no le acepta una disciplina que sí traen los demás de su elemento (dato de Wix, no de aquí).
     sinDisciplina: 'Este no incluye {faltan}',
@@ -878,10 +1012,18 @@ const TEXTOS_ALTA = {
     plan: '{clases}, {duracion}',
     porClase: '*{porClase}* por clase',
     pagas: 'pagas *{precio}* {cada}',
-    ver: 'Ver planes trimestrales y semestrales',
+    ver: 'Ver planes trimestrales, semestrales y anuales',
+    // v9: en «¿cuántas clases?» la celda anual de cada renglón; en «¿qué elemento?» una línea al pie (desde = el anual más barato por clase).
+    tituloAnual: 'Si pagas por adelantado (3, 6 o 12 meses)',
+    anualDur: 'Anual · en recepción',
+    anualPagas: 'pagas *{precio}* por 1 año',
+    anualLinea: '✦ También hay *plan anual* (12 meses): desde *{porClase}* por clase. Se contrata en recepción.',
+    // Revisión v9: con el criterio del plan de 12 clases (el mismo de los «desde» de la primera pantalla).
+    anualLineaDoce: '✦ También hay *plan anual* (12 meses): desde *{porClase}* por clase con {clases} clases. Se contrata en recepción.',
     // Olmo (9-nov): flexibilidad. Verificado en Wix: en trimestral y semestral las clases se cargan al inicio de cada ciclo
-    // (PER_BILLING_CYCLE) y no pasan al siguiente (rollover apagado), por eso «úsalas dentro de…».
-    flexible: '✦ *Todas tus clases desde el primer día*: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses.'
+    // (PER_BILLING_CYCLE) y no pasan al siguiente (rollover apagado), por eso «úsalas dentro de…». Revisión v9: dice «en
+    // trimestral y semestral» porque el bloque ya enseña el anual y de ese no está verificado cómo se cargan las clases.
+    flexible: '✦ *Todas tus clases desde el primer día* en trimestral y semestral: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses.'
   },
 
   // v4 (Olmo, 9-nov): botón aparte para las membresías trimestrales y semestrales, con sus números reales. Lo que presume es
@@ -890,21 +1032,25 @@ const TEXTOS_ALTA = {
   largo: {
     // Franja de «¿Membresía o paquete?» (v7: con el estilo del bloque «Si pagas por adelantado», no el de las tarjetas): título,
     // «desde» y debajo la frase completa. Lo que presume (botonSub) solo sale si el backend dice que es cierto (CAT.largo.masBarato).
-    boton: 'Paga 3 o 6 meses por adelantado',
-    botonSinPresumir: 'Planes trimestrales y semestrales',
+    boton: 'Paga 3, 6 o 12 meses por adelantado',
+    botonSinPresumir: 'Planes trimestrales, semestrales y anuales',
     botonDesde: 'desde *{porClase}* por clase',
+    // Revisión v9: el «desde» de la franja también con el plan de 12 clases (el de Aire 18 semestral, $81, hacía sentir caro el de 12).
+    botonDoce: 'desde *{porClase}* por clase con {clases} clases',
     // Revisión v7: lo que se paga de golpe en el plan de ese «desde», para que el precio bajo se entienda.
     botonPago: 'pagas *{precio}* {cada}',
     botonSub: 'Más baratos por clase que la mensual y el paquete de las mismas clases.',
     botonSubSinPresumir: 'Pagas varios meses por adelantado.',
-    titulo: 'Planes trimestrales y semestrales',
-    tituloEl: '{elemento}: planes trimestrales y semestrales',
+    titulo: 'Planes trimestrales, semestrales y anuales',
+    tituloEl: '{elemento}: trimestral, semestral y anual',
+    // v9: cada número de clases es un carrusel (trimestral · semestral · anual): se desliza a la derecha.
+    desliza: 'Desliza para ver el plan anual ›',
     sub: 'Pagas varios meses por adelantado y cada clase te sale más barata que en la mensual o el paquete de las mismas clases.',
     subSinPresumir: 'Pagas varios meses por adelantado.',
     // v7: en la tarjeta, lo que se paga de golpe va tan grande como el precio por clase, lado a lado.
     porClaseEt: 'Por clase',
     pagoEt: 'Pagas por adelantado',
-    flexible: '✦ *Todas tus clases se cargan desde el primer día*: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses de tu plan.',
+    flexible: '✦ *Todas tus clases se cargan desde el primer día* en trimestral y semestral: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses de tu plan.',
     pagoPie: '{cada}, en un solo cobro',
     clases: '{clases} clases {frecuencia}',
     vsMensual: 'Contra la mensual ({nombre}, {porClaseOtro} por clase): ahorras *{ahorroClase}* por clase y *{ahorroPeriodo}* en {periodo}.',
@@ -928,6 +1074,22 @@ const TEXTOS_ALTA = {
     elegir: 'Elegir este plan'
   },
 
+  // v9: tarjeta y hoja del plan anual (datos en ANUALES_ALTA, arriba). Se contrata en recepción: la tablet no lo cobra.
+  anual: {
+    fam: 'Anual', recepcion: 'Se contrata en recepción',
+    porClaseEt: 'Por clase', pagoEt: 'Pagas por 1 año',
+    pagoPie: 'en un solo pago · hasta {meses} MSI',
+    ahorras: 'Ahorras *{ahorro}* en 1 año',
+    detalle: 'vs. la mensual de las mismas clases ({pct} % menos)',
+    pie: 'Se contrata en recepción',
+    hojaTit: 'Plan anual · {elemento} {clases} clases al mes',
+    hojaTexto: 'Este plan *no se cobra en la tablet*. Si lo quieres, pídeselo a recepción: ella lo arma y te lo cobra en el mostrador.',
+    total: '*{precio}* por 1 año, en un solo pago (*{porClase}* por clase).',
+    incluye: 'Incluye',
+    msiTxt: 'Puedes pagarlo hasta en {meses} meses sin intereses (compras desde {desde}).',
+    letra: 'Precios del folleto «Planes Largo Plazo 2026» de Hera. El ahorro compara con pagar 12 meses la membresía mensual de las mismas clases, con los precios de hoy.'
+  },
+
   // v4: plan de PRUEBA (secreto alta_plan_prueba). Solo sale si el secreto existe; se quita al terminar la prueba en vivo.
   prueba: {
     seccion: '🧪 Prueba (solo para validar)',
@@ -943,24 +1105,41 @@ const TEXTOS_ALTA = {
   // (regaloBienvenida en alta.js) y llega como `regalo` en el catálogo: aquí no se escribe la tabla a mano. Nada de esto
   // cambia el precio grande ni el «desde». El derecho lo decide el servidor (Wix o el PIN de recepción), nunca la tablet.
   bienvenida: {
-    franja: '🎁 Si te inscribes hoy, el día de tu clase muestra, te regalamos clases',
+    // v9 (Olmo, 9-nov: «no queda claro que sean one time only»): en todos lados se dice que el regalo es UNA SOLA VEZ (su
+    // primer mes de membresía o su primer paquete), no cada mes.
+    franja: '🎁 Si te inscribes hoy, el día de tu clase muestra, te regalamos clases (una sola vez)',
     franjaVer: 'Ver condiciones ›',
     titulo: '🎁 Oferta de bienvenida',
-    intro: 'Si te inscribes el mismo día de tu clase muestra, te regalamos clases:',
-    colClases: 'Clases', colPaquete: 'Paquete', colMembresia: 'Membresía mensual',
+    intro: 'Si te inscribes el mismo día de tu clase muestra, te regalamos clases *una sola vez*, en tu primera compra:',
+    colClases: 'Clases', colPaquete: 'Paquete', colMembresia: 'Membresía mensual (solo el 1er mes)',
     filaClases: '{clases} clases', celda: '+{n} de regalo', sinRegalo: '—',
+    unaVez: 'Es un regalo único: solo en tu primer mes de membresía o en tu primer paquete. No se repite cada mes: del segundo mes en adelante tu membresía trae sus clases de siempre.',
     usar: 'Las clases de regalo se usan en los próximos 2 meses.',
     soloHoy: 'Solo el día de tu clase muestra.',
     aplica: 'Aplica en {cantidades} clases.',
     noAplica: 'No aplica en planes trimestrales, semestrales, ilimitados, AGUA Serena ni de 24 clases.',
+    // v9: interruptor debajo del subtítulo de «¿cuántas clases?» y «¿cada cuánto?» (apagado al entrar). Solo enseña: el
+    // derecho lo sigue decidiendo el servidor.
+    interruptor: '🎁 Ver con mi regalo de bienvenida',
+    interruptorNota: 'Aplica si hoy es tu clase muestra. Es *una sola vez*: solo en tu primer mes, no cada mes. Las clases de regalo se usan en los próximos 2 meses.',
+    // Revisión v9: en «¿cuántas clases?» de paquete no se habla de «primer mes».
+    interruptorNotaPaquete: 'Aplica si hoy es tu clase muestra. Es *una sola vez*: solo en esta compra, no en cada paquete. Las clases de regalo se usan en los próximos 2 meses.',
+    interruptorVer: 'Condiciones',
     // En las fichas de «¿cuántas clases?» y «¿cada cuánto?», debajo del número y en chico.
     ficha: '+{n} de regalo',
+    // v9: debajo del «+N de regalo» (solo con el interruptor encendido).
+    fichaNota: { membresia: 'solo tu primer mes', paquete: 'solo en esta compra' },
     // «¿y si mejor membresía?»: solo si la membresía regala más que el paquete.
-    empuje: 'Y si hoy es tu clase muestra, la membresía te regala más: *+{mem}* clases en lugar de *+{paq}*.',
+    empuje: 'Y si hoy es tu clase muestra, la membresía te regala más: *+{mem}* clases en lugar de *+{paq}* (una sola vez, en tu primer mes).',
     // Resumen, si el servidor dice que tiene derecho (lo confirmó Wix o recepción con su PIN).
-    resumen: '🎁 Hoy te llevas *+{n} clases de regalo* · úsalas en los próximos 2 meses',
+    resumen: '🎁 Hoy te llevas *+{n} clases de regalo*, una sola vez · úsalas en los próximos 2 meses',
+    // v9: debajo, en chico: que no espere el regalo cada mes.
+    unaVezMembresia: 'Es solo en tu primer mes: del segundo en adelante son tus {clases} clases {frecuencia}.',
+    unaVezPaquete: 'Es solo en esta compra: el siguiente paquete ya no trae regalo.',
+    // Revisión v9: membresía sin número de clases (el plan de prueba recurrente llega con clases: null).
+    unaVezGenerico: 'Es una sola vez, solo en esta primera compra: no se repite cada mes.',
     // Con derecho y «Venimos en grupo» marcada: la tablet no cobra (ni avisa del bono), así que se le pide recordarlo.
-    enGrupo: '🎁 Tu regalo de bienvenida (*+{n} clases*) también aplica: recuérdaselo a recepción al armar tu grupo.',
+    enGrupo: '🎁 Tu regalo de bienvenida (*+{n} clases*, una sola vez) también aplica: recuérdaselo a recepción al armar tu grupo.',
     // Letra chica y aclarado: el precio grande NO cambia.
     primerMes: 'Tu primer mes: {porClase} por clase con tu regalo ({precio} entre {total} clases, si las usas todas ese mes).',
     // Para recepción, discreto, cuando Wix no lo confirmó solo (también si es nueva).
@@ -1006,6 +1185,29 @@ const TEXTOS_ALTA = {
     ejemploLista: 'Precio de lista: *{precio}* cada mes',
     ejemploFila: '{quienes} (−{pct} %): *{precio}* cada mes, cada una',
     ejemploNota: 'Con los precios de hoy, redondeado a pesos.',
+    // v9 (Olmo, 9-nov: «más sencilla de entender, no solo texto; no queda claro cómo proceder»): la hoja es un carrusel de 4
+    // diapositivas (se desliza a la derecha): cuánto ahorran, un ejemplo con el precio real, las reglas clave y cómo hacerlo hoy.
+    diapositivas: ['Entre más son, más ahorran', 'Ejemplo con precio real', 'Reglas clave', '¿Cómo lo hacemos?'],
+    pct: '−{pct} %',
+    ejemploAhorro: 'ahorra {ahorro} al mes',
+    ejemploCada: 'cada una, cada mes',
+    // Cada regla con su icono; `de` = el texto completo que ya está arriba (reglas, cancela), para no escribirlo dos veces.
+    claves: [
+      { ico: '8+', tit: 'Membresía de 8 clases o más', txt: 'Cada una con su membresía mensual: no aplica en paquetes ni en la de 4 clases.' },
+      { ico: '½', tit: 'La mitad, nuevas', de: 'grupo.reglas.0' },
+      { ico: '🔒', tit: 'El % no cambia', de: 'grupo.reglas.1' },
+      { ico: '8', tit: 'Hasta 8 amigas', de: 'grupo.reglas.2' },
+      { ico: '✕', tit: 'Si cancelas, lo pierdes', de: 'grupo.cancela' },
+      { ico: '🎁', tit: 'Regalo a los 3 meses', de: 'grupo.reglas.4' }
+    ],
+    compatible: '🎁 Es compatible con la Oferta de Bienvenida.',
+    // Fase 1 (hoy): la tablet no cobra al grupo; recepción les da el código.
+    pasos: [
+      'Vengan juntas a recepción, o díganle a recepción que vienen en grupo.',
+      'Cada una elige aquí su membresía mensual de 8 clases o más y, al revisar su plan, marca *«{casilla}»*: la tablet no cobra.',
+      'Recepción arma el grupo y les da su *código de descuento*.',
+      'Cada una se inscribe desde su celular con su código.'
+    ],
     // Resumen: solo si eligió una membresía mensual de 8 clases o más. Marcada, la tablet NO cobra (así no se cobra el
     // precio completo que luego habría que reembolsar).
     casilla: 'Venimos en grupo (Dúo o Tribu)',
@@ -1364,7 +1566,7 @@ let pila = [];               // vistas para «Atrás»
 let ultimoToque = Date.now(), finTimer = null, reenvioTimer = null, appTimer = null, correoOtraTimer = null;
 function nuevaAlta(){ const v = A && A.vendedora; A = { vendedora: v || null, email: '', sugerencia: null, correoConfirmado: false, reto: null, ult4: '', fallosCel: 0,
   verif: null, verifViejo: null, corrige: null, existe: false, nombreV: '', planes: [], pideColonia: false, tipo: null, elemento: null, clases: null, plan: null, repetido: false, recibo: null,
-  bienvenida: null, grupo: false }; }   // promos fase 1: lo que el SERVIDOR dijo de la Oferta de Bienvenida (solo para enseñar) y la casilla de grupo
+  bienvenida: null, grupo: false, verRegalo: false }; }   // promos fase 1: lo que el SERVIDOR dijo de la Oferta de Bienvenida (solo para enseñar) y la casilla de grupo
 function limpiarCampos(){ ['correo','regNombre','regApellido','regCelular','regColonia','regDia','regMes','regAnio','holaColonia','inicio'].forEach(id => { if ($(id)) $(id).value = ''; });
   ['correoError','confError','celError','regError','holaError','resError','pinError','correoMsg','regCelVes'].forEach(id => { if ($(id)) $(id).textContent = ''; });
   $('quien').textContent = ''; }
@@ -1383,7 +1585,11 @@ function ir(v, { apilar = true } = {}){
   cerrarAgenda(false);       // v6: ni la agenda
   window.scrollTo(0, 0);
 }
-function atras(){ const actual = (document.querySelector('.vista.activa') || {}).id; let v; do v = pila.pop(); while (v && v === actual); if (v) ir(v, { apilar: false }); }
+function atras(){ const actual = (document.querySelector('.vista.activa') || {}).id; let v; do v = pila.pop(); while (v && v === actual); if (!v) return;
+  // Revisión v9: «¿cuántas clases?» y «¿cada cuánto?» se repintan al volver (el interruptor del regalo pudo cambiar en la otra).
+  const caja = { vClases: 'clasesRegalo', vDuracion: 'durRegalo' }[v], rp = caja && $(caja) && $(caja)._repintar;
+  if (rp && A) rp();
+  ir(v, { apilar: false }); }
 document.querySelectorAll('[data-atras]').forEach(b => b.onclick = atras);
 
 /** De regreso al kiosco: se descarta el sello de venta (la siguiente venta pide PIN otra vez). */
@@ -1670,6 +1876,11 @@ $('regColonia').addEventListener('keydown', e => { if (e.key === 'Enter') regist
 function svgEl(el, t = 56){ const e = EL[el]; if (!e) return ''; return `<svg class="el" width="${t}" height="${t}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11.5" fill="${e[0]}"/>${e[2]}</svg>`; }
 const ppc = p => p.precioPorClase || Infinity;
 const desde = xs => Math.min(...xs.map(ppc));
+/** v9 (Olmo, 9-nov: «casi todos eligen 8 o 12; el 24 se ve llamativo, pero al verlo completo le baja el feeling al de 12»):
+ *  el precio grande de la primera pantalla y de cada elemento sale de los planes de 12 clases que se pagan cada mes (o el
+ *  paquete de 12), sin trimestral ni semestral. Si no hay de 12, el criterio de antes. */
+const CLASES_REF = 12;
+const doceDe = xs => xs.filter(p => !p.largo && !p.ilimitada && p.clases === CLASES_REF);
 const ul = xs => (xs && xs.length ? `<ul>${xs.map(x => `<li>${x}</li>`).join('')}</ul>` : '');
 
 /* v5 (rediseño 8-nov): piezas de las fichas. Iconos de línea (24×24, color del texto). */
@@ -1680,8 +1891,17 @@ const ICO = {
   sinCargos: '<path d="M20 11a8 8 0 0 0-14.3-4.9M4 13a8 8 0 0 0 14.3 4.9"/><path d="M5.5 3.5v3.2h3.2M18.5 20.5v-3.2h-3.2"/><path d="m3.5 3.5 17 17"/>',
   vigencia: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   paquete: '<path d="M3.5 8 12 3.8 20.5 8v8L12 20.2 3.5 16Z"/><path d="M3.5 8 12 12.2 20.5 8M12 12.2v8"/>',
-  perk: '<path d="M12 3.5l2.1 5.4 5.4 2.1-5.4 2.1L12 18.5l-2.1-5.4L4.5 11l5.4-2.1Z"/>'
+  perk: '<path d="M12 3.5l2.1 5.4 5.4 2.1-5.4 2.1L12 18.5l-2.1-5.4L4.5 11l5.4-2.1Z"/>',
+  // v9: iconos de los beneficios de membresía (talleres y eventos, Chai/Calena, pase de invitada, ahorro)
+  evento: '<path d="M4 8.5V6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v2a2.5 2.5 0 0 0 0 5v2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 15.5v-2a2.5 2.5 0 0 0 0-5Z"/><path d="M14 5v2.2M14 10.4v1.2M14 14.8V17"/>',
+  taza: '<path d="M5 9h11v4.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13.5Z"/><path d="M16 10.5h1.2a2.3 2.3 0 0 1 0 4.6H16M8 3.5c-.7.9.7 1.6 0 2.5M11.5 3.5c-.7.9.7 1.6 0 2.5"/>',
+  invitada: '<circle cx="9.5" cy="8.5" r="3.5"/><path d="M3.5 19.5a6 6 0 0 1 12 0M18 8.5v6M15 11.5h6"/>',
+  ahorro: '<path d="M4 16.5 9.5 11l3.5 3.5L20 7.5"/><path d="M15 7.5h5v5"/>',
+  regalo: '<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3 9h18M12 9v11M12 9c-1.5-3.5-5.5-4.5-5.5-2S10 9 12 9Zm0 0c1.5-3.5 5.5-4.5 5.5-2S14 9 12 9Z"/>'
 };
+/** v9: icono de un beneficio según lo que dice (los textos vienen de Wix; si ninguno cuadra, el destello de siempre). */
+const icoPerk = x => (/cargo autom|gesti[oó]n extra/i.test(x) ? 'tarjeta' : /taller|evento/i.test(x) ? 'evento' : /chai|calena|restaur|bebida/i.test(x) ? 'taza'
+  : /gracia/i.test(x) ? 'vigencia' : /invitad/i.test(x) ? 'invitada' : /barat|precio|ahorr/i.test(x) ? 'precio' : /tote|regal|paquete/i.test(x) ? 'regalo' : 'perk');
 const ico = (k, t = 26) => `<svg class="ico" width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]}</svg>`;
 // Corona de laurel (la misma del kiosco para «Miembro»).
 const LAUREL_HOJAS = [[8.24,19.46,96],[5.33,16.82,125],[4.03,13.1,153],[4.66,9.21,182],[7.07,6.1,210],
@@ -1695,13 +1915,14 @@ const heroe = (n, conDesde = true, nota = '') => `<div class="heroe">${conDesde 
 const puntos2 = (xs, icos) => `<ul class="puntos2">${xs.map((x, i) => `<li>${ico(icos[i] || 'unaVez')}<span>${x}</span></li>`).join('')}</ul>`;
 /** v5.1: beneficios como lista compacta con icono (los textos de Wix son largos: en pastilla se partían en óvalos).
  *  xs = [{ x: texto, fam: 'solo …' }]. */
-const perksLista = xs => (xs.length ? `<ul class="perks">${xs.map(o => `<li>${ico('perk', 20)}<span>${esc(o.x)}${o.fam ? `<small>${esc(o.fam)}</small>` : ''}</span></li>`).join('')}</ul>` : '');
+const perksLista = xs => (xs.length ? `<ul class="perks">${xs.map(o => `<li>${ico(icoPerk(o.x), 20)}<span>${esc(o.x)}${o.fam ? `<small>${esc(o.fam)}</small>` : ''}</span></li>`).join('')}</ul>` : '');
 
 /* Panel «ⓘ Condiciones»: cada ficha guarda su contenido con una clave; el enlace lo abre encima, «Entendido» lo cierra. */
 const HOJAS = new Map();
 function enlaceHoja(clave, titulo, cuerpo, mas = 0){ HOJAS.set(clave, { titulo, cuerpo });
   return `<button type="button" class="cond" data-hoja="${esc(clave)}">${T('hoja.condiciones')}${mas > 0 ? `<span class="mas">${T(mas === 1 ? 'hoja.mas1' : 'hoja.mas', { n: mas })}</span>` : ''}</button>`; }
-function abrirHoja(clave){ const h = HOJAS.get(clave); if (!h) return; $('hojaTit').textContent = h.titulo; $('hojaCuerpo').innerHTML = h.cuerpo; $('hoja').hidden = false; }
+function abrirHoja(clave){ const h = HOJAS.get(clave); if (!h) return; $('hojaTit').textContent = h.titulo; $('hojaCuerpo').innerHTML = h.cuerpo; $('hoja').hidden = false;
+  $('hoja').querySelector('.hoja').scrollTop = 0; conectarCarruseles($('hojaCuerpo')); }   // v9: la hoja de Dúo/Tribu es un carrusel
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-hoja]'); if (b) { e.stopPropagation(); abrirHoja(b.dataset.hoja); } }, true);
 $('hojaCerrar').onclick = () => { $('hoja').hidden = true; };
 $('hoja').addEventListener('click', e => { if (e.target === $('hoja')) $('hoja').hidden = true; });
@@ -1720,40 +1941,46 @@ function irTipo(){
   const cartas = [];
   if (ms.length) {
     // El precio grande es el de las que se cobran cada ciclo; las trimestrales/semestrales van en la franja con su «desde».
-    const cortas = ms.filter(p => !p.largo), base = cortas.length ? cortas : ms, d = desde(base), pct = ahorroHasta(base);
+    const cortas = ms.filter(p => !p.largo), base = cortas.length ? cortas : ms, d = desde(base);
+    // v9 (Olmo, 9-nov, opción B): el «Ahorras hasta X%» y su ejemplo, con los planes de 12 clases, como el precio grande.
+    const base12 = doceDe(base), baseAh = base12.length ? base12 : base, pct = ahorroHasta(baseAh);
     const fam = g => lista((g.familias || []).map(f => Tt('tipo.membresia.familias.' + f) || f));
-    // v5.1: en la ficha, 1 beneficio de las membresías del precio grande, en lista con icono; los demás (y los de
-    // trimestral/semestral) en «ⓘ Condiciones». Sin el de «cargo automático»: ya lo dice «Se cobra sola con tu tarjeta».
+    // v9 (Olmo, 9-nov: «hazlo más llamativo»): bloque destacado «Beneficios de membresía» con icono por beneficio: el ahorro
+    // contra el paquete (catálogo) y los beneficios de Wix de las membresías del precio grande (beneficiosPorTipo: los de
+    // todas y los de su familia). Los de trimestral y semestral, en «ⓘ Condiciones» (el enlace dice cuántos son).
     const fams = new Set(base.map(p => p.familia)), gruposFicha = (BM.grupos || []).filter(g => (g.familias || []).some(f => fams.has(f)));
-    const repite = x => /cargo autom|gesti[oó]n extra/i.test(x);
-    const perksFicha = [...(BM.todas || []).map(x => ({ x })), ...gruposFicha.flatMap(g => (g.perks || []).map(x => ({ x, fam: Tt('tipo.membresia.chipSolo', { familias: fam(g) }) })))]
-      .filter(o => !repite(o.x)).slice(0, 1);
-    const totalPerks = (BM.todas || []).length + (BM.grupos || []).reduce((n, g) => n + (g.perks || []).length, 0);
+    const perksFicha = [...gruposFicha.flatMap(g => g.perks || []), ...(BM.todas || [])].filter((x, i, xs) => xs.indexOf(x) === i);
+    const masLargo = (BM.grupos || []).filter(g => !gruposFicha.includes(g)).reduce((n, g) => n + (g.perks || []).length, 0);
+    const famPerks = g => perksLista((g.perks || []).map(x => ({ x })));
     let cuerpo = '';
-    if ((BM.todas || []).length) cuerpo += `<h3>${T('tipo.membresia.todas')}</h3>${ul(BM.todas.map(esc))}`;
-    for (const g of BM.grupos || []) if ((g.perks || []).length) cuerpo += `<h3>${T('tipo.membresia.solo', { familias: fam(g) })}</h3>${ul(g.perks.map(esc))}`;
+    if ((BM.todas || []).length) cuerpo += `<h3>${T('tipo.membresia.todas')}</h3>${perksLista(BM.todas.map(x => ({ x })))}`;
+    for (const g of BM.grupos || []) if ((g.perks || []).length) cuerpo += `<h3>${T('tipo.membresia.solo', { familias: fam(g) })}</h3>${famPerks(g)}`;
     if (BM.cancelacion) cuerpo += `<h3>${T('tipo.membresia.letraChica')}</h3><p>${esc(BM.cancelacion)}</p>`;
     // El ejemplo concreto del «hasta X%» (el plan donde pasa), para que no parezca contradecir los «desde».
-    const ej = pct > 0 ? base.find(m => ahorroHasta([m]) === pct) : null;
+    const ej = pct > 0 ? baseAh.find(m => ahorroHasta([m]) === pct) : null;
     const ejTxt = ej ? T('tipo.membresia.ahorroEjemplo', { elemento: EL[ej.elemento] ? EL[ej.elemento][1] : ej.elemento, clases: ej.clases,
       porClase: pesos(ej.equivalente.porClaseMembresia), porClasePaquete: pesos(ej.equivalente.porClasePaquete) }) : '';   // pesos cerrados (los centavos, solo en el empuje)
+    const items = [pct > 0 ? `<li class="ben-ahorro">${ico('ahorro', 22)}<span><b>${T('tipo.membresia.ahorro', { pct })}</b><small>${T('tipo.membresia.ahorroNota')}${ejTxt ? ` · ${ejTxt}` : ''}</small></span></li>` : '',
+      ...perksFicha.map(x => `<li>${ico(icoPerk(x), 22)}<span>${esc(x)}</span></li>`)].filter(Boolean);
+    const bloqueBen = items.length ? `<div class="ben"><div class="ben-tit">${svgLaurel(26)}<span>${T('tipo.membresia.beneficiosTit')}</span></div><ul>${items.join('')}</ul></div>` : '';
+    // v9: el precio grande, con el plan de 12 clases (ver doceDe).
+    const doce = doceDe(base), dd = doce.length ? desde(doce) : d;
     cartas.push(`<div class="carta plan reco"><span class="sello">${T('tipo.membresia.sello')}</span>
       <div class="cab">${svgLaurel(52)}<div><h2>${T('tipo.membresia.nombre')}</h2><div class="lema">${T('tipo.membresia.lema')}</div></div></div>
-      ${Number.isFinite(d) ? heroe(d, true, base !== ms ? T('tipo.membresia.sinLargo') : '') : ''}
-      ${pct > 0 ? `<div class="ahorro"><span>${T('tipo.membresia.ahorro', { pct })}</span><small>${T('tipo.membresia.ahorroNota')}${ejTxt ? `<br><span class="ej">${ejTxt}</span>` : ''}</small></div>` : ''}
-      ${puntos2(TX.tipo.membresia.puntos.map((_, i) => T('tipo.membresia.puntos.' + i)), ['tarjeta', 'precio'])}
-      ${perksLista(perksFicha)}
-      ${cuerpo ? enlaceHoja('tipo-membresia', Tt('tipo.membresia.nombre'), cuerpo, totalPerks - perksFicha.length) : ''}
+      ${Number.isFinite(dd) ? heroe(dd, true, doce.length ? T('tipo.membresia.doce', { clases: CLASES_REF }) : base !== ms ? T('tipo.membresia.sinLargo') : '') : ''}
+      ${bloqueBen}
+      ${cuerpo ? `<button type="button" class="cond" data-hoja="tipo-membresia">${T('hoja.condiciones')}${masLargo > 0 ? `<span class="mas">${T('tipo.membresia.masLargo', { n: masLargo })}</span>` : ''}</button>` : ''}
       <button class="btn pri" data-t="membresia">${T('tipo.membresia.boton')}</button></div>`);
+    if (cuerpo) HOJAS.set('tipo-membresia', { titulo: Tt('tipo.membresia.nombre'), cuerpo });
   }
   if (ps.length) {
-    const d = desde(ps);
+    const doce = doceDe(ps), d = doce.length ? desde(doce) : desde(ps);
     const cuerpo = `<p>${T('tipo.paquete.unaVez')}</p>${(BP.vigencias || []).length ? `<p>${T('tipo.paquete.vigencias', { vigencias: lista(BP.vigencias) })}</p>` : ''}`
       + ((BP.todas || []).length ? `<h3>${T('tipo.membresia.beneficios')}</h3>${ul(BP.todas.map(esc))}` : '');
     const perksP = (BP.todas || []).slice(0, 2).map(x => ({ x }));
     cartas.push(`<div class="carta plan">
       <div class="cab">${ico('paquete', 50)}<div><h2>${T('tipo.paquete.nombre')}</h2><div class="lema">${T('tipo.paquete.lema')}</div></div></div>
-      ${Number.isFinite(d) ? heroe(d) : ''}
+      ${Number.isFinite(d) ? heroe(d, true, doce.length ? T('tipo.paquete.doce', { clases: CLASES_REF }) : '') : ''}
       ${puntos2(TX.tipo.paquete.puntos.map((_, i) => T('tipo.paquete.puntos.' + i)), ['unaVez', 'vigencia'])}
       ${perksLista(perksP)}
       ${enlaceHoja('tipo-paquete', Tt('tipo.paquete.nombre'), cuerpo, (BP.todas || []).length - perksP.length)}
@@ -1779,13 +2006,15 @@ function botonLargo(el){
   const L = CAT.largo || {}, x = el ? (L.elementos || {})[el] : L;
   if (!x || !x.n) return '';
   // v5: franja de una línea con el «desde» real de esos planes y, debajo, la frase completa.
-  const ls = CAT.planes.filter(p => p.largo && (!el || p.elemento === el)), d = desde(ls);
-  // Revisión v7: con el «desde» va lo que se paga de golpe en ESE plan (el primero del catálogo si empatan), para que $81 no
-  // se lea como un precio de cada mes junto a los «desde» de la membresía y el paquete.
-  const pd = ls.find(p => ppc(p) === d);
+  // Revisión v9: el «desde» con las de 12 clases (el criterio de las fichas de arriba); si no hay de 12, todas.
+  const ls = CAT.planes.filter(p => p.largo && (!el || p.elemento === el)), l12 = ls.filter(p => !p.ilimitada && p.clases === CLASES_REF);
+  const base = l12.length ? l12 : ls, d = desde(base);
+  // Revisión v7: con el «desde» va lo que se paga de golpe en ESE plan (el primero del catálogo si empatan), para que el precio
+  // bajo no se lea como un precio de cada mes junto a los «desde» de la membresía y el paquete.
+  const pd = base.find(p => ppc(p) === d);
   return `<button class="franja" data-largo="${esc(el || '')}"><span class="estrella" aria-hidden="true">${ico('vigencia')}</span><span class="txt">
     <span class="fila1"><span class="tit">${T(x.masBarato ? 'largo.boton' : 'largo.botonSinPresumir')}</span>
-    ${Number.isFinite(d) ? `<span class="lin">${T('largo.botonDesde', { porClase: pesos(d) })} · ${T('largo.botonPago', { precio: pesos(pd.precio), cada: cadaDe(pd.cicloTexto) })}</span>` : ''}</span>
+    ${Number.isFinite(d) ? `<span class="lin">${T(l12.length ? 'largo.botonDoce' : 'largo.botonDesde', { porClase: pesos(d), clases: CLASES_REF })} · ${T('largo.botonPago', { precio: pesos(pd.precio), cada: cadaDe(pd.cicloTexto) })}</span>` : ''}</span>
     <span class="sub2">${T(x.masBarato ? 'largo.botonSub' : 'largo.botonSubSinPresumir')}</span></span><span class="flecha" aria-hidden="true">›</span></button>`;
 }
 /** v7 (Olmo, 9-nov): las trimestrales y semestrales que van en el bloque aparte, una por grupo (en la pantalla de elementos,
@@ -1805,11 +2034,21 @@ function bloqueAdelantado(filas, el, conElemento){
   // Revisión v7: en «¿cuántas clases?», un renglón por número de clases con la trimestral y la semestral lado a lado (en vez
   // de uno por plan): el bloque pesa menos que las fichas de cada mes de arriba.
   const grupos = [...new Set(filas.map(claveClases))].map(g => filas.filter(p => claveClases(p) === g));
-  const par = xs => `<span class="adel-fila adel-par"><span class="adel-plan">${esc(textoClases(claveClases(xs[0]), xs))}</span>
-    <span class="adel-celdas">${xs.map(p => nums(p, `<span class="adel-dur">${esc(p.etiquetaDuracion)}</span>`)).join('')}</span></span>`;
-  return `<button class="adel" data-largo="${esc(el || '')}"><span class="adel-cab"><span class="adel-ico" aria-hidden="true">${ico('vigencia')}</span><span class="txt">
-    <span class="adel-tit">${T('adelantado.titulo')}</span><span class="adel-sub">${T(presume ? 'adelantado.sub' : 'adelantado.subSinPresumir')}</span><span class="adel-flex">${T('adelantado.flexible')}</span></span></span>
-    <span class="adel-filas">${conElemento ? filas.map(fila).join('') : grupos.map(par).join('')}</span><span class="adel-pie">${T('adelantado.ver')} ›</span></button>`;
+  // v9: con su anual (del PDF, «en recepción») como tercera celda; en celular las celdas se deslizan a la derecha.
+  const celdaAnual = a => `<span class="adel-num adel-anual"><span class="adel-dur">${T('adelantado.anualDur')}</span><span class="adel-ppc">${T('adelantado.porClase', { porClase: pesos(a.porClase) })}</span><span class="adel-pago">${T('adelantado.anualPagas', { precio: pesos(a.total) })}</span></span>`;
+  const par = xs => { const an = el ? anualDe(el, claveClases(xs[0])) : null;
+    return `<span class="adel-fila adel-par"><span class="adel-plan">${esc(textoClases(claveClases(xs[0]), xs))}</span>
+    <span class="adel-celdas${an ? ' con-anual' : ''}">${xs.map(p => nums(p, `<span class="adel-dur">${esc(p.etiquetaDuracion)}</span>`)).join('')}${an ? celdaAnual(an) : ''}</span></span>`; };
+  // En «¿qué elemento?», una línea al pie con el anual más barato por clase de todos (tampoco se cobra en la tablet).
+  const anuales = conElemento ? ORDEN_EL.flatMap(e => Object.keys((ANU.precios || {})[e] || {}).map(g => anualDe(e, g))).filter(Boolean) : [];
+  const conAnual = conElemento ? anuales.length > 0 : grupos.some(xs => anualDe(el, claveClases(xs[0])));
+  // Revisión v9: «desde» con los anuales de 12 clases (el mismo criterio que la primera pantalla); si no hay, todos.
+  const an12 = anuales.filter(a => a.n === CLASES_REF), anRef = an12.length ? an12 : anuales;
+  const lineaAnual = anuales.length ? `<span class="adel-anual-linea">${T(an12.length ? 'adelantado.anualLineaDoce' : 'adelantado.anualLinea', { porClase: pesos(Math.min(...anRef.map(a => a.porClase))), clases: CLASES_REF })}</span>` : '';
+  // v9: ya no es un <button> (adentro hay celdas que se deslizan): un div con role="button" (Enter o espacio lo abren).
+  return `<div class="adel" data-largo="${esc(el || '')}" role="button" tabindex="0"><span class="adel-cab"><span class="adel-ico" aria-hidden="true">${ico('vigencia')}</span><span class="txt">
+    <span class="adel-tit">${T(conAnual ? 'adelantado.tituloAnual' : 'adelantado.titulo')}</span><span class="adel-sub">${T(presume ? 'adelantado.sub' : 'adelantado.subSinPresumir')}</span><span class="adel-flex">${T('adelantado.flexible')}</span></span></span>
+    <span class="adel-filas">${conElemento ? filas.map(fila).join('') : grupos.map(par).join('')}</span>${lineaAnual}<span class="adel-pie">${T('adelantado.ver')} ›</span></div>`;
 }
 function conectarLargo(caja){ caja.querySelectorAll('[data-largo]').forEach(b => b.onclick = () => irLargo(b.dataset.largo || null)); }
 /** v5.1: entrando sin elemento (desde «¿Membresía o paquete?») ya no salen las 24 tarjetas: pestañas por elemento, abre en el
@@ -1850,16 +2089,87 @@ function irLargo(el, pestanas = false){
   const tabs = pestanas ? `<div class="lg-tabs" role="tablist">${els.map(e => `<button class="lg-tab${e === el ? ' activa' : ''}" role="tab" aria-selected="${e === el}" data-tab="${e}">${svgEl(e, 36)}
     <span class="txt"><b>${EL[e][1]}</b><small>${T('heroe.desde')} ${esc(pesos(dEl(e)))}</small></span></button>`).join('')}</div>` : '';
   const grupos = [...new Set(xs.map(claveClases))].sort((a, b) => (a === 'ilimitada') - (b === 'ilimitada') || +a - +b);
-  $('largoLista').innerHTML = tabs + grupos.map(g => { const gx = xs.filter(p => claveClases(p) === g);
-    return `<h2 class="lg-grupo">${esc(textoClases(g, gx))}</h2><div class="planes2">${gx.map(carta).join('')}</div>`; }).join('');
+  // v9 (Olmo, 9-nov): cada número de clases es un carrusel (trimestral · semestral · anual): se desliza a la derecha para ver
+  // el anual (del PDF; se contrata en recepción, la tablet no lo cobra).
+  $('largoLista').innerHTML = tabs + grupos.map(g => { const gx = xs.filter(p => claveClases(p) === g).sort((a, b) => (a.diasCiclo || 0) - (b.diasCiclo || 0));
+    const an = anualDe(el, g), tarjetas = gx.map(carta).concat(an ? [cartaAnual(an)] : []);
+    return `<h2 class="lg-grupo">${esc(textoClases(g, gx))}</h2>${carrusel(tarjetas, textoClases(g, gx), an ? Tt('largo.desliza') : '')}`; }).join('');
   $('largoLetra').textContent = Tt('largo.letra');
   $('largoLista').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => irLargo(b.dataset.tab, true));
   $('largoLista').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
     const p = xs.find(x => x.planId === b.dataset.id); if (!p) return;
     A.tipo = 'membresia'; A.elemento = p.elemento; A.clases = claveClases(p); elegirPlan(p, { desdeLargo: true });
   });
+  // El anual NO avanza al pago: abre su hoja («Se contrata en recepción»).
+  $('largoLista').querySelectorAll('[data-anual]').forEach(b => b.onclick = () => abrirHoja(b.dataset.anual));
   ir('vLargo');
+  conectarCarruseles($('largoLista'));
 }
+
+/* --------------------------------------------------------------- v9: planes anuales (PDF «Planes Largo Plazo 2026»)
+   No existen en Wix: la tabla vive en textos-alta.js (ANUALES_ALTA). Se enseñan junto a la trimestral y la semestral, pero la
+   tablet no los cobra: tocarlos abre una hoja que dice que se contratan en recepción. El ahorro se calcula contra la mensual
+   de las mismas clases del catálogo de Wix (12 cobros), solo si es cierto. */
+const ANU = typeof ANUALES_ALTA !== 'undefined' ? ANUALES_ALTA : { precios: {}, beneficios: [], msi: null };
+function anualDe(el, g){
+  const total = ((ANU.precios || {})[el] || {})[g]; if (!total || !(+g > 0)) return null;
+  const n = +g, porClase = total / (n * 12), clave = `anual-${el}-${n}`;
+  const m = CAT.planes.find(p => p.tipo === 'membresia' && p.elemento === el && p.clases === n && p.duracion === 'mensual' && !p.largo);
+  const ahorro = m && m.precio * 12 > total ? m.precio * 12 - total : 0;
+  return { el, n, total, porClase, clave, ahorro, pct: ahorro ? Math.floor(ahorro * 100 / (m.precio * 12)) : 0 };
+}
+function cartaAnual(a){
+  const msi = ANU.msi && a.total >= ANU.msi.desde ? ANU.msi : null;
+  const ah = a.ahorro ? `<p class="lg-vs"><b class="lg-ah">${T('anual.ahorras', { ahorro: pesos(a.ahorro) })}</b><small>${T('anual.detalle', { pct: a.pct })}</small></p>` : '';
+  HOJAS.set(a.clave, { titulo: Tt('anual.hojaTit', { elemento: EL[a.el][1], clases: a.n }), cuerpo: `<p class="an-aviso">${T('anual.hojaTexto')}</p>
+    <p>${T('anual.total', { precio: pesos(a.total), porClase: pesos(a.porClase) })}</p>${ah}
+    <h3>${T('anual.incluye')}</h3>${perksLista((ANU.beneficios || []).map(x => ({ x })))}
+    ${msi ? `<p class="an-msi">${T('anual.msiTxt', { meses: msi.meses, desde: pesos(msi.desde) })}</p>` : ''}<p class="nota">${T('anual.letra')}</p>` });
+  return `<div class="carta plan elegible lg-carta lg-anual" data-anual="${esc(a.clave)}" role="button" tabindex="0" aria-label="${esc(Tt('anual.hojaTit', { elemento: EL[a.el][1], clases: a.n }) + '. ' + Tt('anual.recepcion'))}">
+    <span class="lg-fam-fila"><span class="lg-fam">${T('anual.fam')}</span><span class="an-recep">${T('anual.recepcion')}</span></span>
+    <div class="lg-nums"><div class="lg-n ppc"><small>${T('anual.porClaseEt')}</small><b>${esc(pesos(a.porClase))}</b></div>
+      <div class="lg-n"><small>${T('anual.pagoEt')}</small><b>${esc(pesos(a.total))}</b><span>${msi ? T('anual.pagoPie', { meses: msi.meses }) : ''}</span></div></div>
+    ${perksLista((ANU.beneficios || []).slice(0, 3).map(x => ({ x })))}${ah}
+    <div class="el-pie">${T('anual.pie')} ›</div></div>`;
+}
+
+/* --------------------------------------------------------------- v9: carrusel (anuales y hoja de Dúo/Tribu)
+   Desliza con el dedo (scroll-snap nativo), con flechas o con los puntos. Respeta prefers-reduced-motion. */
+const sinMovimiento = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+function carrusel(slides, etiqueta, pista = '', clase = ''){
+  const n = slides.length;
+  return `<div class="carr${clase ? ' ' + clase : ''}"><div class="carr-pista" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="${esc(etiqueta)}">
+    ${slides.map((x, i) => `<div class="carr-item" role="group" aria-roledescription="diapositiva" aria-label="${i + 1} de ${n}">${x}</div>`).join('')}</div>
+    <div class="carr-ctl"><button type="button" class="carr-fl" data-dir="-1" aria-label="Anterior">‹</button>
+      <span class="carr-puntos">${slides.map((_, i) => `<button type="button" class="carr-p" data-i="${i}" aria-label="Ir a la ${i + 1} de ${n}"></button>`).join('')}</span>
+      <button type="button" class="carr-fl" data-dir="1" aria-label="Siguiente">›</button>${pista ? `<span class="carr-pista-txt">${esc(pista)}</span>` : ''}</div></div>`;
+}
+function conectarCarruseles(raiz){
+  raiz.querySelectorAll('.carr').forEach(c => {
+    const pista = c.querySelector('.carr-pista'), items = [...pista.children], puntos = [...c.querySelectorAll('.carr-p')], fl = c.querySelectorAll('.carr-fl');
+    const hoja = c.classList.contains('carr-hoja');
+    // Revisión v9: un punto por cada posición a la que se puede llegar (si caben 2 tarjetas y sobra un poco, las de en medio no
+    // se alcanzan: su punto no sale); la última posición es «hasta el final».
+    const off = i => items[i].offsetLeft - items[0].offsetLeft, max = () => Math.max(0, pista.scrollWidth - pista.clientWidth);
+    const posiciones = () => { const m = max(), ps = items.map((_, i) => i).filter(i => off(i) < m - 2); ps.push(items.length - 1); return [...new Set(ps)]; };
+    const actual = ps => { const m = max(); if (m > 2 && pista.scrollLeft >= m - 2) return items.length - 1;
+      return ps.reduce((a, i) => (Math.abs(off(i) - pista.scrollLeft) < Math.abs(off(a) - pista.scrollLeft) ? i : a), ps[0]); };
+    const pinta = () => { const ps = posiciones(), i = actual(ps), cabe = pista.scrollWidth <= pista.clientWidth + 2;
+      c.classList.toggle('cabe', cabe); c.classList.toggle('fin', i === items.length - 1);
+      puntos.forEach((p, k) => { p.hidden = !ps.includes(k); p.setAttribute('aria-current', String(k === i)); });
+      fl[0].disabled = i === ps[0]; fl[1].disabled = i === ps[ps.length - 1];
+      // Revisión v9: en la hoja de Dúo/Tribu la pista mide lo que la diapositiva que se ve (sin el hueco de la más alta).
+      if (hoja) pista.style.height = (items[i].offsetHeight + 12) + 'px'; };
+    const a = i => { i = Math.max(0, Math.min(items.length - 1, i)); pista.scrollTo({ left: Math.min(off(i), max()), behavior: sinMovimiento() ? 'auto' : 'smooth' }); };
+    fl.forEach(b => b.onclick = e => { e.stopPropagation(); const ps = posiciones(), k = ps.indexOf(actual(ps)); a(ps[Math.max(0, Math.min(ps.length - 1, k + +b.dataset.dir))]); });
+    puntos.forEach(b => b.onclick = e => { e.stopPropagation(); a(+b.dataset.i); });
+    let raf = 0; pista.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(pinta); }, { passive: true });
+    c._pinta = pinta; pinta();
+  });
+}
+window.addEventListener('resize', () => document.querySelectorAll('.carr').forEach(c => c._pinta && c._pinta()));
+// v9: las tarjetas que son role="button" (no <button>) también se eligen con Enter o espacio desde el teclado.
+document.addEventListener('keydown', e => { const t = e.target; if ((e.key === 'Enter' || e.key === ' ') && t && t.getAttribute && t.getAttribute('role') === 'button' && t.tagName !== 'BUTTON') { e.preventDefault(); t.click(); } });
 
 /** 2b. Elemento: disciplinas (Bookings) y, en su botón, la agenda de la semana (v6). */
 function disciplinasDeElemento(el){
@@ -1877,16 +2187,19 @@ function irElemento(navegar = true){
   $('elLista').innerHTML = els.map(el => {
     const ds = disciplinasDeElemento(el), xs = CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === el);
     const cortas = xs.filter(p => !p.largo), d = desde(cortas.length ? cortas : xs);
+    const doce = doceDe(xs), dd = doce.length ? desde(doce) : d;   // v9: el de 12 clases (el mismo criterio que la primera pantalla)
     const disc = ds.length ? `<div class="el-disc-tit">${T('elemento.disciplinas')}</div><ul class="el-disc">${ds.map(x => `<li><i style="background:${colorDe(x)[0]}" aria-hidden="true"></i>${esc(x)}</li>`).join('')}</ul>` : '';
     const ver = conHorarios(ds).length ? `<button type="button" class="ver-ag" data-agenda="${el}">${ico('vigencia', 22)}${T('elemento.verHorarios')}</button>` : '';
     return `<div class="carta elegible el-carta" data-e="${el}" role="button" tabindex="0" aria-label="${esc(Tt('elemento.elegir', { elemento: EL[el][1] }) + '. ' + Tt('elemento.incluye', { disciplinas: lista(ds) }))}" style="--c:${EL[el][0]}${el === 'AGUA' ? ';--o:.24' : ''}">
-      <div class="el-cab">${svgEl(el, 52)}<h2>${EL[el][1]}</h2>${Number.isFinite(d) ? `<div class="el-precio"><small>${T('heroe.desde')}</small><b>${esc(pesos(d))}</b><span>${T('heroe.porClase')}</span></div>` : ''}</div>
+      <div class="el-cab">${svgEl(el, 52)}<h2>${EL[el][1]}</h2>${Number.isFinite(dd) ? `<div class="el-precio"><small>${doce.length ? T('elemento.doce', { clases: CLASES_REF }) : T('heroe.desde')}</small><b>${esc(pesos(dd))}</b><span>${T('heroe.porClase')}</span></div>` : ''}</div>
       <div class="el-cuerpo">${disc}${ver}
       <div class="el-pie">${T('elemento.elegir', { elemento: EL[el][1] })} ›</div></div></div>`;
   }).join('');
   $('elLista').querySelectorAll('[data-e]').forEach(b => b.onclick = () => { A.elemento = b.dataset.e; irClases(); });
   // v7: un renglón por elemento (su trimestral o semestral más barata por clase), aparte.
-  const filas = filasAdelantado(CAT.planes.filter(p => p.tipo === A.tipo && els.includes(p.elemento)), p => p.elemento)
+  // Revisión v9: si el elemento tiene trimestral o semestral de 12 clases, su renglón sale de esas (el criterio de los «desde»).
+  const candL = CAT.planes.filter(p => p.tipo === A.tipo && els.includes(p.elemento)), doceL = e => candL.some(p => p.largo && p.elemento === e && p.clases === CLASES_REF);
+  const filas = filasAdelantado(candL.filter(p => !doceL(p.elemento) || p.clases === CLASES_REF), p => p.elemento)
     .sort((a, b) => ORDEN_EL.indexOf(a.elemento) - ORDEN_EL.indexOf(b.elemento));
   $('elExtra').innerHTML = bloqueAdelantado(filas, null, true); conectarLargo($('elExtra'));
   if (navegar) ir('vElemento');
@@ -1965,10 +2278,11 @@ const notaFaltan = xs => {
 };
 /** «$1,090 cada mes» en membresías; «$1,340 · Vigencia de 1 mes» en paquetes. */
 const precioCon = p => (p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) : `${pesos(p.precio)} · ${p.etiquetaDuracion}`);
-function irClases(){
+function irClases(navegar = true){
   const ps = deLaCasilla(), grupos = [...new Set(ps.map(claveClases))];
   $('clasesTitulo').textContent = Tt('clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
   $('clasesSub').textContent = Tt('clases.sub');
+  interruptorRegalo($('clasesRegalo'), ps, () => irClases(false));
   // v6: el sello «El más barato por clase de esta lista» sigue al número GRANDE que se ve en cada ficha (en membresía con
   // mensual, el de la mensual; antes caía en la ficha con la semestral más barata aunque otra enseñara un número menor).
   const fichas = grupos.map(g => {
@@ -1996,7 +2310,11 @@ function irClases(){
       if (Number.isFinite(ppc(m))) porClase = `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(ppc(m)) })}</span>`;
       precio = `<small>${esc(precioCon(m))}</small>`;
     }
-    return `<button class="op tile${top ? ' destacada' : ''}${top && hayLargo ? ' sello2' : ''}" data-g="${g}" aria-label="${esc(textoClases(g, xs))}">${top ? `<span class="mejor">${sello}</span>` : ''}${num}${fichaRegalo(regaloDe(opcionesDe(xs)))}<span class="tile-sep"></span>${porClase}${precio}${notaFaltan(xs)}</button>`;
+    // v9 (Olmo, 9-nov): la cinta es «★ El más elegido» en la de 12 clases; «el más barato por clase» baja a una etiqueta
+    // dentro de su ficha (una sola cinta: no dos peleando).
+    const elegida = g === String(CLASES_REF);
+    const et = top ? `<span class="mejor-et">${sello}</span>` : '';
+    return `<button class="op tile${elegida ? ' elegida' : ''}" data-g="${g}" aria-label="${esc([textoClases(g, xs), elegida ? Tt('clases.elegido').replace('★ ', '') : '', top ? Tt('clases.mejor') : ''].filter(Boolean).join('. '))}">${elegida ? `<span class="cinta">${T('clases.elegido')}</span>` : ''}${num}${fichaRegalo(regaloDe(opcionesDe(xs)))}<span class="tile-sep"></span>${porClase}${precio}${et}${notaFaltan(xs)}</button>`;
   }).join('');
   $('clasesLista').querySelectorAll('button').forEach(b => b.onclick = () => {
     A.clases = b.dataset.g; const xs = opcionesDe(ps.filter(p => claveClases(p) === A.clases));
@@ -2007,25 +2325,26 @@ function irClases(){
   const filas = filasAdelantado(CAT.planes.filter(p => p.tipo === 'membresia' && p.elemento === A.elemento), p => p.planId)
     .sort((a, b) => (a.ilimitada - b.ilimitada) || (a.clases - b.clases) || (a.diasCiclo - b.diasCiclo));
   $('clasesExtra').innerHTML = bloqueAdelantado(filas, A.elemento, false); conectarLargo($('clasesExtra'));
-  ir('vClases');
+  if (navegar) ir('vClases');
 }
 // Si los planes de la casilla no se llaman igual (fuera de la palabra de duración), se enseña el nombre (p. ej. «AGUA Serena»).
 const nombreBase = n => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\b(mensual|trimestral|semestral|anual)\b/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
 /** Revisión v7 (Olmo, 9-nov): si hay alguna que se cobra cada mes (o cada 45 días), la trimestral y la semestral no se ofrecen
  *  junto a ella: ya están en el bloque «Si pagas por adelantado» de debajo. Solo si no hay otra cosa se eligen aquí. */
 const opcionesDe = xs => { const c = xs.filter(p => !p.largo); return c.length ? c : xs; };
-function irDuracion(xs){
+function irDuracion(xs, navegar = true){
   xs = opcionesDe(xs);
   const conNombre = new Set(xs.map(p => nombreBase(p.nombre))).size > 1, mejor = desde(xs);
   $('durTitulo').textContent = Tt(A.tipo === 'membresia' ? 'duracion.titulo' : 'clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
   $('durSub').textContent = A.tipo === 'membresia' ? Tt('duracion.sub') : '';
+  interruptorRegalo($('durRegalo'), xs, () => irDuracion(xs, false));
   // v5.1: mismas fichas que «¿cuántas clases?»: la duración en grande, el precio por clase como héroe y el cobro debajo.
   $('durLista').innerHTML = xs.map((p, i) => { const top = ppc(p) === mejor;
     // «$6,480 cada 6 meses (se cobra por adelantado)»: que no se lea como cobro mensual (revisión 9-nov).
     const cobro = p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) + (p.familia && p.familia !== 'mensual' ? ` (${Tt('duracion.adelantado')})` : '') : pesos(p.precio);
     return `<button class="op tile${top ? ' destacada' : ''}" data-i="${i}">${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}<span class="tile-num txt">${esc(p.etiquetaDuracion)}</span>${conNombre ? `<small class="nombre">${esc(p.nombre)}</small>` : ''}${fichaRegalo(p.regalo)}<span class="tile-sep"></span>${p.precioPorClase ? `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}<small>${esc(cobro)}</small>${notaFaltan([p])}</button>`; }).join('');
   $('durLista').querySelectorAll('button').forEach(b => b.onclick = () => elegirPlan(xs[+b.dataset.i]));
-  ir('vDuracion');
+  if (navegar) ir('vDuracion');
 }
 function elegirPlan(p, { desdeLargo = false } = {}){
   A.plan = p; A.desdeLargo = desdeLargo;   // v6: el refuerzo del resumen repite las cifras (pesos cerrados) de la tarjeta trimestral
@@ -2176,14 +2495,27 @@ function tablaRegalo(){
 /** El regalo de una ficha solo si todas sus opciones regalan lo mismo (AGUA 18 junta el de 1 mes y el Serena, que no regala:
  *  ahí se dice en la ficha de cada vigencia). */
 const regaloDe = xs => { const rs = [...new Set(xs.map(p => p.regalo || 0))]; return rs.length === 1 ? rs[0] : 0; };
-const fichaRegalo = n => (n > 0 ? `<small class="tile-regalo">${T('bienvenida.ficha', { n })}</small>` : '');
+/** v9 (Olmo, 9-nov): el «+N de regalo» ya no sale siempre: solo con el interruptor «Ver con mi regalo de bienvenida»
+ *  encendido, y siempre con «solo tu primer mes» / «solo en esta compra» (es una sola vez, no cada mes). */
+const fichaRegalo = n => (n > 0 && A && A.verRegalo ? `<small class="tile-regalo">${T('bienvenida.ficha', { n })}<span>${T('bienvenida.fichaNota.' + (A.tipo === 'paquete' ? 'paquete' : 'membresia'))}</span></small>` : '');
+/** v9: interruptor debajo del subtítulo (apagado al entrar a cada venta). Solo si alguna opción de la lista regala y existe la
+ *  hoja de condiciones. Es solo visual: el derecho lo decide el servidor, como siempre. */
+function interruptorRegalo(caja, xs, repintar){
+  const hay = xs.some(p => p.regalo > 0) && HOJAS.has('bienvenida');
+  caja.hidden = !hay; if (!hay) { caja.innerHTML = ''; return; }
+  const on = !!A.verRegalo;
+  caja.innerHTML = `<button type="button" class="regalo-sw" role="switch" aria-checked="${on}"><span class="t">${T('bienvenida.interruptor')}</span><span class="sw" aria-hidden="true"><i></i></span></button>`
+    + (on ? `<p class="regalo-nota">${T(A.tipo === 'paquete' ? 'bienvenida.interruptorNotaPaquete' : 'bienvenida.interruptorNota')} <button type="button" class="cond-in" data-hoja="bienvenida">${T('bienvenida.interruptorVer')}</button></p>` : '');
+  caja._repintar = repintar;
+  caja.querySelector('.regalo-sw').onclick = () => { A.verRegalo = !A.verRegalo; repintar(); const b = caja.querySelector('.regalo-sw'); if (b) b.focus(); };
+}
 /** Dúo/Tribu: solo membresía MENSUAL de 8 clases o más (no paquetes, ni de 4, ni trimestral o semestral, ni la de prueba). */
 const esDeGrupo = p => !!p && !p.prueba && p.tipo === 'membresia' && p.duracion === 'mensual' && p.clases >= 8;
 /** Ejemplo del grupo con el precio REAL de la membresía de TX.grupo.ejemplo (FUEGO 12): de lista y con cada %, a pesos. */
 function ejemploGrupo(){
   const G = TX.grupo || {}, e = G.ejemplo || {};
   const p = CAT.planes.find(x => esDeGrupo(x) && x.elemento === e.elemento && x.clases === e.clases);
-  return p ? { nombre: p.nombre, precio: p.precio, filas: (G.escalones || []).map(s => ({ quienes: s.quienes, pct: s.pct, precio: pesos(Math.round(p.precio * (100 - s.pct) / 100)) })) } : null;
+  return p ? { nombre: p.nombre, precio: p.precio, filas: (G.escalones || []).map(s => ({ quienes: s.quienes, pct: s.pct, monto: Math.round(p.precio * (100 - s.pct) / 100), precio: pesos(Math.round(p.precio * (100 - s.pct) / 100)) })) } : null;
 }
 /** Hojas de condiciones de las dos promos (mismo molde que «ⓘ Condiciones»). */
 function hojasPromos(){
@@ -2194,14 +2526,19 @@ function hojasPromos(){
     HOJAS.set('bienvenida', { titulo: Tt('bienvenida.titulo'), cuerpo: `<p>${T('bienvenida.intro')}</p>
       <table><thead><tr><th>${T('bienvenida.colClases')}</th><th>${T('bienvenida.colPaquete')}</th><th>${T('bienvenida.colMembresia')}</th></tr></thead>
       <tbody>${tabla.map(([c, f]) => `<tr><td>${T('bienvenida.filaClases', { clases: c })}</td><td>${celda(f.paquete)}</td><td>${celda(f.membresia)}</td></tr>`).join('')}</tbody></table>
-      ${ul([T('bienvenida.usar'), T('bienvenida.soloHoy'), T('bienvenida.aplica', { cantidades: lista(tabla.map(x => String(x[0]))) }), T('bienvenida.noAplica')])}` });
+      ${ul([T('bienvenida.unaVez'), T('bienvenida.usar'), T('bienvenida.soloHoy'), T('bienvenida.aplica', { cantidades: lista(tabla.map(x => String(x[0]))) }), T('bienvenida.noAplica')])}` });
   }
-  const G = TX.grupo || {}, ej = ejemploGrupo();
-  HOJAS.set('grupo', { titulo: Tt('grupo.titulo'), cuerpo: `<p>${T('grupo.intro')}</p>
-    ${ul((G.escalones || []).map(e => T('grupo.escalon', e) + (e.nombre ? T('grupo.escalonNombre', e) : '')))}
-    <h3>${T('grupo.reglasTit')}</h3>${ul((G.reglas || []).map((_, i) => T('grupo.reglas.' + i)))}
-    <h3>${T('grupo.noAplicaTit')}</h3><p>${T('grupo.noAplica')}</p><h3>${T('grupo.cancelaTit')}</h3><p>${T('grupo.cancela')}</p>
-    ${ej ? `<h3>${T('grupo.ejemploTit', { plan: nombreLimpio(ej.nombre) })}</h3><div class="ej"><p>${T('grupo.ejemploLista', { precio: pesos(ej.precio) })}</p>${ul(ej.filas.map(f => T('grupo.ejemploFila', f)))}<p class="nota">${T('grupo.ejemploNota')}</p></div>` : ''}` });
+  // v9 (Olmo, 9-nov: «más sencilla de entender, no solo texto»): 4 diapositivas en carrusel (se deslizan con el dedo, flechas o
+  // puntos): cuánto ahorran, el ejemplo con el precio REAL del catálogo, las reglas clave con icono y cómo hacerlo hoy.
+  const G = TX.grupo || {}, ej = ejemploGrupo(), dia = (i, x) => `<div class="gr-dia"><h3 class="gr-tit">${T('grupo.diapositivas.' + i)}</h3>${x}</div>`;
+  const d1 = `<p class="gr-intro">${T('grupo.intro')}</p><div class="gr-pcts">${(G.escalones || []).map(e => `<div class="gr-pct"><b>${T('grupo.pct', e)}</b><span>${esc(e.quienes)}</span>${e.nombre ? `<small>${esc(e.nombre)}</small>` : ''}</div>`).join('')}</div>`;
+  const d2 = ej ? `<p class="gr-plan">${esc(nombreLimpio(ej.nombre))}</p><p>${T('grupo.ejemploLista', { precio: pesos(ej.precio) })}</p>
+    <div class="gr-filas">${ej.filas.map(f => `<div class="gr-fila"><span class="gr-q">${esc(f.quienes)} <i>${T('grupo.pct', f)}</i></span><span class="gr-p"><b>${esc(f.precio)}</b><small>${T('grupo.ejemploCada')} · ${T('grupo.ejemploAhorro', { ahorro: pesos(ej.precio - f.monto) })}</small></span></div>`).join('')}</div>
+    <p class="nota">${T('grupo.ejemploNota')}</p>` : '';
+  const d3 = `<div class="gr-claves">${(G.claves || []).map(k => `<div class="gr-clave"><span class="gr-ico" aria-hidden="true">${esc(k.ico)}</span><span><b>${esc(k.tit)}</b><small>${k.de ? T(k.de) : esc(k.txt)}</small></span></div>`).join('')}</div>
+    <p class="gr-chica">${T('grupo.compatible')} <b>${T('grupo.noAplicaTit')}:</b> ${T('grupo.noAplica')}</p>`;
+  const d4 = `<ol class="gr-pasos">${(G.pasos || []).map((_, i) => `<li><span class="gr-n" aria-hidden="true">${i + 1}</span><span>${T('grupo.pasos.' + i, { casilla: Tt('grupo.casilla') })}</span></li>`).join('')}</ol>`;
+  HOJAS.set('grupo', { titulo: Tt('grupo.titulo'), cuerpo: carrusel([dia(0, d1), ...(d2 ? [dia(1, d2)] : []), dia(2, d3), dia(3, d4)], Tt('grupo.titulo'), '', 'carr-hoja') });
 }
 /** «¿Membresía o paquete?»: la franja de la Oferta de Bienvenida y el botón de Dúo/Tribu (cada uno abre su hoja). */
 function bloquePromos(){
@@ -2210,6 +2547,10 @@ function bloquePromos(){
   const grupo = CAT.planes.some(esDeGrupo) ? `<button type="button" class="grupo-btn" data-hoja="grupo">${T('grupo.boton')}</button>` : '';
   return bien || grupo ? `<div class="promos">${bien}${grupo}</div>` : '';
 }
+/** Revisión v9: la línea «es una sola vez» del resumen. Una membresía sin número de clases (el plan de prueba recurrente llega
+ *  con clases: null y, con alta_bono_prueba, regalo: 1) dice la genérica en vez de «son tus  clases .». */
+const unaVezDe = p => (p.tipo === 'membresia' && p.clases > 0 ? T('bienvenida.unaVezMembresia', { clases: p.clases, frecuencia: p.frecuencia || '' })
+  : T(p.tipo === 'membresia' ? 'bienvenida.unaVezGenerico' : 'bienvenida.unaVezPaquete'));
 /** La tablet no cobra con el anticipo vivo (se descuenta del plan en el panel) ni si viene en grupo (recepción le da su código). */
 const noSeCobra = () => !!(A && A.plan && ((A.bienvenida || {}).bloqueo || (esDeGrupo(A.plan) && A.grupo)));
 /** Resumen: recuadro del regalo (si el servidor dijo que tiene derecho), botón discreto de recepción, casilla de grupo y
@@ -2223,7 +2564,8 @@ function pintarPromos(){
   $('resBien').hidden = !con;
   $('resBien').innerHTML = !con ? '' : enGrupo ? T('bienvenida.enGrupo', { n: reg })
     + (B.quien ? `<small class="bien-ok">${T('bienvenida.confirmo', { quien: B.quien })}</small>` : '') : T('bienvenida.resumen', { n: reg })
-    + (p.tipo === 'membresia' ? `<small>${T('bienvenida.primerMes', { porClase: pesos(p.precio / (p.clases + reg)), precio: pesos(p.precio), total: p.clases + reg })}</small>` : '')
+    + (p.tipo === 'membresia' && p.clases > 0 ? `<small>${T('bienvenida.primerMes', { porClase: pesos(p.precio / (p.clases + reg)), precio: pesos(p.precio), total: p.clases + reg })}</small>` : '')
+    + `<small>${unaVezDe(p)}</small>`
     + (B.quien ? `<small class="bien-ok">${T('bienvenida.confirmo', { quien: B.quien })}</small>` : '');
   $('resBienRecep').hidden = !(reg > 0 && !B.derecho && !bloqueo && A.verif); $('resBienRecep').textContent = Tt('bienvenida.boton');
   $('resGrupoCaja').hidden = !(esDeGrupo(p) && !bloqueo); $('resGrupoTxt').textContent = Tt('grupo.casilla'); $('resGrupo').checked = !!A.grupo;
