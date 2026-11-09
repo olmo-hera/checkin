@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VDKjyxm02wGS6vjEoXG8yxS+KT6bg9hjzqGZk2AE7Qg=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yJV19c3vQNRPHXNYDHIyjHdk+khFLktsAyjJ49ihajE=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -11,13 +11,16 @@
 <title>Alta en mostrador · Hera Zenter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;1,400&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#6F6F6F;
+  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#5E5E5E;   /* v5: gris más oscuro (contraste AA sobre arena) */
   --arena:#EFE7DE; --arena-suave:#F7F2EC; --crema:#E8DCD0; --pizarra:#788991;
   --ok:#4F7A5A; --alerta:#B5651D;
   --fuego:#E8613C; --agua:#3C8FD6; --aire:#6F9CCB; --tierra-el:#7A6A4F;
+  --terracota-suave:#FBF0E8; --verde-suave:#E9F2EB; --verde-texto:#2E5A3A; --oro:#D4A23C; --oro-borde:#A97A1F; --oro-tallo:#B8862B;
+  /* v6: paleta del «Weekly Schedule» de Hera (Instagram): agenda de la semana, un color por disciplina */
+  --ag-vino:#8E4A55; --ag-naranja:#D98A5B; --ag-salvia:#8E9E7A; --ag-azul:#7590A3; --ag-carbon:#3E3E3E; --ag-crema:#F3EEE6; --ag-borde:#DDD2C4;
   --radio:18px; --sombra:0 1px 2px rgba(66,73,73,.08),0 6px 24px rgba(66,73,73,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -144,6 +147,302 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
 .carta.prueba .grupo{color:var(--alerta);font-weight:500;font-size:18px}
 .aviso-cancelar{background:#FDECEC;border:2.5px solid #B42318;border-radius:14px;padding:12px 18px;font-size:19px;font-weight:600;color:#B42318;max-width:640px;margin:0 auto 10px}
 .aviso-prueba{background:#FFF7E8;border:2px dashed var(--alerta);border-radius:14px;padding:12px 18px;font-size:18px;color:var(--alerta);max-width:640px}
+/* v5 (rediseño 8-nov): fichas de membresía/paquete, elementos, «¿cuántas clases?» y trimestrales. Una cosa grande por ficha
+   (el precio por clase o el número de clases), frases cortas con icono, letra chica tras «ⓘ Condiciones». */
+.ico{width:26px;height:26px;flex:none;color:var(--terracota)}
+.heroe{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;color:var(--carbon)}
+.heroe .desde{font-size:19px}
+.heroe .monto{font-family:Poppins;font-weight:600;font-size:54px;line-height:1;color:var(--terracota);letter-spacing:-.02em}
+.heroe .unidad{font-size:21px;font-weight:500}
+.heroe-nota{font-size:16px;color:var(--gris);margin-top:-6px}
+.puntos2{list-style:none;display:flex;flex-direction:column;gap:12px}
+.carta .puntos2 li{display:flex;align-items:center;gap:12px;font-size:20px;line-height:1.3;color:var(--texto);padding-left:0}
+.carta .puntos2 li::before{content:none}
+.cab .ico{width:50px;height:50px;color:var(--carbon)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-block;background:var(--arena-suave);border:1px solid var(--crema);border-radius:999px;padding:7px 14px;font-size:16px;line-height:1.25;color:var(--carbon)}
+.chip .fam{color:var(--gris);font-size:14px}
+.ahorro{display:flex;flex-direction:column;gap:2px;background:var(--verde-suave);border-radius:14px;padding:10px 14px;color:var(--verde-texto);font-size:19px}
+.ahorro b{font-family:Poppins;font-weight:600}
+.ahorro small{font-size:15px;color:var(--verde-texto)}
+.cond{align-self:flex-start;font-size:17px;color:var(--carbon);text-decoration:underline;text-underline-offset:3px;padding:10px 2px;min-height:44px}
+.plan{position:relative;padding:28px 24px 22px;gap:16px}
+.plan .cab{display:flex;align-items:center;gap:14px}
+.plan .cab h2{font-size:30px}
+.plan .cab .lema{font-size:17px;color:var(--carbon);font-weight:400;margin-top:2px}
+.plan .cab svg{flex:none}
+.plan.reco{border:2.5px solid var(--terracota);background:linear-gradient(180deg,var(--terracota-suave) 0,#fff 46%)}
+.sello{position:absolute;top:-1px;right:20px;background:var(--terracota);color:#fff;font-family:Poppins;font-weight:600;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;border-radius:0 0 12px 12px}
+.plan .btn{margin-top:auto}
+.franja{width:100%;display:flex;align-items:center;gap:16px;text-align:left;background:linear-gradient(90deg,#F6E6D2,#FFF8EE);border:2px solid #E2C27A;border-radius:var(--radio);padding:18px 20px;box-shadow:var(--sombra)}
+.franja:active{transform:scale(.99)}
+.franja .estrella{width:48px;height:48px;border-radius:50%;background:var(--terracota);color:#fff;display:grid;place-items:center;flex:none;font-size:24px}
+.franja .txt{flex:1;display:flex;flex-direction:column;gap:3px}
+.franja .tit{font-family:Poppins;font-weight:600;font-size:21px;color:var(--carbon);line-height:1.2}
+.franja .lin{font-size:19px;color:var(--texto)}
+.franja .lin b{color:var(--terracota);font-family:Poppins;font-weight:600}
+.franja .sub2{font-size:15px;color:var(--gris)}
+.franja .flecha{font-size:34px;color:var(--terracota);flex:none;line-height:1}
+/* elementos */
+.el-carta{padding:0;overflow:hidden;gap:0}
+.el-cab{position:relative;display:flex;align-items:center;gap:14px;padding:18px 20px;border-top:6px solid var(--c)}
+.el-cab::before{content:'';position:absolute;inset:0;background:var(--c);opacity:.13}
+.el-cab > *{position:relative}
+.el-cab h2{font-size:28px;flex:1}
+.el-precio{text-align:right;color:var(--carbon);line-height:1.1}
+.el-precio small{display:block;font-size:15px}
+.el-precio b{font-family:Poppins;font-weight:600;font-size:30px;color:var(--carbon)}
+.el-precio span{font-size:16px}
+.el-cuerpo{display:flex;flex-direction:column;gap:14px;padding:16px 20px 18px;flex:1}
+.el-cuerpo .chip{font-size:17px;background:#fff;border-color:var(--crema)}
+.agenda{display:flex;flex-direction:column;gap:10px}
+.agenda .tit{font-size:16px;color:var(--gris)}
+.ag-fila{display:flex;flex-direction:column;gap:6px}
+.ag-fila b{font-size:17px;font-weight:500;color:var(--carbon)}
+.ag-horas{display:flex;flex-wrap:wrap;gap:6px}
+.ag-horas i{font-style:normal;font-size:16px;color:var(--carbon);background:var(--arena-suave);border-radius:8px;padding:5px 10px;font-variant-numeric:tabular-nums}
+.el-pie{margin-top:auto;padding-top:6px;font-size:19px;font-weight:500;color:var(--terracota)}
+/* ¿cuántas clases? */
+.tiles{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.op.tile{position:relative;justify-content:flex-start;gap:4px;padding:30px 18px 22px;min-height:0}
+.tile-num{font-family:Poppins;font-weight:600;font-size:60px;line-height:1;color:var(--carbon)}
+.tile-num.txt{font-size:34px;line-height:1.2}
+.tile-unidad{font-size:19px;color:var(--carbon);font-weight:400}
+.tile-sep{width:44px;height:2px;background:var(--crema);margin:10px 0 8px}
+.tile-ppc{font-size:20px;color:var(--carbon);font-weight:400}
+.tile-ppc b{font-family:Poppins;font-weight:600;font-size:26px;color:var(--terracota)}
+.op.tile small{font-size:17px;color:var(--gris)}
+.op.tile.destacada{border-color:#D9B25E;background:#FFFBF2;padding-top:40px}
+.op.tile.sello2{padding-top:58px}
+.op.tile .mejor small{display:block;font-size:13px;line-height:1.2;opacity:.9}
+.op.tile .mejor{position:absolute;top:-1px;left:50%;transform:translateX(-50%);margin:0;border-radius:0 0 10px 10px;width:max-content;max-width:calc(100% - 24px);font-size:14px;padding:4px 12px;background:#F5E7C8;color:#6A4708}
+/* trimestrales y semestrales */
+.lg-fam{display:inline-block;align-self:flex-start;background:var(--terracota-suave);color:var(--terracota);font-weight:500;font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:4px 12px}
+.carta .lg-nombre{font-size:20px;line-height:1.25}
+.lg-linea{font-size:19px;color:var(--texto);margin-top:-6px}
+.lg-vs{font-size:17px;line-height:1.4;border-radius:12px;padding:10px 14px;background:var(--verde-suave);color:var(--verde-texto)}
+.lg-vs.no{background:var(--arena-suave);color:var(--texto)}
+/* panel de condiciones */
+.hoja-fondo{position:fixed;inset:0;z-index:50;background:rgba(43,43,43,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.hoja{background:#fff;border-radius:22px;width:min(620px,100%);max-height:86dvh;overflow:auto;padding:26px 24px;text-align:left;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 48px rgba(0,0,0,.25)}
+.hoja h2{font-size:26px}
+.hoja h3{font-size:18px;margin-top:6px}
+.hoja p,.hoja li{font-size:18px;line-height:1.45;color:var(--texto)}
+.hoja ul{padding-left:22px;display:flex;flex-direction:column;gap:4px}
+.hoja .btn{width:100%;margin-top:6px}
+@media (max-width:700px){ .heroe .monto{font-size:46px} .plan .cab h2{font-size:26px} .franja{padding:16px} .franja .estrella{width:40px;height:40px;font-size:20px} .franja .tit{font-size:19px} .tile-num{font-size:52px} }
+/* v5.1 (revisión de diseño 8-nov): lo importante arriba del pliegue, beneficios como lista con icono (no pastillas),
+   pisos de tamaño (16px etiquetas, 17px frases con información) y «cada cuánto», empuje y resumen con el estilo nuevo. */
+.sello{font-size:16px;letter-spacing:.04em}
+.op .mejor,.mejor,.op.tile .mejor{font-size:16px;letter-spacing:0}
+.tiles.dur .op.tile{padding-top:60px}
+.lg-fam{font-size:16px}
+.heroe .heroe-nota{flex-basis:100%;font-size:17px;color:var(--gris);margin:2px 0 0}
+.ahorro{border:1px solid #B9D3BF}
+.ahorro small{font-size:16px}
+.ahorro .ej{font-size:16px;color:var(--texto)}
+.ahorro .ej b{font-family:Poppins;font-weight:600;color:var(--verde-texto)}
+.perks{list-style:none;display:flex;flex-direction:column;gap:8px}
+.carta .perks li{display:flex;align-items:flex-start;gap:10px;font-size:17px;line-height:1.35;color:var(--texto);padding-left:0}
+.carta .perks li::before{content:none}
+.perks .ico{width:20px;height:20px;margin-top:1px}
+.perks small{display:block;font-size:16px;color:var(--gris)}
+.cond{font-size:18px}
+.cond .mas{color:var(--terracota);font-weight:500;text-decoration:none;margin-left:6px}
+.franja .sub2{font-size:17px;color:var(--texto)}
+.plan .cab .lema{font-size:18px}
+/* elementos: agenda en texto tabular (no pastillas: tocar elige el elemento, no un horario) */
+.el-cab::before{opacity:var(--o,.13)}
+.el-precio small{font-size:16px}
+.el-precio b{color:var(--terracota)}
+.agenda .tit{font-size:17px}
+.ag-fila b{font-size:18px}
+.ag-horas{gap:0}
+.ag-horas i{background:none;padding:0;border-radius:0;font-size:18px;color:var(--texto)}
+.ag-horas i + i::before{content:'·';color:var(--gris);padding:0 8px}
+/* ¿cuántas clases? y ¿cada cuánto? */
+.op.tile{padding-top:40px}
+.tiles > :last-child:nth-child(odd):not(:first-child){grid-column:1/-1;width:calc(50% - 8px);justify-self:center}
+.franja .fila1{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;row-gap:2px}
+/* «Hay dos formas. Te recomendamos la membresía.» ya lo dicen el sello y el borde: se quita para que botones y franja quepan. */
+#tipoSub{display:none}
+.tiles.dur{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.tiles.dur > :last-child:nth-child(odd):not(:first-child){grid-column:auto;width:auto}
+.op.tile small.nombre{font-size:16px;margin-top:4px}
+/* trimestrales y semestrales: pestañas por elemento, filas por número de clases, ahorro en dos niveles */
+.lg-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%}
+.lg-tab{display:flex;align-items:center;gap:10px;line-height:1.2;background:#fff;border:2px solid var(--crema);border-radius:16px;padding:10px 12px;text-align:left;min-height:64px}
+.lg-tab .txt{display:flex;flex-direction:column;line-height:1.2}
+.lg-tab b{font-family:Poppins;font-weight:600;font-size:19px;color:var(--carbon)}
+.lg-tab small{font-size:16px;color:var(--texto)}
+.lg-tab.activa{border-color:var(--terracota);background:var(--terracota-suave)}
+.lg-grupo{align-self:flex-start;font-size:22px;margin-top:10px;text-align:left}
+.lg-carta{gap:12px;padding-top:22px}
+.lg-carta .heroe .monto{font-size:46px}
+.lg-vs{display:flex;flex-direction:column;gap:2px;font-size:16px}
+.lg-vs .lg-ah{font-family:Poppins;font-weight:600;font-size:20px;line-height:1.25}
+.lg-vs small{font-size:16px;color:inherit}
+.lg-carta .el-pie{padding-top:2px}
+#largoLetra{font-size:17px;color:var(--texto)}
+/* ¿y si mejor membresía? y resumen: la letra chica legible antes de pagar */
+.empuje .chica{font-size:16px;color:var(--texto)}
+.empuje .chica.canc{font-size:17px}
+#resPrecio{color:var(--terracota);font-size:48px;line-height:1.1}
+#resPrecio .res-cada{font-family:Jost;font-weight:400;font-size:20px;color:var(--carbon);margin-left:8px}
+.letra{font-size:17px;color:var(--texto)}
+.letra b{font-size:17px}
+.letra.tarjeta{display:flex;flex-direction:column;gap:6px}
+@media (max-width:700px){
+  .top .titulo{font-size:16px} .top .titulo small{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top .titulo{min-width:0;flex:1} .top img{height:44px} .cancelar{padding:10px 16px;font-size:16px}
+  .tiles > :last-child:nth-child(odd):not(:first-child){width:auto;justify-self:stretch}   /* v7: a lo ancho (encogida, el sello tapaba el número) */
+  .lg-tabs{grid-template-columns:repeat(2,1fr)}
+  .plan .cab .lema{display:none}   /* lo repite la primera frase de la ficha; así el botón queda en la primera vista */
+}
+@media (min-width:701px){ #vTipo > .atras + h1{margin-top:-34px} }
+@media (max-height:820px) and (min-width:701px){
+  .vista{gap:14px} .top{padding-top:10px} .top img{height:46px} main{padding-top:6px}
+  .plan .cab h2{font-size:26px} .plan .cab svg{width:44px;height:44px} .puntos2{gap:8px}
+  .franja{padding:12px 18px} .franja .estrella{width:40px;height:40px;font-size:20px}
+  /* el lema repite la primera frase de la ficha («Se cobra sola…» / «Pagas una vez…»): fuera en pantallas bajas */
+  .plan .cab .lema{display:none} .plan{gap:10px} .plan .btn{min-height:56px;padding:14px 20px} .ahorro{padding:8px 12px}
+  .heroe .monto{font-size:42px} .top img{height:40px}
+  .vista{gap:12px} main{padding-top:0} .top{padding-bottom:2px} .vista h1{font-size:26px} .plan{padding:18px 20px 16px} .franja{padding:10px 18px}
+  .vista h1{font-size:28px;margin-top:0}
+  #vTipo > p, #tipoSub{display:none}
+  .heroe .monto{font-size:46px}
+  .plan{padding:22px 20px 18px;gap:12px}
+}
+/* v6 (Olmo, 9-nov): agenda de la semana estilo Hera (su «Weekly Schedule» de Instagram): filas = horas, columnas = días,
+   un círculo por clase con el día adentro y el color de su disciplina; leyenda tocable que filtra. */
+body.sin-scroll{overflow:hidden}
+.el-disc{list-style:none;display:flex;flex-direction:column;gap:6px}
+.carta .el-disc li{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:500;color:var(--carbon);padding-left:0}
+.carta .el-disc li::before{content:none}
+.el-disc i{width:14px;height:14px;border-radius:50%;flex:none}
+.el-disc-tit{font-size:16px;color:var(--gris)}
+.ver-ag{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:52px;border:1.5px solid var(--ag-vino);color:var(--ag-vino);background:#fff;border-radius:14px;font-size:18px;font-weight:500;padding:10px 14px}
+.ver-ag .ico{color:var(--ag-vino);width:22px;height:22px}
+.ver-ag:active{background:#F6ECEE}
+.el-cuerpo .ver-ag{margin-top:auto}
+.el-cuerpo .ver-ag + .el-pie{margin-top:0}
+.ag-fondo{position:fixed;inset:0;z-index:60;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  background-color:var(--ag-crema);background-image:radial-gradient(rgba(62,62,62,.05) .8px,transparent 1.2px),radial-gradient(rgba(142,74,85,.04) .8px,transparent 1.2px);
+  background-size:7px 7px,13px 13px;background-position:0 0,4px 6px;
+  padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 16px)}
+.ag-hoja{max-width:940px;margin:0 auto;display:flex;flex-direction:column;gap:16px;text-align:left}
+.ag-cab{display:flex;align-items:flex-start;gap:14px}
+.ag-cab .ag-txt{flex:1;min-width:0}
+.ag-cab h2{font-family:Poppins;font-weight:600;font-size:40px;line-height:1.05;color:var(--ag-vino);letter-spacing:-.015em}
+.ag-cab .ag-disc{font-style:italic;font-size:21px;color:var(--ag-carbon);margin-top:6px}
+.ag-cab .ag-nota{font-size:16px;color:var(--gris);margin-top:4px}
+.ag-cab .ag-der{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:none}
+.ag-logo{display:block;width:92px;height:46px;background:var(--ag-vino);-webkit-mask:url(https://static.wixstatic.com/media/9d6afa_882d2a3243604a24a1b6a47b0ad5fdbf~mv2.png/v1/fill/w_400,h_197/logo.png) center/contain no-repeat;mask:url(https://static.wixstatic.com/media/9d6afa_882d2a3243604a24a1b6a47b0ad5fdbf~mv2.png/v1/fill/w_400,h_197/logo.png) center/contain no-repeat}
+.ag-cerrar{border:1.5px solid var(--ag-vino);color:var(--ag-vino);background:#fff;border-radius:999px;padding:10px 18px;font-size:18px;font-weight:500;min-height:48px}
+.ag-cerrar:active{background:#F6ECEE}
+.ag-tabla{--hcol:112px;--d:clamp(36px,min(7.6vw,6.6vh),62px);--dm:clamp(32px,min(5.4vw,5.6vh),46px);--dd:var(--dm);--ac:2;background:rgba(255,255,255,.55);border:1.5px solid var(--ag-borde);border-radius:18px;padding:4px 12px}
+.ag-fila{display:grid;grid-template-columns:var(--hcol) repeat(var(--cols),minmax(0,1fr));align-items:center;border-top:1px solid var(--ag-borde);min-height:calc(var(--d) + 12px)}
+.ag-fila:first-child{border-top:0}
+.ag-hora{font-family:Poppins;font-weight:600;font-size:18px;color:var(--ag-carbon);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ag-hora small{font-family:Poppins;font-weight:500;font-size:14px;margin-left:4px;color:var(--ag-carbon)}
+/* Revisión v6: un solo diámetro en toda la agenda y un lugar fijo por disciplina dentro de la celda (el hueco queda vacío):
+   1 disciplina a la vista → un círculo grande; 2 o más → todas del mismo tamaño, en el orden de la leyenda. */
+.ag-tabla.l1{--dd:var(--d);--ac:1}
+.ag-celda{display:grid;grid-template-columns:repeat(var(--ac),var(--dd));grid-auto-rows:var(--dd);align-content:center;justify-content:center;gap:4px;padding:6px 1px;min-width:0}
+.ag-c{width:var(--dd);height:var(--dd);border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--tx);
+  font-family:Poppins;font-weight:600;font-size:max(10.5px,calc(var(--dd) * .31));letter-spacing:.03em;line-height:1}
+.ag-c.hueco{visibility:hidden}
+.ag-break{display:flex;align-items:center;gap:14px;border-top:1px solid var(--ag-borde);padding:10px 0;color:var(--ag-vino);font-family:Poppins;font-weight:600;font-size:15px;letter-spacing:.32em}
+.ag-break::before,.ag-break::after{content:'';flex:1;height:1.5px;background:var(--ag-vino);opacity:.35}
+.ag-break + .ag-fila{border-top:0}
+/* Revisión v6: la leyenda (la única clave de colores, y la que filtra) va en la cabecera, a la vista sin bajar. */
+.ag-filtro{display:flex;flex-direction:column;gap:6px;margin-top:-4px}
+.ag-filtro p{font-size:16px;color:var(--gris)}
+.ag-leyenda{display:flex;flex-wrap:wrap;gap:8px}
+.ag-ley{display:flex;align-items:center;gap:10px;min-height:48px;background:#fff;border:1.5px solid var(--ag-borde);border-radius:999px;padding:6px 16px 6px 8px;font-size:18px;font-weight:500;color:var(--ag-carbon);text-align:left}
+.ag-ley i{width:30px;height:30px;border-radius:50%;flex:none;background:var(--bg)}
+.ag-ley[aria-pressed="true"]{border-color:var(--ag-carbon);box-shadow:inset 0 0 0 1px var(--ag-carbon)}
+.ag-leyenda.filtrada .ag-ley[aria-pressed="false"]{opacity:.5}
+@media (max-width:700px){
+  .ag-cab h2{font-size:28px} .ag-cab .ag-disc{font-size:17px} .ag-logo{width:70px;height:35px} .ag-cerrar{padding:8px 14px;font-size:16px;min-height:44px}
+  .ag-tabla{--hcol:50px;--ac:1;padding:2px 6px}
+  .ag-hora{font-size:15px;white-space:normal;line-height:1.05} .ag-hora small{display:block;margin:2px 0 0;font-size:12px}
+  .ag-celda{gap:3px}
+  .ag-leyenda{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px} .ag-ley{font-size:16px;padding:6px 10px 6px 6px;gap:8px;min-height:44px} .ag-ley i{width:26px;height:26px}
+}
+/* v6 (Olmo, 9-nov): «¿y si mejor membresía?» por bloques: tu paquete → la membresía, el ahorro en grande, el cobro en una
+   línea y la letra chica tras «ⓘ Condiciones». */
+.emp2{width:min(680px,100%);max-width:680px;gap:16px;padding:22px 22px 14px}
+.emp-vs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.25fr);align-items:stretch;gap:10px}
+.emp-lado{display:flex;flex-direction:column;gap:4px;border-radius:14px;padding:14px 16px;justify-content:center}
+.emp-paq{background:#fff;border:1.5px solid var(--crema);color:var(--gris)}
+.emp-mem{background:#fff;border:2.5px solid var(--terracota);box-shadow:0 4px 16px rgba(154,66,21,.12)}
+.emp-et{font-size:17px;font-weight:500;color:var(--carbon);line-height:1.25}
+.emp-paq .emp-et{color:var(--gris)}
+.emp-nom{font-size:16px;color:var(--gris);line-height:1.25}
+.emp-pc{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:17px}
+.emp-pc b{font-family:Poppins;font-weight:600;line-height:1}
+.emp-paq .emp-pc b{font-size:30px;color:var(--gris)}
+.emp-mem .emp-pc{color:var(--carbon)}
+.emp-mem .emp-pc b{font-size:46px;color:var(--terracota);letter-spacing:-.02em}
+.emp-flecha{align-self:center;font-size:30px;color:var(--terracota);line-height:1}
+.emp-ahorro{display:flex;flex-direction:column;gap:2px;background:var(--verde-suave);border:1px solid #B9D3BF;border-radius:14px;padding:12px 16px;color:var(--verde-texto);text-align:center}
+.emp-ahorro b{font-family:Poppins;font-weight:600;font-size:27px;line-height:1.2}
+.emp-ahorro small{font-size:17px}
+.empuje .emp-cobro{font-size:20px;line-height:1.35;color:var(--texto);text-align:center}
+.emp2 .cond{align-self:center}
+#vEmpuje .fila-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(680px,100%);gap:14px}
+#vEmpuje .fila-btns .btn{min-width:0;width:100%}
+@media (max-width:700px){
+  .emp-vs{grid-template-columns:1fr;gap:6px} .emp-flecha{transform:rotate(90deg);justify-self:center;font-size:26px}
+  .emp-mem .emp-pc b{font-size:40px} .emp-ahorro b{font-size:23px}
+  #vEmpuje .fila-btns{grid-template-columns:1fr}
+}
+/* v7 (Olmo, 9-nov): los precios de pago por adelantado (trimestral y semestral) NO van junto a las mensuales: van en un bloque
+   aparte, debajo, con otro estilo (fondo pizarra, borde punteado, icono de calendario; números en pizarra oscuro, no en
+   terracota) y cada renglón dice lo que se paga de golpe. La franja de «¿Membresía o paquete?» toma el mismo estilo. */
+.adel,.franja{background:#EEF2F4;border:2px dashed #8A9BA3;box-shadow:none}
+.adel{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:12px;text-align:left;border-radius:var(--radio);padding:18px 20px;margin-top:8px}
+.adel:active,.franja:active{transform:scale(.99);background:#E4EAED}
+.adel-cab{display:flex;align-items:flex-start;gap:14px}
+.adel-ico,.franja .estrella{width:48px;height:48px;border-radius:50%;background:var(--pizarra);color:#fff;display:grid;place-items:center;flex:none}
+.adel-ico .ico,.franja .estrella .ico{color:#fff;width:26px;height:26px}
+.adel-cab .txt{display:flex;flex-direction:column;gap:3px}
+.adel-tit{font-family:Poppins;font-weight:600;font-size:21px;line-height:1.2;color:var(--carbon)}
+.adel-sub{font-size:17px;line-height:1.35;color:var(--texto)}
+.adel-flex{display:block;margin-top:6px;font-size:17px;line-height:1.35;color:#34474F}
+.flex-nota{font-size:18px;color:#34474F;background:#EEF2F4;border-radius:12px;padding:10px 14px;max-width:640px;margin:8px auto 0}
+.adel-filas{display:flex;flex-direction:column;background:#fff;border-radius:14px;padding:2px 16px}
+.adel-fila{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:16px;row-gap:2px;padding:12px 0;border-top:1px solid #E1E7EA}
+.adel-fila:first-child{border-top:0}
+.adel-plan{font-size:18px;line-height:1.3;color:var(--carbon)}
+.adel-plan b{font-family:Poppins;font-weight:600}
+.adel-plan i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.adel-num{display:flex;flex-direction:column;align-items:flex-end;text-align:right;line-height:1.25}
+.adel-ppc{font-size:18px;color:#34474F}
+.adel-ppc b{font-family:Poppins;font-weight:600;font-size:22px}
+.adel-pago{font-size:18px;color:#34474F}
+.adel-pago b{font-family:Poppins;font-weight:600;font-size:22px}
+.adel-par{grid-template-columns:1fr;row-gap:8px}
+.adel-celdas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.adel-celdas .adel-num{align-items:flex-start;text-align:left;background:#F3F6F7;border-radius:10px;padding:8px 12px}
+.adel-dur{font-size:16px;color:var(--texto)}
+.adel-pie{font-size:19px;font-weight:500;color:#34474F}
+.franja .tit{color:var(--carbon)}
+.franja .lin b,.franja .flecha{color:#34474F}
+@media (max-width:700px){
+  .adel{padding:16px} .adel-ico,.franja .estrella{width:40px;height:40px} .adel-tit{font-size:19px}
+  .adel-fila{grid-template-columns:1fr} .adel-num{align-items:flex-start;text-align:left}
+}
+@media (max-width:520px){ .adel-celdas{grid-template-columns:1fr;gap:8px} }
+/* tarjeta trimestral/semestral: el precio por clase y el pago por adelantado, lado a lado y del mismo tamaño */
+.lg-nums{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lg-n{display:flex;flex-direction:column;gap:2px;background:var(--arena-suave);border-radius:12px;padding:10px 14px}
+.lg-n small{font-size:16px;color:var(--carbon)}
+.lg-n b{font-family:Poppins;font-weight:600;font-size:38px;line-height:1.1;color:var(--carbon);letter-spacing:-.01em}
+.lg-n.ppc b{color:#34474F}
+.lg-n span{font-size:16px;color:var(--texto)}
+@media (max-width:420px){ .lg-n b{font-size:32px} .lg-n{padding:10px 12px} }
 </style>
 </head>
 <body>
@@ -267,6 +566,7 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
     <h1 id="elTitulo"></h1>
     <p id="elSub"></p>
     <div class="planes2" id="elLista"></div>
+    <div class="extra" id="elExtra"></div>
   </section>
 
   <!-- 2c. CLASES (precio y precio por clase) -->
@@ -274,7 +574,7 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="clasesTitulo"></h1>
     <p id="clasesSub"></p>
-    <div class="ops" id="clasesLista"></div>
+    <div class="ops tiles" id="clasesLista"></div>
     <div class="extra" id="clasesExtra"></div>
   </section>
 
@@ -283,8 +583,9 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="largoTitulo"></h1>
     <p id="largoSub"></p>
-    <p class="nota" id="largoLetra"></p>
+    <p id="largoFlex" class="flex-nota"></p>
     <div class="extra" id="largoLista"></div>
+    <p class="nota" id="largoLetra"></p>
   </section>
 
   <!-- 2d. DURACIÓN -->
@@ -292,14 +593,14 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="durTitulo"></h1>
     <p id="durSub"></p>
-    <div class="ops" id="durLista"></div>
+    <div class="ops tiles dur" id="durLista"></div>
   </section>
 
   <!-- 2e. ¿Y SI MEJOR MEMBRESÍA? (solo si eligió paquete y la membresía sale más barata) -->
   <section class="vista" id="vEmpuje">
     <button class="atras" data-atras>‹ Atrás</button>
     <h1 id="empTitulo"></h1>
-    <div class="empuje" id="empCarta"></div>
+    <div class="empuje emp2" id="empCarta"></div>
     <div class="fila-btns">
       <button class="btn pri" id="empCambiar"></button>
       <button class="btn sec" id="empSeguir"></button>
@@ -320,7 +621,7 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
       <label for="inicio" style="font-size:19px;color:var(--carbon)" id="inicioTxt"></label>
       <input class="campo" id="inicio" type="date">
     </div>
-    <div class="letra" id="resLetra"></div>
+    <div class="letra tarjeta" id="resLetra"></div>
     <p class="nota" id="resSeguro"></p>
     <div class="error" id="resError"></div>
     <button class="btn pri" id="pagar"></button>
@@ -358,6 +659,18 @@ main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%
       <button class="btn sec" id="bloqueoListo" data-tx="bloqueo.listo"></button>
     </div>
   </section>
+
+  <!-- v5: panel de «ⓘ Condiciones» (beneficios completos y letra chica de una ficha) -->
+  <div class="hoja-fondo" id="hoja" hidden><div class="hoja" role="dialog" aria-modal="true" aria-labelledby="hojaTit">
+    <h2 id="hojaTit"></h2><div id="hojaCuerpo"></div><button class="btn pri" id="hojaCerrar" data-tx="hoja.cerrar"></button></div></div>
+
+  <!-- v6: agenda de la semana de un elemento (pantalla completa, estilo del «Weekly Schedule» de Hera) -->
+  <div class="ag-fondo" id="agenda" hidden role="dialog" aria-modal="true" aria-labelledby="agTit"><div class="ag-hoja">
+    <div class="ag-cab"><div class="ag-txt"><h2 id="agTit"></h2><p class="ag-disc" id="agDisc"></p><p class="ag-nota" id="agNota"></p></div>
+      <div class="ag-der"><button class="ag-cerrar" id="agCerrar"></button><span class="ag-logo" role="img" aria-label="Hera Zenter"></span></div></div>
+    <div class="ag-filtro"><div class="ag-leyenda" id="agLeyenda"></div><p id="agAyuda"></p></div>
+    <div class="ag-tabla" id="agGrid"></div>
+  </div></div>
 
   <!-- FIN -->
   <section class="vista" id="vFin">
@@ -405,24 +718,48 @@ const TEXTOS_ALTA = {
     red: 'Sin conexión. Intenta otra vez.'
   },
 
+  // Precio grande de las tarjetas: «desde $95 /clase» (el número sale del catálogo de Wix).
+  heroe: { desde: 'desde', porClase: '/clase' },
+  // Panel de «ⓘ Condiciones» (beneficios completos y letra chica; el resumen antes de pagar la vuelve a enseñar completa).
+  // v5.1: si en la ficha no caben todos los beneficios, el enlace dice cuántos más hay dentro.
+  hoja: { condiciones: 'ⓘ Condiciones', cerrar: 'Entendido', mas1: '+1 beneficio más', mas: '+{n} beneficios más' },
+
   tipo: {
     titulo: '¿Cómo quieres venir a Hera?',
-    sub: 'Hay dos formas. Te contamos cada una.',
+    // v5.1: ya no se enseña en la tablet (el sello «Recomendada» lo dice y así caben botones y franja sin bajar).
+    sub: 'Hay dos formas. Te recomendamos la membresía.',
     membresia: {
       nombre: 'Membresía',
+      sello: 'Recomendada',
       lema: 'Se renueva sola. Tú solo vienes.',
-      puntos: ['Se cobra sola en cada ciclo con tu tarjeta.', 'El menor precio por clase: desde *{desdePorClase}*.'],
+      // Rediseño (Olmo, 8-nov): frases de 3 a 6 palabras, con su icono. Los números van en el precio grande.
+      puntos: ['Se cobra sola con tu tarjeta', 'El menor precio por clase'],
+      // El precio grande de la tarjeta es el de las membresías que se cobran cada ciclo; las trimestrales y semestrales
+      // (más baratas) van en la franja de abajo con su propio «desde».
+      sinLargo: 'sin contar trimestral y semestral',
+      // {pct}: el mayor ahorro por clase de una membresía contra el paquete de las MISMAS clases (centavos de Wix, redondeado
+      // hacia abajo). Solo membresías que se cobran cada ciclo (las mismas del precio grande).
+      ahorro: 'Ahorras hasta *{pct}%* por clase',
+      ahorroNota: 'contra el paquete de las mismas clases',
+      // v5.1: el plan donde pasa ese máximo, en pesos cerrados (que «hasta 21%» no parezca contradecir los «desde»).
+      ahorroEjemplo: 'Ej.: {elemento} {clases} clases, *{porClase}* vs. {porClasePaquete}',
+      beneficios: 'Beneficios',
       todas: 'Todas incluyen:',
       // Cada beneficio va con las familias EXACTAS que lo traen (no es escalera: no se suman de un grupo al otro).
       solo: 'Solo las {familias}:',
       familias: { mensual: 'mensuales y de 45 días', trimestral: 'trimestrales', semestral: 'semestrales', anual: 'anuales' },
-      letraChica: 'Letra chica: {cancelacion}',
+      // En las fichas de beneficio (chips): a qué membresías aplica el que no traen todas.
+      chipSolo: 'solo {familias}',
+      letraChica: 'Letra chica',
       boton: 'Quiero membresía'
     },
     paquete: {
       nombre: 'Paquete',
       lema: 'Un solo pago, sin cargos automáticos.',
-      puntos: ['Pagas una vez y listo: no se renueva.', 'Cada paquete tiene su vigencia: {vigencias}.', 'Desde *{desdePorClase}* por clase.'],
+      // v5.1: «No se renueva solo» se quitó: el lema ya lo dice.
+      puntos: ['Pagas una vez y listo', 'Cada paquete con su vigencia'],
+      vigencias: 'Cada paquete tiene su vigencia: {vigencias}.',
+      unaVez: 'Pagas una vez y listo: no se renueva.',
       boton: 'Quiero paquete'
     }
   },
@@ -431,20 +768,49 @@ const TEXTOS_ALTA = {
     titulo: '¿Qué elemento va contigo?',
     sub: 'Cada elemento incluye distintas disciplinas.',
     incluye: 'Incluye: {disciplinas}',
-    desde: 'desde {porClase} por clase',
-    horarios: 'Algunos horarios de los próximos días:',
-    linea: '{disciplina}: {horarios}'
+    // v6: las disciplinas van en lista (con el color que tienen en la agenda) y los horarios, en su propia pantalla.
+    disciplinas: 'Incluye',
+    verHorarios: 'Ver horarios de la semana',
+    // v7: el «desde» grande no cuenta trimestral y semestral (igual que la ficha de membresía); esas ya no van en la ficha, sino
+    // en el bloque «Si pagas por adelantado» de debajo (adelantado.*).
+    elegir: 'Elegir {elemento}'
+  },
+
+  // v6 (Olmo, 9-nov): agenda de la semana de un elemento, con el estilo de su «Weekly Schedule» de Instagram. Las horas van
+  // como en ese póster (7:00 AM, 6:30 PM). Revisión v6 (opción A): cada día y hora sale si tiene lugar en alguna de las
+  // próximas 2 semanas (un horario lleno esta semana no desaparece si la que entra tiene lugar).
+  agenda: {
+    titulo: 'Horarios · {elemento}',
+    nota: 'Horarios con lugar en los próximos 14 días.',
+    cerrar: 'Cerrar ✕',
+    descanso: 'BREAK',
+    am: 'AM', pm: 'PM',
+    filtro: 'Toca una disciplina para ver solo esa.',
+    filtroOtraVez: 'Toca la misma otra vez para ver todas.',
+    // Dentro de cada círculo (0 = domingo) y, completos, para el lector de pantalla («Pilates Reformer, lunes 7:00 AM»).
+    dias: ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'],
+    diasLargos: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
   },
 
   clases: {
     titulo: '{elemento} · {tipo}: ¿cuántas clases?',
     sub: 'Entre más clases, menos pagas por cada una.',
     opcion: '{clases} clases {frecuencia}',
+    // Ficha de «¿cuántas clases?»: el número grande y debajo «clases al mes».
+    unidad: 'clases {frecuencia}',
+    ilimitadas: 'Ilimitadas',
     precio: '{precio}',
-    porClase: '{porClase} por clase',
-    desde: 'desde {porClase} por clase',
+    porClase: '*{porClase}* por clase',
+    desde: 'desde *{porClase}* por clase',
+    // Cuando un número de clases tiene varias formas de pago (mensual, trimestral…): se eligen en la pantalla siguiente.
+    opciones: '{n} formas de pagar',
+    opcionesPaquete: '{n} vigencias a elegir',
+    // v7: la trimestral o semestral ya no va en la ficha (la línea «★ o $136 por clase en semestral»): va en el bloque aparte.
     // Solo compara las opciones de ESTA pantalla (no «el mejor precio» de Hera: eso era el perk viejo y no era cierto).
     mejor: '⭐ El más barato por clase de esta lista',
+    // Revisión v6: en membresía, el sello va con el número GRANDE (el de las que se cobran cada mes o cada 45 días); si en la
+    // lista hay trimestral o semestral (más baratas, en el bloque «Si pagas por adelantado»), el sello lo aclara.
+    mejorSinLargo: 'El más barato por clase', mejorSinLargoNota: 'sin contar trimestral y semestral',
     membresia: 'membresía', paquete: 'paquete',
     // Plan al que Bookings no le acepta una disciplina que sí traen los demás de su elemento (dato de Wix, no de aquí).
     sinDisciplina: 'Este no incluye {faltan}',
@@ -453,30 +819,71 @@ const TEXTOS_ALTA = {
 
   duracion: {
     titulo: '¿Cada cuánto quieres pagar?',
-    sub: 'Las de más meses salen más baratas por clase.',
+    // Revisión v7: aquí ya no salen la trimestral ni la semestral junto a la de cada mes (van en «Si pagas por adelantado»):
+    // el subtítulo ya no las presume.
+    sub: 'Elige cada cuánto se cobra.',
     precio: '{precio} {cada}',
     adelantado: 'se cobra por adelantado'
+  },
+
+  // v7 (Olmo, 9-nov: «los precios muy bajos, que son de largo plazo, no los pongas en la misma comparación, sino en un
+  // comparativo visible pero diferente»). Bloque aparte DEBAJO de las fichas de «¿qué elemento?» y «¿cuántas clases?», con
+  // otro estilo (fondo pizarra, borde punteado, icono de calendario). Arriba solo se comparan las que se pagan cada mes (o los
+  // paquetes); aquí cada renglón dice su precio por clase Y lo que se paga de golpe, para que el precio bajo se entienda.
+  // En «¿qué elemento?», un renglón por elemento (su trimestral o semestral más barata por clase); en «¿cuántas clases?», todas
+  // las del elemento elegido. Un toque abre «Planes trimestrales y semestrales».
+  adelantado: {
+    titulo: 'Si pagas por adelantado (3 o 6 meses)',
+    sub: 'Membresías trimestrales y semestrales: cada clase sale más barata que en la mensual y el paquete de las mismas clases, pero pagas varios meses de golpe.',
+    subSinPresumir: 'Membresías trimestrales y semestrales: pagas varios meses de golpe.',
+    plan: '{clases}, {duracion}',
+    porClase: '*{porClase}* por clase',
+    pagas: 'pagas *{precio}* {cada}',
+    ver: 'Ver planes trimestrales y semestrales',
+    // Olmo (9-nov): flexibilidad. Verificado en Wix: en trimestral y semestral las clases se cargan al inicio de cada ciclo
+    // (PER_BILLING_CYCLE) y no pasan al siguiente (rollover apagado), por eso «úsalas dentro de…».
+    flexible: '✦ *Todas tus clases desde el primer día*: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses.'
   },
 
   // v4 (Olmo, 9-nov): botón aparte para las membresías trimestrales y semestrales, con sus números reales. Lo que presume es
   // SOLO contra la mensual y el paquete de las MISMAS clases (no «los más baratos» en general: una Membresía 24 de AIRE sale
   // más barata por clase que la Trimestral 8) y solo sale si es cierto con el catálogo de hoy (resumenLargo en alta.js).
   largo: {
-    boton: 'Ver planes trimestrales y semestrales (más baratos que la mensual y el paquete de las mismas clases)',
-    botonSinPresumir: 'Ver planes trimestrales y semestrales',
+    // Franja de «¿Membresía o paquete?» (v7: con el estilo del bloque «Si pagas por adelantado», no el de las tarjetas): título,
+    // «desde» y debajo la frase completa. Lo que presume (botonSub) solo sale si el backend dice que es cierto (CAT.largo.masBarato).
+    boton: 'Paga 3 o 6 meses por adelantado',
+    botonSinPresumir: 'Planes trimestrales y semestrales',
+    botonDesde: 'desde *{porClase}* por clase',
+    // Revisión v7: lo que se paga de golpe en el plan de ese «desde», para que el precio bajo se entienda.
+    botonPago: 'pagas *{precio}* {cada}',
+    botonSub: 'Más baratos por clase que la mensual y el paquete de las mismas clases.',
+    botonSubSinPresumir: 'Pagas varios meses por adelantado.',
     titulo: 'Planes trimestrales y semestrales',
     tituloEl: '{elemento}: planes trimestrales y semestrales',
     sub: 'Pagas varios meses por adelantado y cada clase te sale más barata que en la mensual o el paquete de las mismas clases.',
     subSinPresumir: 'Pagas varios meses por adelantado.',
-    cobro: '{precio} {cada} (se cobra por adelantado)',
+    // v7: en la tarjeta, lo que se paga de golpe va tan grande como el precio por clase, lado a lado.
+    porClaseEt: 'Por clase',
+    pagoEt: 'Pagas por adelantado',
+    flexible: '✦ *Todas tus clases se cargan desde el primer día*: organiza tus entrenamientos como te acomode y úsalas dentro de los 3 o 6 meses de tu plan.',
+    pagoPie: '{cada}, en un solo cobro',
     clases: '{clases} clases {frecuencia}',
-    porClase: '{porClase} por clase',
     vsMensual: 'Contra la mensual ({nombre}, {porClaseOtro} por clase): ahorras *{ahorroClase}* por clase y *{ahorroPeriodo}* en {periodo}.',
     vsMensualNo: 'Contra la mensual ({nombre}): no sale más barata por clase ({porClase} contra {porClaseOtro}).',
     vsPaquete: 'Contra el paquete ({nombre}, {porClaseOtro} por clase): ahorras *{ahorroClase}* por clase y *{ahorroPeriodo}* en {periodo}.',
     vsPaqueteNo: 'Contra el paquete ({nombre}): no sale más barata por clase ({porClase} contra {porClaseOtro}).',
     letra: 'Cálculo con los precios de hoy y las mismas clases al mes: el ahorro «en 3 meses» o «en 6 meses» compara con pagar la mensual cada mes, o con comprar el paquete cada mes, durante ese tiempo.',
-    cancelacion: 'Letra chica: {cancelacion}',
+    // v5.1: a la vista, el ahorro en dos niveles; la frase completa de arriba (con el nombre del plan) va en «ⓘ Condiciones».
+    // v7 (decisión 2A de Olmo): sin «$246 → $180 por clase» (con pesos cerrados, restar y multiplicar no cuadraba por unos
+    // pesos): solo el ahorro del periodo y contra qué; el precio por clase de esta membresía va arriba, en grande («Por clase»).
+    ahorras: 'Ahorras *{ahorroPeriodo}* en {periodo}',
+    noAhorras: 'No sale más barata',
+    detalle: '{contra} de las mismas clases',
+    detalleNo: '{contra}: {porClase} contra {porClaseOtro} por clase',
+    contra: { vsMensual: 'vs. la mensual', vsPaquete: 'vs. el paquete' },
+    condiciones: 'Condiciones',
+    comparacion: 'Contra qué se compara',
+    cancelacion: 'Letra chica',
     // Wix dice «2 ciclos de pago»; en una trimestral son 6 meses y en una semestral 12 (que nadie entienda «2 meses»).
     compromiso: 'En este plan, 2 ciclos de pago = {meses}.',
     elegir: 'Elegir este plan'
@@ -494,16 +901,20 @@ const TEXTOS_ALTA = {
   },
 
   empuje: {
-    titulo: 'Antes de pagar: ¿y si mejor membresía? 💛',
-    // v4.1 (Olmo, 9-nov): en esta tarjeta los precios por clase van con centavos y cuadran a la vista: {porClasePaquete} − {porClase}
-    // = {ahorroClase}, y {ahorroClase} × las clases de un cobro = {ahorroCobro}. {frecuenciaM} = «al mes» o «cada 45 días».
-    texto: 'Con *{membresia}* pagas *{porClase}* por clase: te ahorras *{ahorroClase}* por clase, *{ahorroCobro}* {frecuenciaM} y *{ahorroAnio}* al año.',
-    textoSoloClase: 'Con *{membresia}* pagas *{porClase}* por clase: te ahorras *{ahorroClase}* por clase.',
-    comparado: 'Tu paquete: {porClasePaquete} por clase.',
-    cobro: 'La membresía se cobra sola: *{precio} {cada}*, con tu tarjeta.',
-    cancelacion: 'Letra chica: {cancelacion}',
-    // Wix dice «2 ciclos de pago»; en una trimestral son 6 meses y en una semestral 12 (que nadie entienda «2 meses»).
-    compromiso: 'En este plan, 2 ciclos de pago = {meses}.',
+    titulo: 'Antes de pagar: ¿y si mejor membresía? 💛',
+    // v6 (Olmo, 9-nov: «la información está bien, pero la siento difícil de leer»): por bloques. Los precios por clase llevan
+    // centavos solo si hacen falta ($155, $136.25) y cuadran a la vista (v4.1): {porClasePaquete} − {porClase} = {ahorroClase},
+    // y {ahorroClase} × las clases de un cobro = {ahorroCobro}. {frecuenciaM} = «al mes» o «cada 45 días».
+    tuPaquete: 'Tu paquete',
+    porClase: '*{porClasePaquete}* por clase',
+    membresia: '★ {membresia}',
+    porClaseMem: '*{porClase}* por clase',
+    ahorro: 'Ahorras {ahorroCobro} {frecuenciaM} · {ahorroAnio} al año',
+    ahorroClase: '({ahorroClase} menos en cada clase)',
+    ahorroSoloClase: 'Ahorras {ahorroClase} en cada clase',
+    cobro: 'Se cobra sola: *{precio} {cada}* con tu tarjeta.',
+    // En «ⓘ Condiciones»:
+    letraChica: 'Letra chica',
     letra: 'Cálculo con los precios de hoy. Supone que tomas {clasesM} clases {frecuenciaM} y que con paquetes comprarías esas mismas clases en cada ciclo. Un año = {ciclosAnio} cobros.',
     cambiar: 'Cambiar a membresía',
     seguir: 'Seguir con el paquete'
@@ -511,7 +922,9 @@ const TEXTOS_ALTA = {
 
   resumen: {
     titulo: 'Revisa tu plan',
-    plan: 'Plan', precio: 'Precio', porClase: 'Por clase', clases: 'Clases', incluye: 'Incluye',
+    plan: 'Plan', precio: 'Precio',
+    // Revisión v7: si es trimestral o semestral, que el último paso antes de cobrar diga que es un solo cobro por adelantado.
+    precioLargo: '{precio} {cada}, por adelantado en un solo cobro', porClase: 'Por clase', clases: 'Clases', incluye: 'Incluye',
     empieza: 'Empieza', renueva: 'Cómo se renueva', para: 'Para', vende: 'Te atiende',
     correo: 'Tu correo para la app (revísalo antes de pagar):', cambiarCorreo: 'Cambiar correo',
     clasesMembresia: '{clases} clases {frecuencia}',
@@ -525,6 +938,9 @@ const TEXTOS_ALTA = {
     // Revisión v4.1: con centavos, las mismas cifras que la tarjeta «¿y si mejor membresía?». {frecuencia} = «al mes», «cada 45 días» o «cada 3 meses».
     refuerzo: '¡Buena elección! Comparado con *{paquete}* ({porClasePaquete} por clase), te ahorras *{ahorroClase}* por clase, *{ahorroCobro}* {frecuencia} y *{ahorroAnio}* al año.',
     refuerzoSoloClase: '¡Buena elección! Comparado con *{paquete}* ({porClasePaquete} por clase), te ahorras *{ahorroClase}* por clase.',
+    // v6: si la eligió en «Planes trimestrales y semestrales», las mismas cifras de esa tarjeta, en pesos cerrados. Revisión v6:
+    // sin el precio por clase del paquete al lado (con pesos cerrados, restar y multiplicar no cuadraba por unos pesos).
+    refuerzoLargo: '¡Buena elección! Contra *{paquete}*: ahorras *{ahorroPeriodo}* en {periodo} (*{porClase}* por clase).',
     inicio: '¿Desde qué día empieza?',
     seguro: 'Pagas tú con tu tarjeta en la ventana segura de Wix. Recepción no ve ni teclea tu tarjeta.',
     pagar: 'Pagar con mi tarjeta'
@@ -759,8 +1175,9 @@ const ORDEN_EL = ['AIRE', 'TIERRA', 'FUEGO', 'AGUA'];
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pesos = n => '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 });
-/** v4.1, solo la tarjeta «¿y si mejor membresía?»: centavos (enteros) → «$167.50». `siHay`: sin «.00» si son pesos cerrados. */
-const pesosC = (c, siHay = false) => '$' + (Number(c || 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: siHay && c % 100 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+/** v4.1, solo la tarjeta «¿y si mejor membresía?» y su refuerzo: centavos (enteros) → «$167.50». v6: centavos solo cuando
+ *  hacen falta («$155», no «$155.00»; «$136.25» sí). */
+const pesosC = c => '$' + (Number(c || 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: Math.round(c) % 100 === 0 ? 0 : 2, maximumFractionDigits: 2 });
 /** «a», «a y b», «a, b y c» */
 const lista = xs => { const v = (xs || []).filter(Boolean); return v.length < 2 ? (v[0] || '') : v.slice(0, -1).join(', ') + ' y ' + v[v.length - 1]; };
 
@@ -825,7 +1242,7 @@ const errDe = e => (e && e.resp && e.resp.error) || 'red';
 
 /* --------------------------------------------------------------- estado (solo en memoria) */
 let CAT = null;              // { planes, elementos, beneficios } — catálogo público, sin datos de nadie
-let HOR = null;              // { 'Pilates Reformer': ['lun 7:00', …] } — horarios de ejemplo (Bookings)
+let HOR = null;              // v6: { 'Pilates Reformer': [{ d: 1, h: '07:00' }, …] } — la semana de cada disciplina (Bookings)
 let A = null;                // la alta en curso
 let pila = [];               // vistas para «Atrás»
 let ultimoToque = Date.now(), finTimer = null, reenvioTimer = null, appTimer = null, correoOtraTimer = null;
@@ -845,6 +1262,8 @@ function ir(v, { apilar = true } = {}){
   $('cancelar').hidden = ['vClave','vCargando','vBloqueo','vFin'].includes(v);
   $('cancelar').textContent = Tt(v === 'vApp' ? 'barra.terminar' : 'barra.cancelar');   // ya pagó: solo cierra su sesión
   if (v !== 'vApp') { clearInterval(appTimer); clearTimeout(correoOtraTimer); }
+  $('hoja').hidden = true;   // v5: el panel de condiciones nunca se queda abierto al cambiar de pantalla
+  cerrarAgenda(false);       // v6: ni la agenda
   window.scrollTo(0, 0);
 }
 function atras(){ const actual = (document.querySelector('.vista.activa') || {}).id; let v; do v = pila.pop(); while (v && v === actual); if (v) ir(v, { apilar: false }); }
@@ -933,9 +1352,9 @@ async function cargarCatalogo(){
     if (e.auth) return;
     pantallaPin(); $('pinError').textContent = Tt('cargando.planesError'); return;
   }
-  // Horarios de ejemplo en segundo plano: si Bookings falla, simplemente no se muestran.
+  // La semana de horarios en segundo plano: si Bookings falla, no sale el botón «Ver horarios de la semana».
   HOR = null;
-  api('altaHorarios').then(j => { HOR = {}; for (const d of j.disciplinas || []) HOR[d.nombre] = d.horarios || []; if ($('vElemento').classList.contains('activa')) irElemento(false); }).catch(() => {});
+  api('altaHorarios').then(j => { HOR = {}; for (const d of j.disciplinas || []) if (Array.isArray(d.semana)) HOR[d.nombre] = d.semana; if ($('vElemento').classList.contains('activa')) irElemento(false); }).catch(() => {});
   pila = []; irTipo();                                  // primero el plan: la clienta indecisa ve todo sin dar sus datos
 }
 // Vistas del correo, los 4 dígitos y el registro: al entrar a ellas o al terminarlas se quitan de «Atrás» (Atrás regresa al plan).
@@ -1136,6 +1555,46 @@ const ppc = p => p.precioPorClase || Infinity;
 const desde = xs => Math.min(...xs.map(ppc));
 const ul = xs => (xs && xs.length ? `<ul>${xs.map(x => `<li>${x}</li>`).join('')}</ul>` : '');
 
+/* v5 (rediseño 8-nov): piezas de las fichas. Iconos de línea (24×24, color del texto). */
+const ICO = {
+  tarjeta: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/>',
+  precio: '<path d="M3.5 12.6V5a1.5 1.5 0 0 1 1.5-1.5h7.6l8 8a1.5 1.5 0 0 1 0 2.1l-7 7a1.5 1.5 0 0 1-2.1 0Z"/><circle cx="8.2" cy="8.2" r="1.4"/>',
+  unaVez: '<circle cx="12" cy="12" r="9"/><path d="m8 12.3 2.7 2.7L16.2 9.5"/>',
+  sinCargos: '<path d="M20 11a8 8 0 0 0-14.3-4.9M4 13a8 8 0 0 0 14.3 4.9"/><path d="M5.5 3.5v3.2h3.2M18.5 20.5v-3.2h-3.2"/><path d="m3.5 3.5 17 17"/>',
+  vigencia: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  paquete: '<path d="M3.5 8 12 3.8 20.5 8v8L12 20.2 3.5 16Z"/><path d="M3.5 8 12 12.2 20.5 8M12 12.2v8"/>',
+  perk: '<path d="M12 3.5l2.1 5.4 5.4 2.1-5.4 2.1L12 18.5l-2.1-5.4L4.5 11l5.4-2.1Z"/>'
+};
+const ico = (k, t = 26) => `<svg class="ico" width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]}</svg>`;
+// Corona de laurel (la misma del kiosco para «Miembro»).
+const LAUREL_HOJAS = [[8.24,19.46,96],[5.33,16.82,125],[4.03,13.1,153],[4.66,9.21,182],[7.07,6.1,210],
+  [15.76,19.46,84],[18.67,16.82,56],[19.97,13.1,27],[19.34,9.21,-1],[16.93,6.1,-30]]
+  .map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="1.8" ry="3.4" transform="rotate(${r} ${x} ${y})"/>`).join('');
+const svgLaurel = (t = 48) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" aria-hidden="true">
+  <g fill="none" stroke="var(--oro-tallo)" stroke-width="1.5" stroke-linecap="round"><path d="M10.6 20.3A8 8 0 0 1 6.6 6.3"/><path d="M13.4 20.3A8 8 0 0 0 17.4 6.3"/></g>
+  <g fill="var(--oro)" stroke="var(--oro-borde)" stroke-width=".5">${LAUREL_HOJAS}</g></svg>`;
+/** «desde $95 /clase» en grande. */
+const heroe = (n, conDesde = true, nota = '') => `<div class="heroe">${conDesde ? `<span class="desde">${T('heroe.desde')}</span>` : ''}<span class="monto">${esc(pesos(n))}</span><span class="unidad">${T('heroe.porClase')}</span>${nota ? `<small class="heroe-nota">${nota}</small>` : ''}</div>`;
+const puntos2 = (xs, icos) => `<ul class="puntos2">${xs.map((x, i) => `<li>${ico(icos[i] || 'unaVez')}<span>${x}</span></li>`).join('')}</ul>`;
+/** v5.1: beneficios como lista compacta con icono (los textos de Wix son largos: en pastilla se partían en óvalos).
+ *  xs = [{ x: texto, fam: 'solo …' }]. */
+const perksLista = xs => (xs.length ? `<ul class="perks">${xs.map(o => `<li>${ico('perk', 20)}<span>${esc(o.x)}${o.fam ? `<small>${esc(o.fam)}</small>` : ''}</span></li>`).join('')}</ul>` : '');
+
+/* Panel «ⓘ Condiciones»: cada ficha guarda su contenido con una clave; el enlace lo abre encima, «Entendido» lo cierra. */
+const HOJAS = new Map();
+function enlaceHoja(clave, titulo, cuerpo, mas = 0){ HOJAS.set(clave, { titulo, cuerpo });
+  return `<button type="button" class="cond" data-hoja="${esc(clave)}">${T('hoja.condiciones')}${mas > 0 ? `<span class="mas">${T(mas === 1 ? 'hoja.mas1' : 'hoja.mas', { n: mas })}</span>` : ''}</button>`; }
+function abrirHoja(clave){ const h = HOJAS.get(clave); if (!h) return; $('hojaTit').textContent = h.titulo; $('hojaCuerpo').innerHTML = h.cuerpo; $('hoja').hidden = false; }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-hoja]'); if (b) { e.stopPropagation(); abrirHoja(b.dataset.hoja); } }, true);
+$('hojaCerrar').onclick = () => { $('hoja').hidden = true; };
+$('hoja').addEventListener('click', e => { if (e.target === $('hoja')) $('hoja').hidden = true; });
+
+/** Mayor ahorro por clase (en %) de una membresía contra el paquete de las MISMAS clases que ya le calcula el backend
+ *  (`equivalente.cent`, centavos: paquete hacia abajo y membresía hacia arriba), redondeado hacia abajo: nunca promete de más.
+ *  0 si no hay ninguna comparación así. */
+const ahorroHasta = ms => Math.max(0, ...ms.map(m => { const e = m.equivalente, c = e && e.cent;
+  return e && c && e.clases === m.clases && c.porClasePaquete > 0 && c.ahorroClase > 0 ? Math.floor(c.ahorroClase * 100 / c.porClasePaquete) : 0; }));
+
 /** 2a. ¿Membresía o paquete? Qué es cada uno, beneficios (perks reales) y letra chica (términos reales). */
 function irTipo(){
   const B = CAT.beneficios || {}, BM = B.membresia || {}, BP = B.paquete || {};
@@ -1143,21 +1602,48 @@ function irTipo(){
   $('tipoTitulo').textContent = Tt('tipo.titulo'); $('tipoSub').textContent = Tt('tipo.sub');
   const cartas = [];
   if (ms.length) {
-    const d = { desdePorClase: pesos(desde(ms)) };
-    let h = `<h2>${T('tipo.membresia.nombre')}</h2><div class="lema">${T('tipo.membresia.lema')}</div>${ul(TX.tipo.membresia.puntos.map((_, i) => T('tipo.membresia.puntos.' + i, d)))}`;
-    if ((BM.todas || []).length) h += `<div class="grupo">${T('tipo.membresia.todas')}</div>${ul(BM.todas.map(esc))}`;
-    for (const g of BM.grupos || []) if ((g.perks || []).length)
-      h += `<div class="grupo">${T('tipo.membresia.solo', { familias: lista((g.familias || []).map(f => Tt('tipo.membresia.familias.' + f) || f)) })}</div>${ul(g.perks.map(esc))}`;
-    if (BM.cancelacion) h += `<div class="chica">${T('tipo.membresia.letraChica', { cancelacion: BM.cancelacion })}</div>`;
-    cartas.push(`<div class="carta">${h}<button class="btn pri" data-t="membresia">${T('tipo.membresia.boton')}</button></div>`);
+    // El precio grande es el de las que se cobran cada ciclo; las trimestrales/semestrales van en la franja con su «desde».
+    const cortas = ms.filter(p => !p.largo), base = cortas.length ? cortas : ms, d = desde(base), pct = ahorroHasta(base);
+    const fam = g => lista((g.familias || []).map(f => Tt('tipo.membresia.familias.' + f) || f));
+    // v5.1: en la ficha, 1 beneficio de las membresías del precio grande, en lista con icono; los demás (y los de
+    // trimestral/semestral) en «ⓘ Condiciones». Sin el de «cargo automático»: ya lo dice «Se cobra sola con tu tarjeta».
+    const fams = new Set(base.map(p => p.familia)), gruposFicha = (BM.grupos || []).filter(g => (g.familias || []).some(f => fams.has(f)));
+    const repite = x => /cargo autom|gesti[oó]n extra/i.test(x);
+    const perksFicha = [...(BM.todas || []).map(x => ({ x })), ...gruposFicha.flatMap(g => (g.perks || []).map(x => ({ x, fam: Tt('tipo.membresia.chipSolo', { familias: fam(g) }) })))]
+      .filter(o => !repite(o.x)).slice(0, 1);
+    const totalPerks = (BM.todas || []).length + (BM.grupos || []).reduce((n, g) => n + (g.perks || []).length, 0);
+    let cuerpo = '';
+    if ((BM.todas || []).length) cuerpo += `<h3>${T('tipo.membresia.todas')}</h3>${ul(BM.todas.map(esc))}`;
+    for (const g of BM.grupos || []) if ((g.perks || []).length) cuerpo += `<h3>${T('tipo.membresia.solo', { familias: fam(g) })}</h3>${ul(g.perks.map(esc))}`;
+    if (BM.cancelacion) cuerpo += `<h3>${T('tipo.membresia.letraChica')}</h3><p>${esc(BM.cancelacion)}</p>`;
+    // El ejemplo concreto del «hasta X%» (el plan donde pasa), para que no parezca contradecir los «desde».
+    const ej = pct > 0 ? base.find(m => ahorroHasta([m]) === pct) : null;
+    const ejTxt = ej ? T('tipo.membresia.ahorroEjemplo', { elemento: EL[ej.elemento] ? EL[ej.elemento][1] : ej.elemento, clases: ej.clases,
+      porClase: pesos(ej.equivalente.porClaseMembresia), porClasePaquete: pesos(ej.equivalente.porClasePaquete) }) : '';   // pesos cerrados (los centavos, solo en el empuje)
+    cartas.push(`<div class="carta plan reco"><span class="sello">${T('tipo.membresia.sello')}</span>
+      <div class="cab">${svgLaurel(52)}<div><h2>${T('tipo.membresia.nombre')}</h2><div class="lema">${T('tipo.membresia.lema')}</div></div></div>
+      ${Number.isFinite(d) ? heroe(d, true, base !== ms ? T('tipo.membresia.sinLargo') : '') : ''}
+      ${pct > 0 ? `<div class="ahorro"><span>${T('tipo.membresia.ahorro', { pct })}</span><small>${T('tipo.membresia.ahorroNota')}${ejTxt ? `<br><span class="ej">${ejTxt}</span>` : ''}</small></div>` : ''}
+      ${puntos2(TX.tipo.membresia.puntos.map((_, i) => T('tipo.membresia.puntos.' + i)), ['tarjeta', 'precio'])}
+      ${perksLista(perksFicha)}
+      ${cuerpo ? enlaceHoja('tipo-membresia', Tt('tipo.membresia.nombre'), cuerpo, totalPerks - perksFicha.length) : ''}
+      <button class="btn pri" data-t="membresia">${T('tipo.membresia.boton')}</button></div>`);
   }
   if (ps.length) {
-    const d = { desdePorClase: pesos(desde(ps)), vigencias: lista(BP.vigencias || []) };
-    const h = `<h2>${T('tipo.paquete.nombre')}</h2><div class="lema">${T('tipo.paquete.lema')}</div>${ul(TX.tipo.paquete.puntos.map((_, i) => T('tipo.paquete.puntos.' + i, d)))}`;
-    cartas.push(`<div class="carta">${h}<button class="btn sec" data-t="paquete">${T('tipo.paquete.boton')}</button></div>`);
+    const d = desde(ps);
+    const cuerpo = `<p>${T('tipo.paquete.unaVez')}</p>${(BP.vigencias || []).length ? `<p>${T('tipo.paquete.vigencias', { vigencias: lista(BP.vigencias) })}</p>` : ''}`
+      + ((BP.todas || []).length ? `<h3>${T('tipo.membresia.beneficios')}</h3>${ul(BP.todas.map(esc))}` : '');
+    const perksP = (BP.todas || []).slice(0, 2).map(x => ({ x }));
+    cartas.push(`<div class="carta plan">
+      <div class="cab">${ico('paquete', 50)}<div><h2>${T('tipo.paquete.nombre')}</h2><div class="lema">${T('tipo.paquete.lema')}</div></div></div>
+      ${Number.isFinite(d) ? heroe(d) : ''}
+      ${puntos2(TX.tipo.paquete.puntos.map((_, i) => T('tipo.paquete.puntos.' + i)), ['unaVez', 'vigencia'])}
+      ${perksLista(perksP)}
+      ${enlaceHoja('tipo-paquete', Tt('tipo.paquete.nombre'), cuerpo, (BP.todas || []).length - perksP.length)}
+      <button class="btn sec" data-t="paquete">${T('tipo.paquete.boton')}</button></div>`);
   }
   $('tipoLista').innerHTML = cartas.join('');
-  $('tipoLista').querySelectorAll('button').forEach(b => b.onclick = () => { A.tipo = b.dataset.t; irElemento(); });
+  $('tipoLista').querySelectorAll('[data-t]').forEach(b => b.onclick = () => { A.tipo = b.dataset.t; irElemento(); });
   // v4: el botón aparte de trimestrales y semestrales (de todos los elementos: aún no elige) y, si existe, el plan de prueba.
   const pr = CAT.prueba;
   $('tipoExtra').innerHTML = botonLargo(null) + (pr ? `<div class="carta prueba"><div class="grupo">${T('prueba.seccion')}</div><h2>${esc(pr.nombre)}</h2>
@@ -1169,41 +1655,96 @@ function irTipo(){
 }
 
 /* --------------------------------------------------------------- v4: planes de largo plazo (trimestrales y semestrales) */
-/** Botón «Ver planes trimestrales y semestrales». el = null → de todos los elementos. Presume «más baratos que la mensual y
- *  el paquete de las mismas clases» solo si el backend dice que es cierto (CAT.largo.masBarato, por elemento o en total). */
+/** Franja de trimestrales y semestrales de «¿Membresía o paquete?» (v5; v7: con el estilo del bloque «Si pagas por adelantado»
+ *  y el título que dice que se paga por adelantado). el = null → de todos los elementos. Presume («más baratos que la mensual y
+ *  el paquete de las mismas clases») solo si el backend dice que es cierto (CAT.largo.masBarato, por elemento o en total). */
 function botonLargo(el){
   const L = CAT.largo || {}, x = el ? (L.elementos || {})[el] : L;
   if (!x || !x.n) return '';
-  return `<button class="btn sec" data-largo="${esc(el || '')}">${T(x.masBarato ? 'largo.boton' : 'largo.botonSinPresumir')}</button>`;
+  // v5: franja de una línea con el «desde» real de esos planes y, debajo, la frase completa.
+  const ls = CAT.planes.filter(p => p.largo && (!el || p.elemento === el)), d = desde(ls);
+  // Revisión v7: con el «desde» va lo que se paga de golpe en ESE plan (el primero del catálogo si empatan), para que $81 no
+  // se lea como un precio de cada mes junto a los «desde» de la membresía y el paquete.
+  const pd = ls.find(p => ppc(p) === d);
+  return `<button class="franja" data-largo="${esc(el || '')}"><span class="estrella" aria-hidden="true">${ico('vigencia')}</span><span class="txt">
+    <span class="fila1"><span class="tit">${T(x.masBarato ? 'largo.boton' : 'largo.botonSinPresumir')}</span>
+    ${Number.isFinite(d) ? `<span class="lin">${T('largo.botonDesde', { porClase: pesos(d) })} · ${T('largo.botonPago', { precio: pesos(pd.precio), cada: cadaDe(pd.cicloTexto) })}</span>` : ''}</span>
+    <span class="sub2">${T(x.masBarato ? 'largo.botonSub' : 'largo.botonSubSinPresumir')}</span></span><span class="flecha" aria-hidden="true">›</span></button>`;
+}
+/** v7 (Olmo, 9-nov): las trimestrales y semestrales que van en el bloque aparte, una por grupo (en la pantalla de elementos,
+ *  una por elemento: la más barata por clase; si empatan, la primera del catálogo). Las de cada mes no entran. */
+const filasAdelantado = (planes, clave) => { const m = new Map();
+  for (const p of planes) if (p.largo && p.precioPorClase) { const k = clave(p), a = m.get(k); if (!a || p.precioPorClase < a.precioPorClase) m.set(k, p); }
+  return [...m.values()]; };
+/** v7: bloque «Si pagas por adelantado (3 o 6 meses)», debajo de las fichas y con otro estilo. Cada renglón: el plan, su precio
+ *  por clase Y lo que se paga de golpe. conElemento: en la pantalla de elementos, un renglón por elemento. Un toque lleva a
+ *  «Planes trimestrales y semestrales» (del elemento elegido, o con pestañas). */
+function bloqueAdelantado(filas, el, conElemento){
+  if (!filas.length) return '';
+  const L = CAT.largo || {}, x = el ? (L.elementos || {})[el] : L, presume = !!(x && x.masBarato);
+  const nums = (p, dur = '') => `<span class="adel-num">${dur}<span class="adel-ppc">${T('adelantado.porClase', { porClase: pesos(p.precioPorClase) })}</span><span class="adel-pago">${T('adelantado.pagas', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) })}</span></span>`;
+  const fila = p => `<span class="adel-fila"><span class="adel-plan"><i style="background:${EL[p.elemento][0]}" aria-hidden="true"></i><b>${EL[p.elemento][1]}</b> · ${esc(Tt('adelantado.plan', { clases: textoClases(claveClases(p), [p]), duracion: p.etiquetaDuracion.toLowerCase() }))}</span>
+    ${nums(p)}</span>`;
+  // Revisión v7: en «¿cuántas clases?», un renglón por número de clases con la trimestral y la semestral lado a lado (en vez
+  // de uno por plan): el bloque pesa menos que las fichas de cada mes de arriba.
+  const grupos = [...new Set(filas.map(claveClases))].map(g => filas.filter(p => claveClases(p) === g));
+  const par = xs => `<span class="adel-fila adel-par"><span class="adel-plan">${esc(textoClases(claveClases(xs[0]), xs))}</span>
+    <span class="adel-celdas">${xs.map(p => nums(p, `<span class="adel-dur">${esc(p.etiquetaDuracion)}</span>`)).join('')}</span></span>`;
+  return `<button class="adel" data-largo="${esc(el || '')}"><span class="adel-cab"><span class="adel-ico" aria-hidden="true">${ico('vigencia')}</span><span class="txt">
+    <span class="adel-tit">${T('adelantado.titulo')}</span><span class="adel-sub">${T(presume ? 'adelantado.sub' : 'adelantado.subSinPresumir')}</span><span class="adel-flex">${T('adelantado.flexible')}</span></span></span>
+    <span class="adel-filas">${conElemento ? filas.map(fila).join('') : grupos.map(par).join('')}</span><span class="adel-pie">${T('adelantado.ver')} ›</span></button>`;
 }
 function conectarLargo(caja){ caja.querySelectorAll('[data-largo]').forEach(b => b.onclick = () => irLargo(b.dataset.largo || null)); }
-function irLargo(el){
-  const L = CAT.largo || {}, info = el ? (L.elementos || {})[el] : L, presume = !!(info && info.masBarato);
-  const xs = CAT.planes.filter(p => p.largo && (!el || p.elemento === el));
-  $('largoTitulo').textContent = el ? Tt('largo.tituloEl', { elemento: EL[el][1] }) : Tt('largo.titulo');
+/** v5.1: entrando sin elemento (desde «¿Membresía o paquete?») ya no salen las 24 tarjetas: pestañas por elemento, abre en el
+ *  de menor «desde». En cada elemento, una fila por número de clases con la trimestral y la semestral lado a lado. */
+function irLargo(el, pestanas = false){
+  const L = CAT.largo || {}, todos = CAT.planes.filter(p => p.largo);
+  const els = ORDEN_EL.filter(e => todos.some(p => p.elemento === e)), dEl = e => desde(todos.filter(p => p.elemento === e));
+  if (!el) { pestanas = true; el = els.reduce((m, e) => (m && dEl(m) <= dEl(e) ? m : e), null); if (!el) return; }
+  const info = (L.elementos || {})[el] || (pestanas ? L : null), presume = !!(info && info.masBarato);
+  const xs = todos.filter(p => p.elemento === el);
+  $('largoTitulo').textContent = pestanas ? Tt('largo.titulo') : Tt('largo.tituloEl', { elemento: EL[el][1] });
   $('largoSub').textContent = Tt(presume ? 'largo.sub' : 'largo.subSinPresumir');
-  const cmp = (p, c, k) => (!c ? '' : `<p>${T(c.masBarato ? `largo.${k}` : `largo.${k}No`, { nombre: c.nombre, porClase: pesos(c.porClase),
-    porClaseOtro: pesos(c.porClaseOtro), ahorroClase: pesos(c.ahorroClase), ahorroPeriodo: pesos(c.ahorroPeriodo), periodo: p.cicloTexto })}</p>`);
+  $('largoFlex').innerHTML = T('largo.flexible');
+  const datos = (p, c) => ({ nombre: c.nombre, porClase: pesos(c.porClase), porClaseOtro: pesos(c.porClaseOtro), ahorroClase: pesos(c.ahorroClase),
+    ahorroPeriodo: pesos(c.ahorroPeriodo), periodo: p.cicloTexto });
+  // La frase completa (con el nombre de Wix del plan con que compara) va en «ⓘ Condiciones» y en aria-label; a la vista, dos niveles.
+  const frase = (p, c, k) => Tt(c.masBarato ? `largo.${k}` : `largo.${k}No`, datos(p, c));
+  const cmp = (p, c, k) => (!c ? '' : `<p class="lg-vs${c.masBarato ? '' : ' no'}" aria-label="${esc(frase(p, c, k))}">
+    <b class="lg-ah">${T(c.masBarato ? 'largo.ahorras' : 'largo.noAhorras', datos(p, c))}</b>
+    <small>${T(c.masBarato ? 'largo.detalle' : 'largo.detalleNo', { ...datos(p, c), contra: Tt('largo.contra.' + k) })}</small></p>`);
+  // Los beneficios que traen TODAS las membresías (p. ej. el de Chai/Calena) no se repiten en cada tarjeta: ya están en la ficha
+  // de membresía, en sus condiciones y en el resumen antes de pagar. Aquí solo lo propio de cada plan (semanas de gracia, pase).
+  const comunes = new Set(((CAT.beneficios || {}).membresia || {}).todas || []);
   const carta = p => {
     const canc = (p.letraChica || []).find(l => /cancelaci[oó]n anticipada/i.test(l));
-    return `<div class="carta"><h2 style="font-size:22px">${esc(p.nombre)}</h2>
-      <div class="lema">${T('largo.cobro', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) })}</div>
-      <div style="font-size:19px">${T('largo.clases', { clases: p.clases, frecuencia: p.frecuencia })} · <b>${T('largo.porClase', { porClase: pesos(p.precioPorClase) })}</b></div>
+    const comp = [p.largo.mensual && frase(p, p.largo.mensual, 'vsMensual'), p.largo.paquete && frase(p, p.largo.paquete, 'vsPaquete')].filter(Boolean);
+    const letra = (comp.length ? `<h3>${T('largo.comparacion')}</h3>${ul(comp.map(esc))}` : '')
+      + (canc ? `<h3>${T('largo.cancelacion')}</h3><p>${esc(canc)}</p>${p.largo.compromiso ? `<p>${T('largo.compromiso', { meses: p.largo.compromiso })}</p>` : ''}` : '');
+    return `<div class="carta plan elegible lg-carta" data-id="${esc(p.planId)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}">
+      <span class="lg-fam">${esc(p.etiquetaDuracion)}</span>
+      <div class="lg-nums">${p.precioPorClase ? `<div class="lg-n ppc"><small>${T('largo.porClaseEt')}</small><b>${esc(pesos(p.precioPorClase))}</b></div>` : ''}
+        <div class="lg-n"><small>${T('largo.pagoEt')}</small><b>${esc(pesos(p.precio))}</b><span>${T('largo.pagoPie', { cada: cadaDe(p.cicloTexto) })}</span></div></div>
+      ${perksLista((p.perks || []).filter(x => !comunes.has(x)).slice(0, 3).map(x => ({ x })))}
       ${cmp(p, p.largo.mensual, 'vsMensual')}${cmp(p, p.largo.paquete, 'vsPaquete')}${notaFaltan([p])}
-      ${canc ? `<div class="chica">${T('largo.cancelacion', { cancelacion: canc })}${p.largo.compromiso ? ' ' + T('largo.compromiso', { meses: p.largo.compromiso }) : ''}</div>` : ''}
-      <button class="btn pri" data-id="${esc(p.planId)}">${T('largo.elegir')}</button></div>`;
+      ${letra ? enlaceHoja('largo-' + p.planId, Tt('largo.condiciones'), letra) : ''}
+      <div class="el-pie">${T('largo.elegir')} ›</div></div>`;
   };
-  $('largoLista').innerHTML = ORDEN_EL.filter(e => xs.some(p => p.elemento === e)).map(e =>
-    (el ? '' : `<h2 class="largo-el">${svgEl(e, 40)}${EL[e][1]}</h2>`) + `<div class="planes2">${xs.filter(p => p.elemento === e).map(carta).join('')}</div>`).join('');
+  const tabs = pestanas ? `<div class="lg-tabs" role="tablist">${els.map(e => `<button class="lg-tab${e === el ? ' activa' : ''}" role="tab" aria-selected="${e === el}" data-tab="${e}">${svgEl(e, 36)}
+    <span class="txt"><b>${EL[e][1]}</b><small>${T('heroe.desde')} ${esc(pesos(dEl(e)))}</small></span></button>`).join('')}</div>` : '';
+  const grupos = [...new Set(xs.map(claveClases))].sort((a, b) => (a === 'ilimitada') - (b === 'ilimitada') || +a - +b);
+  $('largoLista').innerHTML = tabs + grupos.map(g => { const gx = xs.filter(p => claveClases(p) === g);
+    return `<h2 class="lg-grupo">${esc(textoClases(g, gx))}</h2><div class="planes2">${gx.map(carta).join('')}</div>`; }).join('');
   $('largoLetra').textContent = Tt('largo.letra');
+  $('largoLista').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => irLargo(b.dataset.tab, true));
   $('largoLista').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
     const p = xs.find(x => x.planId === b.dataset.id); if (!p) return;
-    A.tipo = 'membresia'; A.elemento = p.elemento; A.clases = claveClases(p); elegirPlan(p);
+    A.tipo = 'membresia'; A.elemento = p.elemento; A.clases = claveClases(p); elegirPlan(p, { desdeLargo: true });
   });
   ir('vLargo');
 }
 
-/** 2b. Elemento: disciplinas (Bookings) y algunos horarios reales de esta semana. */
+/** 2b. Elemento: disciplinas (Bookings) y, en su botón, la agenda de la semana (v6). */
 function disciplinasDeElemento(el){
   const e = (CAT.elementos || {})[el];
   if (e && e.disciplinas && e.disciplinas.length) return e.disciplinas;
@@ -1213,17 +1754,81 @@ function disciplinasDeElemento(el){
 function irElemento(navegar = true){
   const els = ORDEN_EL.filter(el => CAT.planes.some(p => p.tipo === A.tipo && p.elemento === el));
   $('elTitulo').textContent = Tt('elemento.titulo'); $('elSub').textContent = Tt('elemento.sub');
+  // v5.1: cabecera con el color del elemento y su «desde» (el MISMO criterio que la ficha de membresía: sin trimestral ni
+  // semestral; v7: esas van en el bloque aparte de debajo de las fichas, no en la ficha). v6: las disciplinas con el color que tienen en la agenda y el botón
+  // «Ver horarios de la semana» (abre la agenda; no elige el elemento: lo ataja el clic en captura de abajo).
   $('elLista').innerHTML = els.map(el => {
-    const ds = disciplinasDeElemento(el), d = desde(CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === el));
-    const horas = HOR ? ds.map(x => (HOR[x] && HOR[x].length ? `<div>${T('elemento.linea', { disciplina: x, horarios: HOR[x].slice(0, 5).join(', ') })}</div>` : '')).join('') : '';
-    return `<div class="carta elegible" data-e="${el}" role="button" tabindex="0"><h2>${svgEl(el, 48)}${EL[el][1]}</h2>
-      <div style="font-size:20px">${T('elemento.incluye', { disciplinas: lista(ds) })}</div>
-      ${Number.isFinite(d) ? `<div class="grupo">${T('elemento.desde', { porClase: pesos(d) })}</div>` : ''}
-      ${horas ? `<div class="grupo">${T('elemento.horarios')}</div><div class="horas">${horas}</div>` : ''}</div>`;
+    const ds = disciplinasDeElemento(el), xs = CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === el);
+    const cortas = xs.filter(p => !p.largo), d = desde(cortas.length ? cortas : xs);
+    const disc = ds.length ? `<div class="el-disc-tit">${T('elemento.disciplinas')}</div><ul class="el-disc">${ds.map(x => `<li><i style="background:${colorDe(x)[0]}" aria-hidden="true"></i>${esc(x)}</li>`).join('')}</ul>` : '';
+    const ver = conHorarios(ds).length ? `<button type="button" class="ver-ag" data-agenda="${el}">${ico('vigencia', 22)}${T('elemento.verHorarios')}</button>` : '';
+    return `<div class="carta elegible el-carta" data-e="${el}" role="button" tabindex="0" aria-label="${esc(Tt('elemento.elegir', { elemento: EL[el][1] }) + '. ' + Tt('elemento.incluye', { disciplinas: lista(ds) }))}" style="--c:${EL[el][0]}${el === 'AGUA' ? ';--o:.24' : ''}">
+      <div class="el-cab">${svgEl(el, 52)}<h2>${EL[el][1]}</h2>${Number.isFinite(d) ? `<div class="el-precio"><small>${T('heroe.desde')}</small><b>${esc(pesos(d))}</b><span>${T('heroe.porClase')}</span></div>` : ''}</div>
+      <div class="el-cuerpo">${disc}${ver}
+      <div class="el-pie">${T('elemento.elegir', { elemento: EL[el][1] })} ›</div></div></div>`;
   }).join('');
   $('elLista').querySelectorAll('[data-e]').forEach(b => b.onclick = () => { A.elemento = b.dataset.e; irClases(); });
+  // v7: un renglón por elemento (su trimestral o semestral más barata por clase), aparte.
+  const filas = filasAdelantado(CAT.planes.filter(p => p.tipo === A.tipo && els.includes(p.elemento)), p => p.elemento)
+    .sort((a, b) => ORDEN_EL.indexOf(a.elemento) - ORDEN_EL.indexOf(b.elemento));
+  $('elExtra').innerHTML = bloqueAdelantado(filas, null, true); conectarLargo($('elExtra'));
   if (navegar) ir('vElemento');
 }
+
+/* --------------------------------------------------------------- v6: agenda de la semana (estilo «Weekly Schedule» de Hera)
+   Filas = horas reales (7:00 AM, 6:30 PM: el formato del Instagram de Hera, el que ya conocen sus clientas), columnas = días
+   (LUN a SÁB; DOM solo si hay clases), un círculo por clase con el día adentro y el color de su disciplina (revisión v6:
+   todos del mismo tamaño y cada disciplina en su lugar fijo de la celda). «BREAK» entre la última clase antes de las 13:00
+   y la primera después. La leyenda, en la cabecera, filtra: tocar una disciplina deja solo esa; tocarla otra vez, todas.
+   Datos: altaHorarios (cada día y hora con lugar en los próximos 14 días). Texto de los círculos: blanco sobre vino; casi negro sobre los colores claros
+   (contraste ≥ 4.5 con el blanco no se alcanza en naranja, salvia ni azul gris). */
+const COLOR_DISC = [[/reformer/i, 'var(--ag-vino)', '#fff'], [/\bmat\b/i, 'var(--ag-naranja)', '#1A1A1A'], [/barre/i, 'var(--ag-salvia)', '#1A1A1A'], [/yoga/i, 'var(--ag-azul)', '#1A1A1A']];
+const colorDe = n => (COLOR_DISC.find(([re]) => re.test(n)) || [null, 'var(--ag-carbon)', '#fff']).slice(1);
+const conHorarios = ds => (HOR ? ds.filter(x => (HOR[x] || []).length) : []);
+const DIAS_SEMANA = [1, 2, 3, 4, 5, 6, 0];
+/** '18:30' → ['6:30', 'PM'] */
+const hora12 = h => { const [H, M] = String(h).split(':').map(Number); return [`${H % 12 || 12}:${String(M).padStart(2, '0')}`, Tt(H < 12 ? 'agenda.am' : 'agenda.pm')]; };
+let agEl = null, agFiltro = null, agDesde = null;
+function abrirAgenda(el, boton){
+  if (!EL[el] || !HOR) return;
+  agEl = el; agFiltro = null; agDesde = boton || null;
+  pintarAgenda(); $('agenda').hidden = false; $('agenda').scrollTop = 0; document.body.classList.add('sin-scroll');
+  setTimeout(() => $('agCerrar').focus(), 30);
+}
+function cerrarAgenda(enfocar = true){
+  if ($('agenda').hidden) return;
+  $('agenda').hidden = true; document.body.classList.remove('sin-scroll');
+  if (enfocar && agDesde && document.contains(agDesde)) agDesde.focus();
+  agDesde = null;
+}
+function pintarAgenda(){
+  const ds = conHorarios(disciplinasDeElemento(agEl)), vis = agFiltro ? ds.filter(x => x === agFiltro) : ds;
+  const dias = DIAS_SEMANA.filter(d => d !== 0 || ds.some(x => HOR[x].some(c => c.d === 0)));
+  const horas = [...new Set(vis.flatMap(x => HOR[x].map(c => c.h)))].sort();
+  $('agTit').textContent = Tt('agenda.titulo', { elemento: EL[agEl][1] });
+  $('agDisc').textContent = lista(ds); $('agNota').textContent = Tt('agenda.nota'); $('agCerrar').textContent = Tt('agenda.cerrar');
+  const circulo = (x, d, h) => { const [bg, tx] = colorDe(x), [hh, ap] = hora12(h);
+    return `<span class="ag-c" role="img" style="--bg:${bg};--tx:${tx}" aria-label="${esc(`${x}, ${TX.agenda.diasLargos[d]} ${hh} ${ap}`)}">${esc(TX.agenda.dias[d])}</span>`; };
+  // Revisión v6: cada celda trae un lugar por disciplina a la vista, siempre en el orden de la leyenda (el que no tiene clase
+  // queda como hueco); así todos los círculos miden lo mismo y cada disciplina se sigue con la vista.
+  $('agGrid').style.setProperty('--cols', dias.length);
+  $('agGrid').classList.toggle('l1', vis.length === 1);
+  $('agGrid').innerHTML = horas.map((h, i) => {
+    const [hh, ap] = hora12(h);
+    const brk = i && horas[i - 1] < '13:00' && h >= '13:00' ? `<div class="ag-break" role="separator">${T('agenda.descanso')}</div>` : '';
+    return brk + `<div class="ag-fila"><div class="ag-hora">${esc(hh)}<small>${esc(ap)}</small></div>${dias.map(d =>
+      `<div class="ag-celda">${vis.map(x => HOR[x].some(c => c.d === d && c.h === h) ? circulo(x, d, h) : '<span class="ag-c hueco" aria-hidden="true"></span>').join('')}</div>`).join('')}</div>`;
+  }).join('');
+  $('agAyuda').textContent = ds.length > 1 ? Tt(agFiltro ? 'agenda.filtroOtraVez' : 'agenda.filtro') : '';
+  $('agLeyenda').classList.toggle('filtrada', !!agFiltro);
+  $('agLeyenda').innerHTML = ds.map(x => `<button type="button" class="ag-ley" data-disc="${esc(x)}" aria-pressed="${agFiltro === x}"${ds.length < 2 ? ' disabled' : ''}><i style="--bg:${colorDe(x)[0]}" aria-hidden="true"></i>${esc(x)}</button>`).join('');
+  $('agLeyenda').querySelectorAll('[data-disc]').forEach(b => b.onclick = () => { agFiltro = agFiltro === b.dataset.disc ? null : b.dataset.disc; pintarAgenda();
+    const otra = $('agLeyenda').querySelector(`[data-disc="${CSS.escape(b.dataset.disc)}"]`); if (otra) otra.focus(); });
+}
+// El botón de la ficha abre la agenda SIN elegir el elemento (se ataja en captura, como «ⓘ Condiciones»).
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-agenda]'); if (b) { e.stopPropagation(); abrirAgenda(b.dataset.agenda, b); } }, true);
+$('agCerrar').onclick = () => cerrarAgenda();
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('agenda').hidden) cerrarAgenda(); });
 
 /** 2c. Cuántas clases: precio, precio por clase y la de mejor precio por clase marcada. */
 const deLaCasilla = () => CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === A.elemento);
@@ -1244,55 +1849,99 @@ const notaFaltan = xs => {
 /** «$1,090 cada mes» en membresías; «$1,340 · Vigencia de 1 mes» en paquetes. */
 const precioCon = p => (p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) : `${pesos(p.precio)} · ${p.etiquetaDuracion}`);
 function irClases(){
-  const ps = deLaCasilla(), grupos = [...new Set(ps.map(claveClases))], mejor = desde(ps);
+  const ps = deLaCasilla(), grupos = [...new Set(ps.map(claveClases))];
   $('clasesTitulo').textContent = Tt('clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
   $('clasesSub').textContent = Tt('clases.sub');
-  $('clasesLista').innerHTML = grupos.map(g => {
-    const xs = ps.filter(p => claveClases(p) === g), d = desde(xs), top = d === mejor;
-    const precio = xs.length === 1 ? `<small>${esc(precioCon(xs[0]))}</small>` : '';
-    const porClase = Number.isFinite(d) ? `<span class="ppc">${xs.length === 1 ? T('clases.porClase', { porClase: pesos(d) }) : T('clases.desde', { porClase: pesos(d) })}</span>` : '';
-    return `<button class="op${top ? ' destacada' : ''}" data-g="${g}">${esc(textoClases(g, xs))}${precio}${porClase}${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}${notaFaltan(xs)}</button>`;
+  // v6: el sello «El más barato por clase de esta lista» sigue al número GRANDE que se ve en cada ficha (en membresía con
+  // mensual, el de la mensual; antes caía en la ficha con la semestral más barata aunque otra enseñara un número menor).
+  const fichas = grupos.map(g => {
+    const xs = ps.filter(p => claveClases(p) === g), d = desde(xs);
+    const cortas = xs.filter(p => !p.largo), largos = xs.filter(p => p.largo);
+    const m = A.tipo === 'membresia' && cortas.length && largos.length ? cortas.reduce((a, b) => (ppc(b) < ppc(a) ? b : a)) : null;
+    return { g, xs, d, m, grande: m && Number.isFinite(ppc(m)) ? ppc(m) : d, largos, corto: cortas.length ? desde(cortas) : Infinity };
+  });
+  // Revisión v6: si en la lista hay trimestral o semestral, el sello compara solo los números grandes de las que NO lo son
+  // (las de cada mes o cada 45 días) y lo dice («sin contar trimestral y semestral»): las de pago por adelantado van en el
+  // bloque aparte de debajo (v7) y no lo contradicen.
+  const hayLargo = A.tipo === 'membresia' && fichas.some(f => f.largos.length);
+  const mejor = Math.min(...fichas.map(f => (hayLargo ? f.corto : f.grande)));
+  const sello = hayLargo ? `${T('clases.mejorSinLargo')} <small>${T('clases.mejorSinLargoNota')}</small>` : T('clases.mejor');
+  $('clasesLista').innerHTML = fichas.map(({ g, xs, d, m, grande, corto }) => {
+    const top = Number.isFinite(mejor) && (hayLargo ? corto : grande) === mejor;
+    // v5: el número de clases en grande; debajo el precio por clase y el precio del ciclo (o cuántas formas de pagar hay).
+    const fr = [...new Set(xs.map(p => p.frecuencia || ''))], unidad = Tt('clases.unidad', { frecuencia: fr.length === 1 ? fr[0] : '' }).trim();
+    const num = g === 'ilimitada' ? `<span class="tile-num txt">${T('clases.ilimitadas')}</span>` : `<span class="tile-num">${esc(g)}</span><span class="tile-unidad">${esc(unidad)}</span>`;
+    let precio = xs.length === 1 ? `<small>${esc(precioCon(xs[0]))}</small>` : `<small>${T(A.tipo === 'paquete' ? 'clases.opcionesPaquete' : 'clases.opciones', { n: xs.length })}</small>`;
+    let porClase = Number.isFinite(d) ? `<span class="tile-ppc">${xs.length === 1 ? T('clases.porClase', { porClase: pesos(d) }) : T('clases.desde', { porClase: pesos(d) })}</span>` : '';
+    // v5.1: si hay mensual, el precio grande es el suyo (lo que paga cada mes). v7: la trimestral/semestral ya no va en la
+    // ficha: va en el bloque «Si pagas por adelantado» de debajo.
+    if (m) {
+      if (Number.isFinite(ppc(m))) porClase = `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(ppc(m)) })}</span>`;
+      precio = `<small>${esc(precioCon(m))}</small>`;
+    }
+    return `<button class="op tile${top ? ' destacada' : ''}${top && hayLargo ? ' sello2' : ''}" data-g="${g}" aria-label="${esc(textoClases(g, xs))}">${top ? `<span class="mejor">${sello}</span>` : ''}${num}<span class="tile-sep"></span>${porClase}${precio}${notaFaltan(xs)}</button>`;
   }).join('');
   $('clasesLista').querySelectorAll('button').forEach(b => b.onclick = () => {
-    A.clases = b.dataset.g; const xs = ps.filter(p => claveClases(p) === A.clases);
+    A.clases = b.dataset.g; const xs = opcionesDe(ps.filter(p => claveClases(p) === A.clases));
     if (xs.length === 1) elegirPlan(xs[0]); else irDuracion(xs);
   });
-  $('clasesExtra').innerHTML = botonLargo(A.elemento); conectarLargo($('clasesExtra'));   // v4: también si eligió paquete
+  // v7: TODAS las trimestrales y semestrales del elemento, aparte (de menos a más clases; la de 3 meses antes que la de 6), con
+  // lo que se paga de golpe. También si eligió paquete (v4).
+  const filas = filasAdelantado(CAT.planes.filter(p => p.tipo === 'membresia' && p.elemento === A.elemento), p => p.planId)
+    .sort((a, b) => (a.ilimitada - b.ilimitada) || (a.clases - b.clases) || (a.diasCiclo - b.diasCiclo));
+  $('clasesExtra').innerHTML = bloqueAdelantado(filas, A.elemento, false); conectarLargo($('clasesExtra'));
   ir('vClases');
 }
 // Si los planes de la casilla no se llaman igual (fuera de la palabra de duración), se enseña el nombre (p. ej. «AGUA Serena»).
-const nombreBase = n => String(n || '').replace(/\b(mensual|trimestral|semestral|anual)\b/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+const nombreBase = n => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\b(mensual|trimestral|semestral|anual)\b/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+/** Revisión v7 (Olmo, 9-nov): si hay alguna que se cobra cada mes (o cada 45 días), la trimestral y la semestral no se ofrecen
+ *  junto a ella: ya están en el bloque «Si pagas por adelantado» de debajo. Solo si no hay otra cosa se eligen aquí. */
+const opcionesDe = xs => { const c = xs.filter(p => !p.largo); return c.length ? c : xs; };
 function irDuracion(xs){
+  xs = opcionesDe(xs);
   const conNombre = new Set(xs.map(p => nombreBase(p.nombre))).size > 1, mejor = desde(xs);
   $('durTitulo').textContent = Tt(A.tipo === 'membresia' ? 'duracion.titulo' : 'clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
   $('durSub').textContent = A.tipo === 'membresia' ? Tt('duracion.sub') : '';
+  // v5.1: mismas fichas que «¿cuántas clases?»: la duración en grande, el precio por clase como héroe y el cobro debajo.
   $('durLista').innerHTML = xs.map((p, i) => { const top = ppc(p) === mejor;
     // «$6,480 cada 6 meses (se cobra por adelantado)»: que no se lea como cobro mensual (revisión 9-nov).
     const cobro = p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) + (p.familia && p.familia !== 'mensual' ? ` (${Tt('duracion.adelantado')})` : '') : pesos(p.precio);
-    return `<button class="op${top ? ' destacada' : ''}" data-i="${i}">${esc(p.etiquetaDuracion)}${conNombre ? `<small>${esc(p.nombre)}</small>` : ''}<small>${esc(cobro)}</small>${p.precioPorClase ? `<span class="ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}${notaFaltan([p])}</button>`; }).join('');
+    return `<button class="op tile${top ? ' destacada' : ''}" data-i="${i}">${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}<span class="tile-num txt">${esc(p.etiquetaDuracion)}</span>${conNombre ? `<small class="nombre">${esc(p.nombre)}</small>` : ''}<span class="tile-sep"></span>${p.precioPorClase ? `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}<small>${esc(cobro)}</small>${notaFaltan([p])}</button>`; }).join('');
   $('durLista').querySelectorAll('button').forEach(b => b.onclick = () => elegirPlan(xs[+b.dataset.i]));
   ir('vDuracion');
 }
-function elegirPlan(p){
-  A.plan = p;
+function elegirPlan(p, { desdeLargo = false } = {}){
+  A.plan = p; A.desdeLargo = desdeLargo;   // v6: el refuerzo del resumen repite las cifras (pesos cerrados) de la tarjeta trimestral
   if (p.tipo === 'paquete' && p.equivalente && CAT.planes.some(x => x.planId === p.equivalente.planId)) irEmpuje(); else siguiente();
 }
 
-/** 2e. Eligió paquete y la membresía equivalente sale más barata: tarjeta con el ahorro (con su supuesto en letra chica). */
+/** «AIRE - Membresia 4 Clases» → «Aire · Membresía 4 clases» (v6: el nombre de Wix, limpio, solo para leer en la tarjeta). */
+const nombreLimpio = n => { const t = String(n || '').replace(/\*/g, '').trim(), x = /^(AIRE|TIERRA|FUEGO|AGUA)\s*-?\s*(.+)$/i.exec(t);
+  if (!x || !EL[x[1].toUpperCase()]) return t;
+  const r = x[2].replace(/\bmembres[ií]a\b/i, 'Membresía').replace(/\bclases\b/i, 'clases').replace(/\bpaquete\b/i, 'Paquete');
+  return EL[x[1].toUpperCase()][1] + ' · ' + r.charAt(0).toUpperCase() + r.slice(1); };
+/** 2e. Eligió paquete y la membresía equivalente sale más barata. v6 (Olmo, 9-nov: «la siento difícil de leer»): por bloques.
+ *  Tu paquete (por clase, apagado) → la membresía (por clase, en grande); el ahorro en grande; el cobro en una línea; la
+ *  letra chica y el cálculo tras «ⓘ Condiciones». Con centavos solo cuando hacen falta, y cuadran a la vista (v4.1, e.cent):
+ *  paquete − membresía = ahorro por clase, y ese × las clases de un cobro = el ahorro del cobro. */
 function irEmpuje(){
-  const p = A.plan, e = p.equivalente, m = CAT.planes.find(x => x.planId === e.planId);
-  // v4.1: con centavos (e.cent, enteros): por clase del paquete − por clase de la membresía = ahorro por clase, y ese × las
-  // clases de un cobro = el ahorro del cobro, exactos a la vista.
-  const c = e.cent;
-  const d = { membresia: m.nombre, porClase: pesosC(c.porClaseMembresia), ahorroClase: pesosC(c.ahorroClase), ahorroCobro: pesosC(c.ahorroCobro, true), ahorroAnio: pesosC(c.ahorroAnio, true),
-    porClasePaquete: pesosC(c.porClasePaquete), clasesM: m.clases, frecuenciaM: m.frecuencia, ciclosAnio: String(e.ciclosAnio) };
+  const p = A.plan, e = p.equivalente, m = CAT.planes.find(x => x.planId === e.planId), c = e.cent;
+  const d = { membresia: nombreLimpio(m.nombre), paquete: nombreLimpio(p.nombre), porClase: pesosC(c.porClaseMembresia), ahorroClase: pesosC(c.ahorroClase),
+    ahorroCobro: pesosC(c.ahorroCobro), ahorroAnio: pesosC(c.ahorroAnio), porClasePaquete: pesosC(c.porClasePaquete),
+    clasesM: m.clases, frecuenciaM: m.frecuencia, ciclosAnio: String(e.ciclosAnio) };
   $('empTitulo').textContent = Tt('empuje.titulo');
-  // Antes de «Cambiar a membresía» se ve qué se cobra, cada cuándo, y el cargo si cancela (revisión 9-nov).
+  // Antes de «Cambiar a membresía» se ve qué se cobra y cada cuándo; el cargo si cancela, en «ⓘ Condiciones» y en el resumen.
   const canc = (m.letraChica || []).find(l => /cancelaci[oó]n anticipada/i.test(l));
-  $('empCarta').innerHTML = `<p>${T(e.conMesAnio ? 'empuje.texto' : 'empuje.textoSoloClase', d)}</p><p>${T('empuje.cobro', { precio: pesos(m.precio), cada: cadaDe(m.cicloTexto) })}</p>`
-    + `<p class="chica">${T('empuje.comparado', d)}</p>${canc ? `<p class="chica">${T('empuje.cancelacion', { cancelacion: canc })}</p>` : ''}${e.conMesAnio ? `<p class="chica">${T('empuje.letra', d)}</p>` : ''}`;
+  const cond = (e.conMesAnio ? `<p>${T('empuje.letra', d)}</p>` : '') + (canc ? `<h3>${T('empuje.letraChica')}</h3><p>${esc(canc)}</p>` : '');
+  $('empCarta').innerHTML = `<div class="emp-vs">
+      <div class="emp-lado emp-paq"><span class="emp-et">${T('empuje.tuPaquete')}</span><span class="emp-nom">${esc(d.paquete)}</span><span class="emp-pc">${T('empuje.porClase', d)}</span></div>
+      <span class="emp-flecha" aria-hidden="true">→</span>
+      <div class="emp-lado emp-mem"><span class="emp-et">${T('empuje.membresia', d)}</span><span class="emp-pc">${T('empuje.porClaseMem', d)}</span></div></div>
+    <div class="emp-ahorro">${e.conMesAnio ? `<b>${T('empuje.ahorro', d)}</b><small>${T('empuje.ahorroClase', d)}</small>` : `<b>${T('empuje.ahorroSoloClase', d)}</b>`}</div>
+    <p class="emp-cobro">${T('empuje.cobro', { precio: pesos(m.precio), cada: cadaDe(m.cicloTexto) })}</p>
+    ${cond ? enlaceHoja('empuje', Tt('largo.condiciones'), cond) : ''}`;
   $('empCambiar').textContent = Tt('empuje.cambiar'); $('empSeguir').textContent = Tt('empuje.seguir');
-  $('empCambiar').onclick = () => { A.tipo = 'membresia'; A.plan = m; siguiente(); };
+  $('empCambiar').onclick = () => { A.tipo = 'membresia'; A.plan = m; A.desdeLargo = false; siguiente(); };
   $('empSeguir').onclick = () => siguiente();
   ir('vEmpuje');
 }
@@ -1310,8 +1959,8 @@ function filaEmpieza(){
 function pintarFilas(){
   const p = A.plan, mem = p.tipo === 'membresia';
   const filas = [
-    [Tt('resumen.plan'), p.nombre],
-    [Tt('resumen.precio'), pesos(p.precio) + (mem ? ' ' + cadaDe(p.cicloTexto) : '')],
+    [Tt('resumen.plan'), nombreLimpio(p.nombre)],
+    [Tt('resumen.precio'), p.largo ? Tt('resumen.precioLargo', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) : pesos(p.precio) + (mem ? ' ' + cadaDe(p.cicloTexto) : '')],
     p.precioPorClase ? [Tt('resumen.porClase'), pesos(p.precioPorClase)] : null,
     p.prueba && !p.clases ? null : [Tt('resumen.clases'), mem ? Tt('resumen.clasesMembresia', { clases: p.clases, frecuencia: p.frecuencia }) : Tt('resumen.clasesPaquete', { clases: p.clases, vigencia: p.vigenciaTexto || p.etiquetaDuracion })],
     (p.disciplinas || []).length ? [Tt('resumen.incluye'), lista(p.disciplinas)] : null,
@@ -1324,15 +1973,21 @@ function pintarFilas(){
 }
 function irResumen(){
   const p = A.plan, e = p.equivalente; A.repetido = false;
-  $('resNombre').textContent = p.nombre;
-  $('resPrecio').textContent = pesos(p.precio);
+  $('resNombre').textContent = nombreLimpio(p.nombre);   // revisión v6: el mismo nombre que la tarjeta de empuje
+  $('resPrecio').innerHTML = esc(pesos(p.precio)) + (p.tipo === 'membresia' && p.cicloTexto ? `<span class="res-cada">${esc(cadaDe(p.cicloTexto))}</span>` : '');
   $('resPrueba').hidden = !p.prueba; $('resPrueba').textContent = p.prueba ? Tt(p.recurrente ? 'prueba.resumenRecurrente' : 'prueba.resumen') : '';
   const refuerzo = p.tipo === 'membresia' && e;
   $('resRefuerzo').hidden = !refuerzo;
   // Revisión v4.1: las MISMAS cifras con centavos que la tarjeta «¿y si mejor membresía?» (e.cent), para que no cambien
   // segundos después de tocar «Cambiar a membresía». {frecuencia}: «al mes» o «cada 45 días» / «cada 3 meses».
-  if (refuerzo) $('resRefuerzo').innerHTML = T(e.conMesAnio ? 'resumen.refuerzo' : 'resumen.refuerzoSoloClase', { paquete: e.nombre, porClasePaquete: pesosC(e.cent.porClasePaquete),
-    ahorroClase: pesosC(e.cent.ahorroClase), ahorroCobro: pesosC(e.cent.ahorroCobro, true), frecuencia: frecCobro(p), ahorroAnio: pesosC(e.cent.ahorroAnio, true) });
+  // v6: si eligió en «Planes trimestrales y semestrales», las MISMAS cifras de esa tarjeta, en pesos cerrados («$1,600», no
+  // «$1,599.84»): el ahorro del periodo y su precio por clase (el de la fila «Por clase»). Sin el precio por clase del
+  // paquete ni «ahorro por clase» a la vista: así no hay una resta ni una multiplicación que no cuadre por el redondeo.
+  const lp = A.desdeLargo && p.largo && p.largo.paquete && p.largo.paquete.masBarato ? p.largo.paquete : null;
+  if (refuerzo && lp) $('resRefuerzo').innerHTML = T('resumen.refuerzoLargo', { paquete: nombreLimpio(lp.nombre),
+    porClase: pesos(lp.porClase), ahorroPeriodo: pesos(lp.ahorroPeriodo), periodo: p.cicloTexto });
+  else if (refuerzo) $('resRefuerzo').innerHTML = T(e.conMesAnio ? 'resumen.refuerzo' : 'resumen.refuerzoSoloClase', { paquete: nombreLimpio(e.nombre), porClasePaquete: pesosC(e.cent.porClasePaquete),
+    ahorroClase: pesosC(e.cent.ahorroClase), ahorroCobro: pesosC(e.cent.ahorroCobro), frecuencia: frecCobro(p), ahorroAnio: pesosC(e.cent.ahorroAnio) });
   $('resInicio').hidden = !(p.tipo === 'membresia' && p.inicioLibre);
   $('inicioTxt').textContent = Tt('resumen.inicio');
   const hoy = ymdGDL(new Date());
@@ -1344,6 +1999,7 @@ function irResumen(){
   $('resLetra').innerHTML = [(p.perks || []).length ? `<b>${T('resumen.beneficios')}</b>${ul(p.perks.map(esc))}` : '',
     (p.letraChica || []).length ? `<b>${T('resumen.letraChica')}</b>${ul(p.letraChica.map(esc))}` : '',
     p.largo && p.largo.compromiso ? `<p class="chica">${T('largo.compromiso', { meses: p.largo.compromiso })}</p>` : ''].join('');   // trimestral / semestral
+  $('resLetra').hidden = !$('resLetra').innerHTML;
   $('resSeguro').textContent = Tt('resumen.seguro'); $('pagar').textContent = Tt('resumen.pagar');
   $('resError').textContent = ''; $('pagar').disabled = false;
   ir('vResumen');
@@ -1611,9 +2267,13 @@ function demoApi(accion, datos){
       duracion: 'vigencia-1-semana', etiquetaDuracion: 'Vigencia de 1 semana', precio: 10, precioPorClase: 10, frecuencia: '', inicioLibre: false, vigenciaTexto: '1 semana', familia: 'paquete', disciplinas: [], perks: [], letraChica: [] } : null;
     return { ok: true, planes, elementos, beneficios, largo, prueba, omitidos: [], vendedora: 'Recepción Demo' };
   });
-  if (accion === 'altaHorarios') return espera(500).then(() => ({ ok: true, disciplinas: [
-    { nombre: 'Pilates Reformer', horarios: ['lun 7:00', 'mar 19:00', 'mié 8:00', 'jue 20:00'] }, { nombre: 'Barre', horarios: ['lun 9:00', 'mié 19:00', 'vie 8:00'] },
-    { nombre: 'Yoga', horarios: ['mar 7:00', 'jue 19:30', 'sáb 9:00'] }, { nombre: 'Pilates Mat', horarios: ['lun 8:00', 'mié 7:00', 'vie 19:00'] }] }));
+  if (accion === 'altaHorarios') {   // v6: una semana de ejemplo (formato de altaHorarios: d = día 0-6, h = 'HH:mm')
+    const sem = (dias, horas) => dias.flatMap(d => horas.map(h => ({ d, h })));
+    return espera(500).then(() => ({ ok: true, disciplinas: [
+      { nombre: 'Pilates Reformer', semana: sem([1, 2, 3, 4, 5], ['07:00', '08:00', '18:30', '19:30']).concat(sem([6], ['09:00'])) },
+      { nombre: 'Barre', semana: sem([1, 3, 5], ['08:00', '19:30']) }, { nombre: 'Yoga', semana: sem([2, 4], ['07:00', '18:30']).concat(sem([6], ['10:00'])) },
+      { nombre: 'Pilates Mat', semana: sem([2, 4], ['10:00']) }] }));
+  }
   // v3: correo que empiece con "ya" = ya tiene cuenta (celular que termina en 1234; pide colonia); "sincel" = cuenta sin
   // celular en Wix; cualquier otro = nueva (registro). En el registro, un celular que termine en 0000 hace como si fuera
   // de otro contacto (en la tablet no se nota: solo marca el aviso de Slack).
