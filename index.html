@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3PXi3zTiJeceHGBm06zhWle4MyjMCLGsnTgZ67P3940=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Kp+2mATosMWKbuVcwvYQ/TXuflO+aIW+6O64b2pGCvY=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -234,6 +234,8 @@ button.fila-r:active{background:var(--arena-suave)}
 .lista-noreg small{display:block;color:var(--gris);font-size:14px}
 .res.gris{opacity:.6}
 
+.nueva-venta{position:fixed;left:14px;bottom:calc(10px + env(safe-area-inset-bottom));font-size:13px;color:var(--gris);background:transparent;border:1px solid var(--crema);border-radius:999px;padding:6px 12px;opacity:.6;z-index:5}
+.nueva-venta:active{opacity:1;background:#fff}
 @media (max-width:700px){
   .top{padding:14px 16px 4px} main{padding:8px 16px 20px}
   .saludo h1{font-size:28px} .clase .hora{font-size:28px} .exito h1{font-size:34px}
@@ -277,6 +279,8 @@ button.fila-r:active{background:var(--arena-suave)}
     <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
     <div class="resultados" id="resultados"></div>
     <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
+    <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
+    <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
   </section>
 
   <!-- MI CUENTA (después de confirmar con su celular) -->
@@ -907,7 +911,9 @@ async function consultarCuenta(prueba){
     if (e.auth || verif !== mio) return;
     const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
     mio.digitos = ''; pintarPuntos();
-    $('vError').textContent = err === 'verificacion' ? (seg > 2 ? `No coincide. Espera ${seg} s e intenta otra vez.` : 'No coincide. Intenta otra vez.')
+    // Revisión v3: tope por cuenta al día (compartido con el alta en mostrador): al 5º fallo, a recepción.
+    $('vError').textContent = (err === 'agotado' || (err === 'verificacion' && e.resp.agotado)) ? 'Hoy ya no se puede consultar con tu celular. Pasa a recepción, por favor.'
+      : err === 'verificacion' ? (seg > 2 ? `No coincide. Espera ${seg} s e intenta otra vez.` : 'No coincide. Intenta otra vez.')
       : err === 'espera' ? `Espera ${seg || 'unos'} segundos e intenta otra vez.`
       : err === 'ocupado' ? 'Por ahora no se puede consultar. Pasa a recepción.'
       : err === 'sin-telefono' ? 'Para ver tus clases pasa a recepción, por favor.'
@@ -1190,7 +1196,14 @@ setInterval(vaciarCola, 20000);
 window.addEventListener('online', vaciarCola);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { cargar(); vaciarCola(); pedirWakeLock(); } });
 pintarNoReg();
-if (DEMO || ls.get(TOKEN_KEY)) {
+$('nuevaVenta').onclick = () => { location.href = LOCAL ? '/alta.html' : DEMO ? 'alta.html' : new URL('alta.html' + (DEV ? '?dev=1' : ''), location.href).href; };
+// Alta en mostrador (revisión 9-nov): al abrir el kiosco se descarta el sello «venta» de una venta a medias (recarga,
+// Atrás del navegador, kiosco abierto directo): la siguiente venta pide PIN otra vez. La marca de sesión NO se toca.
+ls.del('hera_alta_venta');
+// Alta en mostrador (revisión 8-nov): si quedó puesta la marca de una sesión de clienta abierta en el sitio, la tablet
+// primero va a alta.html, que la cierra (?salir=1) antes de seguir. La marca es solo una URL; nada de la clienta.
+if (!DEMO && ls.get('hera_alta_sesion')) location.replace(LOCAL ? '/alta.html' : new URL('alta.html', location.href).href);
+else if (DEMO || ls.get(TOKEN_KEY)) {
   const c = leerJSON(CACHE_KEY, null);
   if (c && c.finDia && Date.now() + (c.desfase || 0) < c.finDia) {
     clases = c.clases || []; diaCargado = c.dia; finDiaMs = c.finDia; siguiente = c.siguiente || null;

@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zQFl4+rL4/U2ntiI9d7rBRDphQHe5YfDW2Ab6scG91s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#EFE7DE">
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_32,h_32/favicon.png">
+<title>Alta en mostrador · Hera Zenter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#6F6F6F;
+  --arena:#EFE7DE; --arena-suave:#F7F2EC; --crema:#E8DCD0; --pizarra:#788991;
+  --ok:#4F7A5A; --alerta:#B5651D;
+  --fuego:#E8613C; --agua:#3C8FD6; --aire:#6F9CCB; --tierra-el:#7A6A4F;
+  --radio:18px; --sombra:0 1px 2px rgba(66,73,73,.08),0 6px 24px rgba(66,73,73,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--arena);color:var(--texto);font-family:Jost,Helvetica,Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+h1,h2,h3,.num{font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;color:var(--carbon);letter-spacing:-.01em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;font-size:22px;-webkit-user-select:text;user-select:text}
+[hidden]{display:none!important}
+
+.top{display:flex;align-items:center;gap:16px;padding:18px 24px 6px;width:100%;max-width:1080px;margin:0 auto}
+.top img{height:54px}
+.top .titulo{font-family:Poppins;font-weight:600;font-size:18px;color:var(--carbon)}
+.top .titulo small{display:block;font-family:Jost;font-weight:400;font-size:15px;color:var(--gris)}
+.cancelar{margin-left:auto;border:1.5px solid var(--crema);background:#fff;border-radius:999px;padding:12px 22px;font-size:18px;color:var(--carbon)}
+.cancelar:active{background:var(--arena-suave)}
+
+main{flex:1;padding:12px 24px 28px;display:flex;flex-direction:column;width:100%;max-width:880px;margin:0 auto}
+.vista{display:none;flex-direction:column;align-items:center;gap:20px;animation:entra .2s ease-out;width:100%;text-align:center}
+.vista.activa{display:flex}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.vista h1{font-size:34px;line-height:1.15;margin-top:2vh}
+.vista > p, .sub{font-size:19px;color:var(--gris);max-width:640px}
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;width:100%}
+.op{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:24px 22px;min-height:96px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;font-size:23px;font-weight:500;color:var(--carbon);border:2px solid transparent}
+.op small{font-size:16px;font-weight:400;color:var(--gris)}
+.op:active{transform:scale(.98);background:var(--arena-suave)}
+.op .el{width:56px;height:56px}
+.campo{width:min(560px,100%);border:1.5px solid var(--crema);background:#fff;border-radius:15px;padding:18px 20px;outline:0;text-align:center}
+.campo:focus{border-color:var(--pizarra)}
+.error{color:var(--alerta);font-size:18px;min-height:24px;max-width:640px}
+.btn{border-radius:15px;padding:20px 28px;font-size:21px;font-weight:500;text-align:center;min-height:64px;min-width:260px}
+.btn.pri{background:var(--terracota);color:#fff}
+.btn.sec{background:#fff;color:var(--terracota);border:1.5px solid var(--terracota)}
+.btn:active{filter:brightness(.92)}
+.btn[disabled]{opacity:.55}
+.atras{align-self:flex-start;font-size:18px;color:var(--gris);padding:8px 4px}
+.tarjeta{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:20px 24px;width:min(640px,100%);text-align:left}
+.tarjeta .fila{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--arena);font-size:19px}
+.tarjeta .fila:first-child{border-top:0}
+.tarjeta .fila span:first-child{color:var(--gris)}
+.tarjeta .fila b{font-weight:500;text-align:right}
+.precio{font-family:Poppins;font-weight:600;font-size:40px;color:var(--carbon)}
+.nota{font-size:16px;color:var(--gris);max-width:600px}
+.quien{background:var(--arena-suave);border:1px solid var(--crema);border-radius:14px;padding:12px 18px;font-size:18px;color:var(--carbon);max-width:600px}
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(360px,100%)}
+.teclado button{background:#fff;border-radius:16px;font-family:Poppins;font-weight:600;font-size:28px;color:var(--carbon);min-height:68px;box-shadow:var(--sombra)}
+.teclado button:active{background:var(--crema)}
+.puntos{display:flex;gap:14px;justify-content:center}
+.puntos i{width:18px;height:18px;border-radius:50%;border:2px solid var(--carbon)}
+.puntos i.lleno{background:var(--carbon)}
+.qr-grande{width:280px;height:280px;background:#fff;border-radius:28px;padding:14px;box-shadow:0 6px 24px rgba(154,66,21,.18);display:grid;place-items:center}
+.qr-grande svg{width:100%;height:100%;display:block}
+.pasos{text-align:left;font-size:19px;color:var(--carbon);line-height:1.55;padding-left:26px;max-width:560px}
+.pasos b{color:var(--terracota)}
+.ok-msg{color:var(--ok);font-size:18px;min-height:24px}
+.pregunta{font-size:24px;margin-top:6px}
+.fila-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.cargando{color:var(--gris);font-size:18px}
+.giro{width:46px;height:46px;border-radius:50%;border:4px solid var(--crema);border-top-color:var(--terracota);animation:gira .9s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.cuenta-atras{font-size:17px;color:var(--gris)}
+.cuenta-atras b{color:var(--carbon);font-family:Poppins}
+.bloqueo{background:#9A3B2E;color:#fff;border-radius:var(--radio);padding:28px 24px;max-width:640px}
+.bloqueo h1{color:#fff}
+.bloqueo p{color:#fff;font-size:19px;margin-top:10px}
+.correo-grande{font-family:Poppins;font-weight:600;font-size:24px;color:var(--carbon);word-break:break-all}
+.demo{position:fixed;right:12px;bottom:12px;font-size:12px;color:var(--gris);background:var(--arena-suave);border:1px dashed var(--crema);padding:6px 10px;border-radius:8px}
+@media (max-width:700px){ .top{padding:12px 16px 4px} main{padding:8px 16px 20px} .vista h1{font-size:27px} .btn{min-width:0;width:100%} }
+/* v2: pantallas explicativas (letra grande, frases cortas) */
+.planes2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;width:100%;text-align:left}
+.carta{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:24px 24px 20px;display:flex;flex-direction:column;gap:12px;border:2px solid transparent}
+.carta h2{font-size:28px;display:flex;align-items:center;gap:12px}
+.carta .lema{font-size:20px;color:var(--terracota);font-weight:500}
+.carta ul{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:19px;line-height:1.35;color:var(--texto)}
+.carta ul li{padding-left:26px;position:relative}
+.carta ul li::before{content:'✓';position:absolute;left:0;color:var(--ok);font-weight:600}
+.carta .grupo{font-size:16px;color:var(--gris);margin-top:4px}
+.carta .chica{font-size:15px;color:var(--gris);border-top:1px solid var(--arena);padding-top:10px;line-height:1.4}
+.carta .btn{margin-top:auto;width:100%}
+.carta.elegible{cursor:pointer}
+.carta.elegible:active{transform:scale(.99);background:var(--arena-suave)}
+.carta .horas{font-size:16px;color:var(--carbon);line-height:1.5}
+.carta .horas b{font-weight:500}
+.op .mejor,.mejor{display:inline-block;background:#F5E7C8;color:#7A5410;border-radius:999px;padding:3px 10px;font-size:14px;font-weight:500;margin-top:4px}
+.op.destacada{border-color:#E2C27A}
+.op .ppc{font-size:18px;color:var(--carbon);font-weight:500}
+.op small.falta{color:var(--alerta);font-size:15px}
+.empuje{background:#FFF7E8;border:2px solid #E2C27A;border-radius:var(--radio);padding:24px;max-width:640px;text-align:left;display:flex;flex-direction:column;gap:12px}
+.empuje p{font-size:21px;line-height:1.4;color:var(--texto)}
+.empuje .chica{font-size:15px;color:var(--gris)}
+.refuerzo{background:#EEF5EF;border:1.5px solid #B9D3BF;border-radius:14px;padding:14px 18px;font-size:18px;line-height:1.4;max-width:640px;text-align:left;color:var(--texto)}
+.letra{width:min(640px,100%);text-align:left;font-size:15px;color:var(--gris);line-height:1.45}
+.letra b{color:var(--carbon);font-weight:500}
+.letra ul{padding-left:20px;margin-top:4px}
+.correo-app{background:#fff;border:2px solid var(--terracota);border-radius:16px;padding:14px 18px;max-width:640px;width:100%}
+.correo-app small{display:block;font-size:16px;color:var(--gris)}
+.correo-app .aviso{font-size:17px;color:var(--terracota);font-weight:500;margin-top:6px}
+.app-fila{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.pin-puntos{display:flex;gap:14px;justify-content:center;min-height:22px}
+.pin-puntos i{width:18px;height:18px;border-radius:50%;background:var(--carbon)}
+.volver-k{font-size:17px;color:var(--gris);text-decoration:underline;padding:10px}
+/* v3: correo en grande, sugerencia y registro */
+.correo-grande.grande{font-size:30px}
+.sugerencia{background:#FFF7E8;border:2px solid #E2C27A;border-radius:16px;padding:16px 20px;max-width:640px;width:100%;display:flex;flex-direction:column;gap:12px;align-items:center}
+.sugerencia p{font-size:21px;color:var(--texto)}
+.form{display:flex;flex-direction:column;gap:12px;align-items:center;width:100%}
+.etiqueta{font-size:18px;color:var(--carbon);margin-top:6px}
+.cumple{display:grid;grid-template-columns:1fr 1.6fr 1.3fr;gap:10px;width:min(560px,100%)}
+.cumple .campo{width:100%;padding:16px 10px;font-size:20px;-webkit-appearance:none;appearance:none}
+.dato{display:flex;flex-direction:column;gap:4px;width:min(560px,100%);text-align:left}
+.dato > span{font-size:15px;color:var(--gris);padding-left:6px}
+.dato .campo{width:100%}
+.dato small{font-size:16px;color:var(--carbon);padding-left:6px;min-height:20px}
+.res-correo{display:flex;flex-direction:column;gap:6px;align-items:center}
+.res-correo .btn{min-height:48px;padding:10px 22px;font-size:18px;min-width:0}
+/* v4: planes de largo plazo y plan de prueba */
+.extra{display:flex;flex-direction:column;gap:14px;align-items:center;width:100%}
+.largo-el{display:flex;align-items:center;gap:10px;font-size:24px;align-self:flex-start;margin-top:8px}
+.carta p{font-size:18px;line-height:1.4;color:var(--texto)}
+.carta.prueba{border:2px dashed var(--alerta);background:#FFF7E8;width:min(640px,100%)}
+.carta.prueba .grupo{color:var(--alerta);font-weight:500;font-size:18px}
+.aviso-cancelar{background:#FDECEC;border:2.5px solid #B42318;border-radius:14px;padding:12px 18px;font-size:19px;font-weight:600;color:#B42318;max-width:640px;margin:0 auto 10px}
+.aviso-prueba{background:#FFF7E8;border:2px dashed var(--alerta);border-radius:14px;padding:12px 18px;font-size:18px;color:var(--alerta);max-width:640px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img src="https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png" alt="Hera Zenter">
+  <div class="titulo">Alta en mostrador<small id="paso"></small></div>
+  <button class="cancelar" id="cancelar" hidden>Cancelar</button>
+</header>
+
+<main>
+  <!-- CONTRASEÑA DE LA TABLET (la misma del kiosco: comparte su token) -->
+  <section class="vista" id="vClave">
+    <h1>Alta en mostrador</h1>
+    <p>Esta pantalla es solo para la tablet de recepción.</p>
+    <input class="campo" id="clave" type="password" placeholder="Contraseña" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="error" id="claveError"></div>
+    <button class="btn pri" id="claveOk">Entrar</button>
+  </section>
+
+  <section class="vista" id="vCargando"><div class="giro"></div><p class="cargando" id="cargandoTxt">Cargando…</p></section>
+
+  <!-- 0. PIN DE LA RECEPCIONISTA (la venta queda a su nombre; el PIN nunca se guarda) -->
+  <section class="vista" id="vPin">
+    <h1 id="pinTitulo"></h1>
+    <p id="pinTexto"></p>
+    <div class="pin-puntos" id="pinPuntos"></div>
+    <div class="teclado" id="pinTeclado"></div>
+    <div class="error" id="pinError"></div>
+    <p class="nota" id="pinNota"></p>
+    <button class="volver-k" id="pinVolver"></button>
+  </section>
+
+  <!-- 2. CORREO (después de elegir el plan) -->
+  <section class="vista" id="vCorreo">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 data-tx="correo.titulo"></h1>
+    <p data-tx="correo.texto"></p>
+    <input class="campo" id="correo" type="email" inputmode="email" data-ph="correo.placeholder" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+    <div class="error" id="correoError"></div>
+    <button class="btn pri" id="correoOk" data-tx="correo.seguir"></button>
+  </section>
+
+  <!-- 2b. ¿ESTÁ BIEN ESCRITO? (en grande, con sugerencia si parece error de dedo) -->
+  <section class="vista" id="vConfirma">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 data-tx="confirma.pregunta"></h1>
+    <div class="correo-app"><div class="correo-grande grande" id="confCorreo"></div><div class="aviso" data-tx="confirma.app"></div></div>
+    <div class="sugerencia" id="confSug" hidden><p id="confSugTxt"></p><button class="btn pri" id="confUsar"></button></div>
+    <div class="error" id="confError"></div>
+    <div class="fila-btns">
+      <button class="btn pri" id="confSi" data-tx="confirma.si"></button>
+      <button class="btn sec" id="confCorregir" data-tx="confirma.corregir"></button>
+    </div>
+  </section>
+
+  <!-- 2c. YA TIENE CUENTA: los 4 últimos de su celular -->
+  <section class="vista" id="vCel">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 data-tx="cel.titulo"></h1>
+    <p id="celTexto" data-tx="cel.texto"></p>
+    <div class="puntos" id="puntos"><i></i><i></i><i></i><i></i></div>
+    <div class="teclado" id="teclado"></div>
+    <div class="error" id="celError"></div>
+    <p class="nota" id="celNota" data-tx="cel.nota"></p>
+    <p class="nota" id="celRecepcion" data-tx="cel.recepcion" hidden></p>
+    <button class="btn sec" id="celOtroCorreo" data-tx="cel.otroCorreo"></button>
+  </section>
+
+  <!-- 2d. YA TIENE CUENTA: hola, sus planes y (si falta) su colonia -->
+  <section class="vista" id="vHola">
+    <h1 id="holaTitulo"></h1>
+    <div class="quien" id="quien"></div>
+    <div id="holaColoniaCaja" hidden style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%">
+      <label for="holaColonia" style="font-size:20px;color:var(--carbon)" data-tx="hola.colonia"></label>
+      <input class="campo" id="holaColonia" autocomplete="off" autocapitalize="words" spellcheck="false" data-ph="registro.colonia" maxlength="60">
+    </div>
+    <div class="error" id="holaError"></div>
+    <div class="fila-btns">
+      <button class="btn pri" id="holaOk"></button>
+      <button class="btn sec" id="holaSaltar" hidden data-tx="hola.saltar"></button>
+    </div>
+  </section>
+
+  <!-- 2e. NUEVA: registro desde cero -->
+  <section class="vista" id="vRegistro">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 data-tx="registro.titulo"></h1>
+    <p data-tx="registro.sub"></p>
+    <div class="correo-app"><small data-tx="registro.correo"></small><div class="correo-grande" id="regCorreo"></div></div>
+    <div class="form">
+      <!-- Etiquetas visibles (revisión v3): al escribir, el texto guía desaparece y en tablet no se sabía qué campo era. -->
+      <label class="dato"><span data-tx="registro.nombre"></span><input class="campo" id="regNombre" data-ph="registro.nombre" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="60"></label>
+      <label class="dato"><span data-tx="registro.apellido"></span><input class="campo" id="regApellido" data-ph="registro.apellido" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="60"></label>
+      <!-- Sin recortar: «+52 33 1234 5678» (16 caracteres, así lo pega iOS) se normaliza, nunca se trunca. -->
+      <label class="dato"><span data-tx="registro.celular"></span><input class="campo" id="regCelular" type="tel" inputmode="numeric" data-ph="registro.celularEjemplo" autocomplete="off" maxlength="24"><small id="regCelVes"></small></label>
+      <label class="dato"><span data-tx="registro.colonia"></span><input class="campo" id="regColonia" data-ph="registro.coloniaEjemplo" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="60"></label>
+      <label class="etiqueta" data-tx="registro.cumple"></label>
+      <div class="cumple">
+        <select class="campo" id="regDia" aria-label="Día"></select>
+        <select class="campo" id="regMes" aria-label="Mes"></select>
+        <input class="campo" id="regAnio" type="tel" inputmode="numeric" data-ph="registro.anio" autocomplete="off" maxlength="4">
+      </div>
+    </div>
+    <div class="error" id="regError"></div>
+    <button class="btn pri" id="regOk" data-tx="registro.boton"></button>
+  </section>
+
+  <!-- 2a. MEMBRESÍA O PAQUETE (qué es cada uno, beneficios reales y letra chica) -->
+  <section class="vista" id="vTipo">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="tipoTitulo"></h1>
+    <p id="tipoSub"></p>
+    <div class="planes2" id="tipoLista"></div>
+    <div class="extra" id="tipoExtra"></div>
+  </section>
+
+  <!-- 2b. ELEMENTO (disciplinas y horarios reales) -->
+  <section class="vista" id="vElemento">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="elTitulo"></h1>
+    <p id="elSub"></p>
+    <div class="planes2" id="elLista"></div>
+  </section>
+
+  <!-- 2c. CLASES (precio y precio por clase) -->
+  <section class="vista" id="vClases">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="clasesTitulo"></h1>
+    <p id="clasesSub"></p>
+    <div class="ops" id="clasesLista"></div>
+    <div class="extra" id="clasesExtra"></div>
+  </section>
+
+  <!-- v4: PLANES DE LARGO PLAZO (trimestrales y semestrales, con su ahorro real contra la mensual y el paquete) -->
+  <section class="vista" id="vLargo">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="largoTitulo"></h1>
+    <p id="largoSub"></p>
+    <p class="nota" id="largoLetra"></p>
+    <div class="extra" id="largoLista"></div>
+  </section>
+
+  <!-- 2d. DURACIÓN -->
+  <section class="vista" id="vDuracion">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="durTitulo"></h1>
+    <p id="durSub"></p>
+    <div class="ops" id="durLista"></div>
+  </section>
+
+  <!-- 2e. ¿Y SI MEJOR MEMBRESÍA? (solo si eligió paquete y la membresía sale más barata) -->
+  <section class="vista" id="vEmpuje">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="empTitulo"></h1>
+    <div class="empuje" id="empCarta"></div>
+    <div class="fila-btns">
+      <button class="btn pri" id="empCambiar"></button>
+      <button class="btn sec" id="empSeguir"></button>
+    </div>
+  </section>
+
+  <!-- 3. RESUMEN -->
+  <section class="vista" id="vResumen">
+    <button class="atras" data-atras>‹ Atrás</button>
+    <h1 id="resNombre"></h1>
+    <div class="precio" id="resPrecio"></div>
+    <div class="aviso-prueba" id="resPrueba" hidden></div>
+    <div class="refuerzo" id="resRefuerzo" hidden></div>
+    <div class="correo-app res-correo" id="resCorreoCaja"><small data-tx="resumen.correo"></small><div class="correo-grande grande" id="resCorreo"></div>
+      <button class="btn sec" id="resCambiar" data-tx="resumen.cambiarCorreo" hidden></button></div>
+    <div class="tarjeta" id="resFilas"></div>
+    <div id="resInicio" hidden style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%">
+      <label for="inicio" style="font-size:19px;color:var(--carbon)" id="inicioTxt"></label>
+      <input class="campo" id="inicio" type="date">
+    </div>
+    <div class="letra" id="resLetra"></div>
+    <p class="nota" id="resSeguro"></p>
+    <div class="error" id="resError"></div>
+    <button class="btn pri" id="pagar"></button>
+  </section>
+
+  <!-- 4. YA PAGÓ: la app -->
+  <section class="vista" id="vApp">
+    <div class="aviso-cancelar" id="appPrueba" hidden></div>
+    <h1 id="appTitulo"></h1>
+    <p id="appSub"></p>
+    <div class="correo-app"><small id="appCorreoTit"></small><div class="correo-grande" id="appCorreo"></div><div class="aviso" id="appAviso"></div></div>
+    <div class="app-fila">
+      <div class="qr-grande" id="qrApp"><span class="cargando">…</span></div>
+      <ol class="pasos" id="appPasos"></ol>
+    </div>
+    <button class="btn" id="btnCorreo"></button>
+    <p class="ok-msg" id="correoMsg"></p>
+    <button class="btn sec" id="btnCorreoOtra" hidden></button>
+    <h3 class="pregunta" id="appPregunta"></h3>
+    <div class="fila-btns">
+      <button class="btn pri" id="siReservo"></button>
+      <button class="btn sec" id="noReservo"></button>
+    </div>
+    <p class="cuenta-atras" id="cuentaTxt"></p>
+  </section>
+
+  <!-- NO SE PUDO CERRAR SU SESIÓN: la tablet se queda aquí hasta que recepción lo resuelva -->
+  <section class="vista" id="vBloqueo">
+    <div class="bloqueo">
+      <h1 data-tx="bloqueo.titulo"></h1>
+      <p data-tx="bloqueo.texto"></p>
+    </div>
+    <div class="fila-btns">
+      <button class="btn pri" id="bloqueoReintentar" data-tx="bloqueo.reintentar"></button>
+      <button class="btn sec" id="bloqueoListo" data-tx="bloqueo.listo"></button>
+    </div>
+  </section>
+
+  <!-- FIN -->
+  <section class="vista" id="vFin">
+    <h1 id="finTitulo"></h1>
+    <p id="finTexto"></p>
+    <p class="nota" id="finAuto"></p>
+    <button class="btn pri" id="finVolver"></button>
+  </section>
+</main>
+
+<script>
+// Textos del alta en mostrador (alta.html). TODO lo que lee la clienta o recepción en la tablet está aquí, en un solo lugar.
+// - {marcador} = dato vivo (precios, planes, disciplinas y horarios salen de Wix; nada se escribe a mano aquí).
+// - *texto* = negritas.
+// - Para aprobar o cambiar un texto: edítalo aquí, corre `npm run textos` (regenera docs/TEXTOS_ALTA.md con los precios
+//   de la foto del catálogo) y `npm test`.
+// En la tablet este archivo va DENTRO del único <script> de alta.html (lo mete scripts/empaquetar.mjs, por la CSP).
+
+/* La app y su código: un solo lugar. */
+const CONFIG_ALTA = {
+  appNombre: 'Fit by Wix',
+  appCodigo: 'XBVK52',
+  // Liga de invitación a Hera en Fit by Wix (la misma del QR del kiosco).
+  appLiga: 'https://fitness.wix.app/platform/club/3aca4561-2d36-464a-803b-e87cbf0b6a97/21d18206-19d9-4b9f-9cc4-3c7a471ae6c4'
+};
+
+const TEXTOS_ALTA = {
+  // Orden (v3): primero el plan (sin dar datos), luego el correo (y los 4 dígitos o el registro), luego pagar.
+  pasos: { vPin: 'Recepción', vTipo: 'Paso 1 · tu plan', vElemento: 'Paso 1 · elemento', vClases: 'Paso 1 · clases', vDuracion: 'Paso 1 · cada cuánto',
+    vEmpuje: 'Paso 1 · tu plan', vLargo: 'Paso 1 · tu plan', vCorreo: 'Paso 2 · tu correo', vConfirma: 'Paso 2 · tu correo', vCel: 'Paso 2 · tu cuenta', vRegistro: 'Paso 2 · tus datos', vHola: 'Paso 2 · tu cuenta',
+    vResumen: 'Paso 3 · revisar y pagar', vApp: 'Paso 4 · la app' },
+  venta: 'Venta de {vendedora}',
+  barra: { cancelar: 'Cancelar', terminar: 'Terminar' },
+
+  pin: {
+    titulo: 'Nueva venta',
+    texto: 'Recepción: escribe tu PIN.',
+    nota: 'La venta queda a tu nombre. Tu PIN no se guarda en la tablet.',
+    volver: 'Volver al check-in',
+    pin: 'Ese PIN no es. Intenta otra vez.',
+    bloqueado: 'Demasiados PIN equivocados. La venta se reabre a las {hasta} (en {minutos} min). Mientras, vende desde el panel de Wix.',
+    espera: 'Espera {segundos} s y vuelve a intentar.',
+    sinPines: 'Falta configurar los PIN de recepción en Wix (secreto alta_pines). Avísale a Olmo.',
+    vencido: 'Por seguridad, la venta se pausó. Recepción: escribe tu PIN para seguir.',
+    red: 'Sin conexión. Intenta otra vez.'
+  },
+
+  tipo: {
+    titulo: '¿Cómo quieres venir a Hera?',
+    sub: 'Hay dos formas. Te contamos cada una.',
+    membresia: {
+      nombre: 'Membresía',
+      lema: 'Se renueva sola. Tú solo vienes.',
+      puntos: ['Se cobra sola en cada ciclo con tu tarjeta.', 'El menor precio por clase: desde *{desdePorClase}*.'],
+      todas: 'Todas incluyen:',
+      // Cada beneficio va con las familias EXACTAS que lo traen (no es escalera: no se suman de un grupo al otro).
+      solo: 'Solo las {familias}:',
+      familias: { mensual: 'mensuales y de 45 días', trimestral: 'trimestrales', semestral: 'semestrales', anual: 'anuales' },
+      letraChica: 'Letra chica: {cancelacion}',
+      boton: 'Quiero membresía'
+    },
+    paquete: {
+      nombre: 'Paquete',
+      lema: 'Un solo pago, sin cargos automáticos.',
+      puntos: ['Pagas una vez y listo: no se renueva.', 'Cada paquete tiene su vigencia: {vigencias}.', 'Desde *{desdePorClase}* por clase.'],
+      boton: 'Quiero paquete'
+    }
+  },
+
+  elemento: {
+    titulo: '¿Qué elemento va contigo?',
+    sub: 'Cada elemento incluye distintas disciplinas.',
+    incluye: 'Incluye: {disciplinas}',
+    desde: 'desde {porClase} por clase',
+    horarios: 'Algunos horarios de los próximos días:',
+    linea: '{disciplina}: {horarios}'
+  },
+
+  clases: {
+    titulo: '{elemento} · {tipo}: ¿cuántas clases?',
+    sub: 'Entre más clases, menos pagas por cada una.',
+    opcion: '{clases} clases {frecuencia}',
+    precio: '{precio}',
+    porClase: '{porClase} por clase',
+    desde: 'desde {porClase} por clase',
+    // Solo compara las opciones de ESTA pantalla (no «el mejor precio» de Hera: eso era el perk viejo y no era cierto).
+    mejor: '⭐ El más barato por clase de esta lista',
+    membresia: 'membresía', paquete: 'paquete',
+    // Plan al que Bookings no le acepta una disciplina que sí traen los demás de su elemento (dato de Wix, no de aquí).
+    sinDisciplina: 'Este no incluye {faltan}',
+    algunasSin: 'Alguna opción no incluye {faltan}'
+  },
+
+  duracion: {
+    titulo: '¿Cada cuánto quieres pagar?',
+    sub: 'Las de más meses salen más baratas por clase.',
+    precio: '{precio} {cada}',
+    adelantado: 'se cobra por adelantado'
+  },
+
+  // v4 (Olmo, 9-nov): botón aparte para las membresías trimestrales y semestrales, con sus números reales. Lo que presume es
+  // SOLO contra la mensual y el paquete de las MISMAS clases (no «los más baratos» en general: una Membresía 24 de AIRE sale
+  // más barata por clase que la Trimestral 8) y solo sale si es cierto con el catálogo de hoy (resumenLargo en alta.js).
+  largo: {
+    boton: 'Ver planes trimestrales y semestrales (más baratos que la mensual y el paquete de las mismas clases)',
+    botonSinPresumir: 'Ver planes trimestrales y semestrales',
+    titulo: 'Planes trimestrales y semestrales',
+    tituloEl: '{elemento}: planes trimestrales y semestrales',
+    sub: 'Pagas varios meses por adelantado y cada clase te sale más barata que en la mensual o el paquete de las mismas clases.',
+    subSinPresumir: 'Pagas varios meses por adelantado.',
+    cobro: '{precio} {cada} (se cobra por adelantado)',
+    clases: '{clases} clases {frecuencia}',
+    porClase: '{porClase} por clase',
+    vsMensual: 'Contra la mensual ({nombre}, {porClaseOtro} por clase): ahorras *{ahorroClase}* por clase y *{ahorroPeriodo}* en {periodo}.',
+    vsMensualNo: 'Contra la mensual ({nombre}): no sale más barata por clase ({porClase} contra {porClaseOtro}).',
+    vsPaquete: 'Contra el paquete ({nombre}, {porClaseOtro} por clase): ahorras *{ahorroClase}* por clase y *{ahorroPeriodo}* en {periodo}.',
+    vsPaqueteNo: 'Contra el paquete ({nombre}): no sale más barata por clase ({porClase} contra {porClaseOtro}).',
+    letra: 'Cálculo con los precios de hoy y las mismas clases al mes: el ahorro «en 3 meses» o «en 6 meses» compara con pagar la mensual cada mes, o con comprar el paquete cada mes, durante ese tiempo.',
+    cancelacion: 'Letra chica: {cancelacion}',
+    // Wix dice «2 ciclos de pago»; en una trimestral son 6 meses y en una semestral 12 (que nadie entienda «2 meses»).
+    compromiso: 'En este plan, 2 ciclos de pago = {meses}.',
+    elegir: 'Elegir este plan'
+  },
+
+  // v4: plan de PRUEBA (secreto alta_plan_prueba). Solo sale si el secreto existe; se quita al terminar la prueba en vivo.
+  prueba: {
+    seccion: '🧪 Prueba (solo para validar)',
+    aviso: 'Solo para que recepción pruebe el cobro en vivo. No lo vendas a una clienta.',
+    boton: 'Usar el plan de prueba',
+    resumen: '🧪 PLAN DE PRUEBA: solo para validar el cobro. El aviso a #recepcion dirá PRUEBA.',
+    // v4.1: plan de prueba RECURRENTE (se cobra solo cada ciclo hasta que se cancele la orden).
+    cobroRecurrente: '{precio} {cada}, se cobra solo',
+    resumenRecurrente: '🧪 PLAN DE PRUEBA: solo para validar el cobro. El aviso a #recepcion dirá PRUEBA. Al terminar la prueba hay que CANCELAR esta orden en Wix para que no se vuelva a cobrar.'
+  },
+
+  empuje: {
+    titulo: 'Antes de pagar: ¿y si mejor membresía? 💛',
+    // v4.1 (Olmo, 9-nov): en esta tarjeta los precios por clase van con centavos y cuadran a la vista: {porClasePaquete} − {porClase}
+    // = {ahorroClase}, y {ahorroClase} × las clases de un cobro = {ahorroCobro}. {frecuenciaM} = «al mes» o «cada 45 días».
+    texto: 'Con *{membresia}* pagas *{porClase}* por clase: te ahorras *{ahorroClase}* por clase, *{ahorroCobro}* {frecuenciaM} y *{ahorroAnio}* al año.',
+    textoSoloClase: 'Con *{membresia}* pagas *{porClase}* por clase: te ahorras *{ahorroClase}* por clase.',
+    comparado: 'Tu paquete: {porClasePaquete} por clase.',
+    cobro: 'La membresía se cobra sola: *{precio} {cada}*, con tu tarjeta.',
+    cancelacion: 'Letra chica: {cancelacion}',
+    // Wix dice «2 ciclos de pago»; en una trimestral son 6 meses y en una semestral 12 (que nadie entienda «2 meses»).
+    compromiso: 'En este plan, 2 ciclos de pago = {meses}.',
+    letra: 'Cálculo con los precios de hoy. Supone que tomas {clasesM} clases {frecuenciaM} y que con paquetes comprarías esas mismas clases en cada ciclo. Un año = {ciclosAnio} cobros.',
+    cambiar: 'Cambiar a membresía',
+    seguir: 'Seguir con el paquete'
+  },
+
+  resumen: {
+    titulo: 'Revisa tu plan',
+    plan: 'Plan', precio: 'Precio', porClase: 'Por clase', clases: 'Clases', incluye: 'Incluye',
+    empieza: 'Empieza', renueva: 'Cómo se renueva', para: 'Para', vende: 'Te atiende',
+    correo: 'Tu correo para la app (revísalo antes de pagar):', cambiarCorreo: 'Cambiar correo',
+    clasesMembresia: '{clases} clases {frecuencia}',
+    clasesPaquete: '{clases} clases para usar en {vigencia}',
+    empiezaHoy: 'Hoy, al pagar',
+    empiezaDia: 'El {fecha}',
+    renuevaMembresia: 'Sola, {cada}, con tu tarjeta',
+    renuevaPaquete: 'No se renueva. Vence {vigencia} después de pagar',
+    beneficios: 'Beneficios:',
+    letraChica: 'Letra chica (de los términos del plan):',
+    // Revisión v4.1: con centavos, las mismas cifras que la tarjeta «¿y si mejor membresía?». {frecuencia} = «al mes», «cada 45 días» o «cada 3 meses».
+    refuerzo: '¡Buena elección! Comparado con *{paquete}* ({porClasePaquete} por clase), te ahorras *{ahorroClase}* por clase, *{ahorroCobro}* {frecuencia} y *{ahorroAnio}* al año.',
+    refuerzoSoloClase: '¡Buena elección! Comparado con *{paquete}* ({porClasePaquete} por clase), te ahorras *{ahorroClase}* por clase.',
+    inicio: '¿Desde qué día empieza?',
+    seguro: 'Pagas tú con tu tarjeta en la ventana segura de Wix. Recepción no ve ni teclea tu tarjeta.',
+    pagar: 'Pagar con mi tarjeta'
+  },
+
+  app: {
+    // Revisión v4.1: arriba de la pantalla de la app, en rojo, si se pagó el plan de prueba RECURRENTE.
+    avisoPrueba: '🛑 PLAN DE PRUEBA: Al terminar la prueba hay que CANCELAR esta orden en Wix para que no se vuelva a cobrar.',
+    titulo: '¡Listo, ya quedó pagado! 🎉',
+    sub: 'Ahora baja la app para reservar tus clases.',
+    correoTitulo: 'Tu correo de Hera es:',
+    aviso: 'Entra con este mismo correo o no verás tu plan.',
+    pasosGoogle: [
+      'Escanea el código y baja la app *{appNombre}*.',
+      'Toca *«Continuar con Google»* y elige tu Gmail: *{correo}*.',
+      'Escribe el código *{appCodigo}* para encontrar Hera Zenter.',
+      'En *Agenda* reserva tu primera clase: se descuenta de tu plan.'
+    ],
+    // Si la venta no se alcanzó a confirmar o no se supo el correo: sin botón de la tablet (no se nombra un botón que no se ve).
+    pasosOlvido: [
+      'Escanea el código y baja la app *{appNombre}*.',
+      'Si tu correo es de Gmail, toca *«Continuar con Google»*. Si no, toca *«Entrar con correo»*, escribe *{correo}* y toca *«¿Olvidaste tu contraseña?»*: te llega una liga para crear tu contraseña.',
+      'Escribe el código *{appCodigo}* para encontrar Hera Zenter.',
+      'En *Agenda* reserva tu primera clase: se descuenta de tu plan.'
+    ],
+    correoDesconocido: 'el correo que escribiste al inicio',
+    avisoRecepcion: 'Recepción: esta tablet no alcanzó a confirmar la venta. Revísala en Wix (Planes de precios → Pedidos).',
+    pasosCorreo: [
+      'Escanea el código y baja la app *{appNombre}*.',
+      'Toca *«Mandar correo para crear contraseña»* (aquí abajo) y crea tu contraseña desde tu correo. La liga vale 3 horas.',
+      'En la app toca *«Entrar con correo»* y escribe *{correo}* y tu contraseña.',
+      'Escribe el código *{appCodigo}* para encontrar Hera Zenter.',
+      'En *Agenda* reserva tu primera clase: se descuenta de tu plan.'
+    ],
+    botonCorreo: 'Mandar correo para crear contraseña',
+    botonCorreoRespaldo: '¿No te deja con Google? Crear contraseña',
+    botonOtra: 'Mandar el correo otra vez',
+    sinQR: 'No se pudo dibujar el código: busca «{appNombre}» en la tienda de apps.',
+    pregunta: '¿Ya reservaste tu primera clase en la app?',
+    si: 'Sí, terminar',
+    no: 'No pude, reservar aquí',
+    cuenta: 'Por seguridad, tu sesión se cierra sola en {tiempo}.'
+  },
+
+  fin: { boton: 'Volver al check-in', auto: 'La tablet regresa al check-in en unos segundos.',
+    gracias: '¡Gracias! 🌿', cerrada: 'Se cerró la sesión de la clienta.',
+    reservada: '¡Primera clase reservada! 🌿', reservadaTexto: 'Se cerró la sesión de la clienta. ¡Nos vemos en clase!' },
+
+  clave: { incorrecta: 'Contraseña incorrecta.', demasiados: 'Demasiados intentos. Espera unos minutos.', red: 'Sin conexión. Intenta otra vez.',
+    otraVez: 'La tablet necesita la contraseña otra vez.' },
+  // ---- v3: correo → ¿está bien escrito? → 4 dígitos (ya tiene cuenta) o registro (nueva). Ya no hay código por correo.
+  correo: {
+    titulo: '¡Bienvenida a Hera! 🌿<br>¿Cuál es tu correo?',
+    texto: 'Con él entras a la app para reservar tus clases. Si ya habías venido, usa el mismo correo.',
+    placeholder: 'Tu correo', seguir: 'Seguir', revisa: 'Revisa el correo: le falta algo (la arroba o el .com, por ejemplo).',
+    errores: {
+      bloqueado: 'Ese correo es del equipo o colaboradoras de Hera: esa alta se hace desde el panel de Wix.',
+      demasiadas: 'Demasiados intentos desde esta tablet. Espera unos minutos o pasa con recepción.',
+      correo: 'Revisa el correo.', red: 'Sin conexión. Intenta otra vez.'
+    }
+  },
+  confirma: {
+    pregunta: '¿Está bien escrito?',
+    app: 'Con este correo entrarás a la app. Si tiene un error, no verás tu plan.',
+    quisiste: '¿Quisiste decir *{sugerencia}*?',
+    usar: 'Sí, usar {sugerencia}',
+    si: 'Sí, está bien escrito',
+    corregir: 'Corregir'
+  },
+  cel: {
+    titulo: '¡Ya tienes cuenta en Hera! 🌿',
+    texto: 'Para cuidar tu cuenta, escribe los *4 últimos dígitos* de tu celular.',
+    nota: 'Los del celular que diste en Hera.',
+    malo: 'Esos 4 dígitos no son los de tu cuenta. Revisa e intenta otra vez.',
+    espera: 'Espera {segundos} s e intenta otra vez.',
+    agotado: 'No coincidió el celular. Usa otro correo o pasa con recepción.',
+    queda1: 'Te queda 1 intento hoy.',
+    // Para recepción, cuando la tablet ya no deja seguir (revisión v3).
+    recepcion: 'Recepción: véndele desde el panel de Wix. Si no tiene celular en su contacto, agrégaselo en Wix y vuelve a intentar.',
+    ventaTope: 'Demasiados intentos en esta venta. Pasa con recepción.',
+    sinContacto: 'No encontramos los datos de tu cuenta. Pasa con recepción para terminar tu alta.',
+    sinTelefono: 'Tu cuenta no tiene celular registrado. Pasa con recepción para terminar tu alta.',
+    ocupado: 'Hay muchos intentos fallidos en la tablet. Pasa con recepción (se reabre en {minutos} min).',
+    cambio: 'Algo cambió en la cuenta de ese correo. Escríbelo otra vez.',
+    reto: 'Pasó mucho tiempo. Escribe tu correo otra vez.',
+    otroCorreo: 'Usar otro correo',
+    red: 'Sin conexión. Intenta otra vez.'
+  },
+  registro: {
+    titulo: 'Crea tu cuenta en Hera',
+    sub: 'Te toma un minuto.',
+    correo: 'Tu correo (con él entras a la app):',
+    nombre: 'Nombre', apellido: 'Apellido', celular: 'Celular (10 dígitos)', colonia: 'Colonia donde vives',
+    celularEjemplo: '33 1234 5678', coloniaEjemplo: 'Ej.: Providencia', celularVes: 'Se guardará: {celular}',
+    cumple: 'Tu cumpleaños (opcional): ese día te consentimos 🎂',
+    dia: 'Día', mes: 'Mes', anio: 'Año (opcional)',
+    meses: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+    boton: 'Crear mi cuenta',
+    errores: {
+      nombre: 'Escribe tu nombre (solo letras).', apellido: 'Escribe tu apellido (solo letras).', telefono: 'El celular debe tener 10 dígitos (puedes poner +52 al frente).',
+      colonia: 'Escribe tu colonia.', coloniaRara: 'Revisa tu colonia: usa solo letras, números y . , - # / ( ).',
+      cumple: 'Revisa tu cumpleaños: elige día y mes (el año es opcional).',
+      confirmar: 'Confirma tu correo otra vez.', 'revisar-correo': 'Ese correo ya está en Wix de una forma rara. Pasa con recepción.',
+      demasiadas: 'Demasiados intentos desde esta tablet. Espera unos minutos o pasa con recepción.',
+      red: 'No se pudo crear tu cuenta. Revisa el internet e intenta otra vez.'
+    }
+  },
+  hola: { titulo: '¡Hola de nuevo, {nombre}! 🌿', yaTienes: 'Ya tienes:', nada: 'Hoy no tienes ningún plan vivo.', boton: 'Seguir',
+    colonia: 'Nos falta un dato: ¿en qué colonia vives?', guardar: 'Guardar y seguir', saltar: 'Saltar', coloniaMal: 'Escribe tu colonia o toca «Saltar».',
+    coloniaRara: 'Revisa tu colonia: usa solo letras, números y . , - # / ( ). O toca «Saltar».' },
+  pagar: {
+    repetido: 'Ya tiene «{plan}» (activa, por empezar o pausada). ¿Seguro que quiere comprar OTRA igual?',
+    noSeCobro: 'No se cobró nada. Elige otro plan o pasa a recepción.',
+    verif: 'Pasó mucho tiempo. Por seguridad, confirma otra vez que eres tú: sigues con el mismo plan.',
+    errores: { ocupado: 'Hay muchos intentos fallidos. Espera unos minutos.', demasiadas: 'Demasiados intentos. Pasa a recepción.',
+      plan: 'Ese plan ya no está a la venta. Toca Cancelar y empieza otra vez.', inicio: 'Revisa la fecha de inicio (de hoy a 60 días).' },
+    red: 'No se pudo preparar el pago. Revisa el internet e intenta otra vez.'
+  },
+  correoApp: {
+    enviando: 'Enviando…', listo: '✓ Listo: revisa tu correo (y la carpeta de spam).', otraVez: '✓ Se mandó otra vez: revisa tu correo (y spam).',
+    yaUna: 'Ya se envió hace un momento: revisa spam, o en la app toca «¿Olvidaste tu contraseña?».',
+    yaDos: 'Ya se mandó dos veces. En la app toca «¿Olvidaste tu contraseña?» y escribe tu correo.',
+    recibo: 'Ya pasó el tiempo: en la app toca «¿Olvidaste tu contraseña?».',
+    sinVenta: 'Desde aquí no se puede: en la app toca «¿Olvidaste tu contraseña?» y escribe tu correo.',
+    fallo: 'No se pudo enviar. Intenta otra vez.'
+  },
+  cargando: { planes: 'Cargando planes…', planesError: 'No se pudieron cargar los planes. Intenta otra vez.', pago: 'Abriendo la ventana de pago de Wix…',
+    calendario: 'Abriendo el calendario con su sesión…', cerrando: 'Cerrando la sesión de la clienta…' },
+  // Por qué terminó (llega del sitio en el #hash). [título, texto]
+  motivos: {
+    cancelado: ['Pago cancelado', 'No se cobró nada.'],
+    pase: ['Se venció el tiempo', 'El pase de pago caduca a los 90 segundos o ya se usó. Empieza otra vez.'],
+    usado: ['Ese pase ya se usó', 'Empieza otra vez.'],
+    cambio: ['Su cuenta cambió', 'Algo cambió en la cuenta de ese correo mientras tanto. Empieza otra vez.'],
+    pendiente: ['El pago quedó pendiente', 'Recepción: revisa en Wix (Planes de precios → Pedidos) antes de darle acceso.'],
+    revisar: ['La orden no cuadró', 'Recepción: revisa la orden en Wix antes de darle acceso.'],
+    tiempo: ['Se acabó el tiempo', 'Por seguridad se cerró su sesión. Si no alcanzó a reservar, que lo haga desde la app.'],
+    interrumpido: ['Se interrumpió', 'Recepción: revisa en Wix si quedó una orden pagada antes de cobrar otra vez.'],
+    sesion: ['No se pudo abrir su sesión', 'No se cobró nada. Intenta otra vez o cobra desde el panel de Wix.'],
+    'sin-sesion': ['Su sesión ya se había cerrado', 'Que reserve desde la app o con recepción.'],
+    error: ['Algo falló', 'Si no se vio la confirmación de Wix, no se cobró. Revisa en Wix antes de cobrar otra vez.']
+  },
+  bloqueo: { titulo: 'No se pudo cerrar la sesión de la clienta',
+    texto: 'Recepción: no le pases la tablet a nadie. Toca «Intentar otra vez». Si sigue igual, abre herazenter.com en esta tablet, entra a la cuenta que aparece y toca «Cerrar sesión».',
+    reintentar: 'Intentar otra vez', listo: 'Ya la cerré', confirmar: '¿Ya abriste herazenter.com en esta tablet y cerraste la sesión de la clienta?' }
+};
+
+// Errores de dedo en el dominio del correo: «¿Quisiste decir …?» (alta en mostrador v3, Olmo 8/9-nov).
+// Va DENTRO del único <script> de alta.html (lo mete scripts/empaquetar.mjs, por la CSP). Solo sugiere: la clienta
+// decide. Los dominios van sin arroba a propósito (empaquetar.mjs frena cualquier cosa que parezca un correo).
+
+/* Dominios comunes en Hera. Si lo tecleado se parece a uno (1 o 2 letras de diferencia), se sugiere. */
+const DOMINIOS_CORREO = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'yahoo.com.mx', 'icloud.com', 'live.com', 'live.com.mx',
+  'hotmail.es', 'outlook.es', 'me.com', 'prodigy.net.mx', 'msn.com', 'aol.com'];
+/* Dominios REALES que se parecen a uno de arriba: nunca se «corrigen». */
+const DOMINIOS_REALES = ['mail.com', 'email.com', 'gmx.com', 'gmx.net', 'ymail.com', 'mac.com', 'yahoo.es', 'hotmail.fr', 'hotmail.it', 'hotmail.co.uk', 'outlook.fr', 'live.com.ar', 'live.cl'];
+/* Errores comunes que están lejos por letras pero son claros. */
+const DOMINIOS_FIJOS = { 'gmail.com.mx': 'gmail.com', 'gmail.mx': 'gmail.com', 'gmail.es': 'gmail.com', 'yahoo.mx': 'yahoo.com.mx', 'hotmail.mx': 'hotmail.com',
+  'outlook.mx': 'outlook.com', 'icloud.mx': 'icloud.com', 'icloud.com.mx': 'icloud.com',
+  // Revisión v3: «hotmail.com.mx» y «outlook.com.mx» son errores de dedo comunes en México; se SUGIERE el .com (la clienta
+  // decide: si de verdad tiene esa terminación, toca «Sí, está bien escrito»).
+  'hotmail.com.mx': 'hotmail.com', 'outlook.com.mx': 'outlook.com' };
+
+/** Distancia de edición con transposición (gmial ↔ gmail cuenta 1). */
+function distanciaCorreo(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    const c = a[i - 1] === b[j - 1] ? 0 : 1;
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length];
+}
+
+/** «ana arroba gmial.com» → «ana arroba gmail.com». null si se ve bien (o no se parece a ningún dominio común). */
+function sugerirCorreo(email) {
+  const m = /^([^@\s]+)@([a-z0-9.-]+)$/.exec(String(email || '').trim().toLowerCase());
+  if (!m) return null;
+  const usuario = m[1], dom = m[2].replace(/\.+$/, '');
+  if (DOMINIOS_CORREO.includes(dom) || DOMINIOS_REALES.includes(dom)) return null;
+  if (DOMINIOS_FIJOS[dom]) return usuario + '@' + DOMINIOS_FIJOS[dom];
+  if (!dom.includes('.')) {                                   // «ana@gmail» → falta el .com
+    const x = DOMINIOS_CORREO.find(y => distanciaCorreo(dom, y.split('.')[0]) <= (dom.length >= 5 ? 1 : 0));
+    return x ? usuario + '@' + x : null;
+  }
+  let mejor = null, dm = Infinity;
+  for (const x of DOMINIOS_CORREO) { const k = distanciaCorreo(dom, x); if (k < dm) { dm = k; mejor = x; } }
+  return dm > 0 && dm <= (dom.length >= 9 ? 2 : 1) ? usuario + '@' + mejor : null;
+}
+
+
+'use strict';
+/* =====================================================================
+   Alta en mostrador de Hera Zenter (tablet de recepción) — v3 (Olmo, 8/9-nov).
+   Se entra desde el kiosco («Nueva venta»). Recepción teclea SU PIN: el backend le da un sello «venta» de 30 min con su
+   nombre (el PIN no se guarda ni vuelve a viajar; el sello se renueva al usarse, máx. 2 h desde el PIN). Luego la clienta
+   entiende membresía vs paquete con los datos reales de Wix y elige su plan SIN dar datos; después su correo (confirmado
+   en grande, con «¿Quisiste decir…?»): si ya existe en Wix, los 4 últimos de su celular; si es nueva, se registra aquí
+   (nombre, apellido, celular, colonia y cumpleaños opcional). Ya no hay código por correo. Revisa y paga ella con su
+   tarjeta. Al terminar o cancelar, la tablet regresa al kiosco.
+   Comparte el token del kiosco (mismo origen). En localStorage solo van: el token de la tablet, el sello «venta» (opaco,
+   cifrado, se borra al terminar) y la MARCA de que puede haber una sesión de clienta abierta (una URL). Nada de la clienta.
+   Textos: textos-alta.js (TEXTOS_ALTA y CONFIG_ALTA) y reglas del correo: correo-alta.js (sugerirCorreo). empaquetar.mjs
+   mete los dos dentro de este mismo <script>.
+   El pago y la reserva de respaldo pasan en www.herazenter.com (masterPage.js); al volver llega un #hash:
+   #pagado=<recibo> · #cancelado=<motivo> · #fin · #reservada
+   ===================================================================== */
+const DEMO = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const LOCAL = /\.localhost$/.test(location.hostname);
+const DEV = new URLSearchParams(location.search).has('dev');
+const API_URL = LOCAL ? '/_functions/checkinApi' : `https://www.herazenter.com/${DEV ? '_functions-dev' : '_functions'}/checkinApi`;
+const SITIO = LOCAL ? location.origin + '/_sitio' : 'https://www.herazenter.com';
+const KIOSCO = LOCAL ? '/_functions/checkin' : DEMO ? 'kiosco.html' : './' + (DEV ? '?dev=1' : '');
+const TOKEN_KEY = 'hera_checkin_token', SESION_KEY = 'hera_alta_sesion', VENTA_KEY = 'hera_alta_venta';
+/** Revisión v4.1: «la última venta que se mandó a pagar es del plan de prueba RECURRENTE» (en `ls`, como la marca: por si
+ *  altaApp falla al volver de Wix, la pantalla de la app igual recuerda CANCELAR la orden). Cada pago la pone o la quita,
+ *  la app la consume al leerla, y manda lo que diga altaApp. */
+const PRUEBA_REC_KEY = 'hera_alta_prueba_rec';
+const INACTIVIDAD_MS = 3 * 60000;
+// En «Baja la app» la clienta está en SU celular: no cuenta como inactividad. Tope propio alineado con el del sitio.
+const ABIERTA_MS = 28 * 60000;
+const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
+const QR_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+const QR_SRI = 'sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==';
+const EL = { AIRE:['var(--aire)','Aire','<g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M5.5 9.4h7.8a2.1 2.1 0 1 0-2.1-2.1"/><path d="M5.5 12.6h10.6a2.1 2.1 0 1 1-2.1 2.1"/><path d="M5.5 15.8h4.6"/></g>'],
+             TIERRA:['var(--tierra-el)','Tierra','<path fill="#fff" d="M4.8 16.6 10 8.4l2.8 4.4 1.9-2.4 4.5 6.2Z"/>'],
+             FUEGO:['var(--fuego)','Fuego','<path fill="#fff" d="M12 4.6c.5 2.6 4.3 4.6 4.3 8.6a4.3 4.3 0 0 1-8.6 0c0-2 1-3.2 2-4 .2 1.4.8 2.2 1.6 2.6-.2-2.6.1-5 .7-7.2Z"/>'],
+             AGUA:['var(--agua)','Agua','<path fill="#fff" d="M12 4.8C10 8 7.8 10.6 7.8 13.6a4.2 4.2 0 0 0 8.4 0C16.2 10.6 14 8 12 4.8Z"/>'] };
+const ORDEN_EL = ['AIRE', 'TIERRA', 'FUEGO', 'AGUA'];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pesos = n => '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+/** v4.1, solo la tarjeta «¿y si mejor membresía?»: centavos (enteros) → «$167.50». `siHay`: sin «.00» si son pesos cerrados. */
+const pesosC = (c, siHay = false) => '$' + (Number(c || 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: siHay && c % 100 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+/** «a», «a y b», «a, b y c» */
+const lista = xs => { const v = (xs || []).filter(Boolean); return v.length < 2 ? (v[0] || '') : v.slice(0, -1).join(', ') + ' y ' + v[v.length - 1]; };
+
+/* --------------------------------------------------------------- textos (textos-alta.js) */
+const TX = typeof TEXTOS_ALTA !== 'undefined' ? TEXTOS_ALTA : {};
+const CFG = typeof CONFIG_ALTA !== 'undefined' ? CONFIG_ALTA : { appNombre: 'Fit by Wix', appCodigo: '', appLiga: 'https://www.herazenter.com' };
+const leerTx = ruta => ruta.split('.').reduce((o, k) => (o == null ? o : o[k]), TX);
+/** Texto con {marcadores} y *negritas*, ya escapado (listo para innerHTML). */
+function T(ruta, datos = {}) {
+  const t = leerTx(ruta);
+  if (typeof t !== 'string') return '';
+  return esc(t).replace(/\*([^*]+)\*/g, '<b>$1</b>').replace(/\{([a-zA-Z]+)\}/g, (_, k) => esc(datos[k] == null ? '' : datos[k]));
+}
+const Tt = (ruta, datos) => { const d = document.createElement('div'); d.innerHTML = T(ruta, datos); return d.textContent; };   // texto plano
+
+/* --------------------------------------------------------------- almacenamiento (token, sello de venta y marca) */
+const memoria = {};
+const ls = {
+  get(k){ try { return localStorage.getItem(k); } catch (_) { return memoria[k] ?? null; } },
+  set(k, v){ memoria[k] = v; try { localStorage.setItem(k, v); } catch (_) {} },
+  del(k){ delete memoria[k]; try { localStorage.removeItem(k); } catch (_) {} }
+};
+const baseValida = b => (typeof b === 'string' && /^https:\/\/[a-z0-9.-]+(\/[A-Za-z0-9._~\/-]*)?$/.test(b) || (LOCAL && b === SITIO)) ? b.replace(/\/+$/, '') : null;
+const marca = {
+  hay(){ return !!ls.get(SESION_KEY); },
+  base(){ return baseValida(ls.get(SESION_KEY)) || SITIO; },
+  poner(base){ ls.set(SESION_KEY, baseValida(base) || SITIO); },
+  quitar(){ ls.del(SESION_KEY); }
+};
+const pruebaRec = { poner(si){ if (si) ls.set(PRUEBA_REC_KEY, '1'); else ls.del(PRUEBA_REC_KEY); },
+  tomar(){ const v = ls.get(PRUEBA_REC_KEY) === '1'; ls.del(PRUEBA_REC_KEY); return v; } };
+const venta = { get(){ return ls.get(VENTA_KEY); }, poner(v){ if (typeof v === 'string' && v.length < 2000) ls.set(VENTA_KEY, v); }, quitar(){ ls.del(VENTA_KEY); } };
+
+/* --------------------------------------------------------------- red */
+function errorAuth(){ const e = new Error('sin-acceso'); e.auth = true; return e; }
+const SIN_VENTA = ['entrar', 'altaPin'];
+async function llamar(accion, datos) {
+  if (DEMO) return demoApi(accion, datos);
+  if (accion !== 'entrar' && !ls.get(TOKEN_KEY)) throw errorAuth();
+  const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 20000);
+  try {
+    const cuerpo = { accion, token: ls.get(TOKEN_KEY), ...datos };
+    if (!SIN_VENTA.includes(accion)) cuerpo.venta = venta.get();
+    const r = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=UTF-8' }, cache:'no-store', credentials:'omit',
+      body: JSON.stringify(cuerpo), signal: ctl.signal });
+    let j = null; try { j = await r.json(); } catch (_) {}
+    if (r.status === 401 && accion !== 'entrar' && (!j || j.error === 'token')) { ls.del(TOKEN_KEY); irClave(Tt('clave.otraVez')); throw errorAuth(); }
+    if (!r.ok || !j || !j.ok) { const e = new Error((j && j.error) || ('http ' + r.status)); e.resp = j || { error: 'http-' + r.status }; e.status = r.status; throw e; }
+    return j;
+  } finally { clearTimeout(to); }
+}
+/** Llama al API. Si el sello «venta» venció (30 min sin usarse), pide el PIN otra vez y repite la acción una sola vez. */
+async function api(accion, datos = {}) {
+  try { const j = await llamar(accion, datos); if (j && j.venta) venta.poner(j.venta); return j; }
+  catch (e) {
+    if (errDe(e) !== 'venta' || SIN_VENTA.includes(accion)) throw e;
+    await pedirPinOtraVez();
+    const j = await llamar(accion, datos); if (j && j.venta) venta.poner(j.venta); return j;
+  }
+}
+const errDe = e => (e && e.resp && e.resp.error) || 'red';
+
+/* --------------------------------------------------------------- estado (solo en memoria) */
+let CAT = null;              // { planes, elementos, beneficios } — catálogo público, sin datos de nadie
+let HOR = null;              // { 'Pilates Reformer': ['lun 7:00', …] } — horarios de ejemplo (Bookings)
+let A = null;                // la alta en curso
+let pila = [];               // vistas para «Atrás»
+let ultimoToque = Date.now(), finTimer = null, reenvioTimer = null, appTimer = null, correoOtraTimer = null;
+function nuevaAlta(){ const v = A && A.vendedora; A = { vendedora: v || null, email: '', sugerencia: null, correoConfirmado: false, reto: null, ult4: '', fallosCel: 0,
+  verif: null, verifViejo: null, corrige: null, existe: false, nombreV: '', planes: [], pideColonia: false, tipo: null, elemento: null, clases: null, plan: null, repetido: false, recibo: null }; }
+function limpiarCampos(){ ['correo','regNombre','regApellido','regCelular','regColonia','regDia','regMes','regAnio','holaColonia','inicio'].forEach(id => { if ($(id)) $(id).value = ''; });
+  ['correoError','confError','celError','regError','holaError','resError','pinError','correoMsg','regCelVes'].forEach(id => { if ($(id)) $(id).textContent = ''; });
+  $('quien').textContent = ''; }
+
+const SIN_PILA = ['vCargando','vClave','vFin','vBloqueo','vHola','vPin'];
+function ir(v, { apilar = true } = {}){
+  const actual = document.querySelector('.vista.activa');
+  if (apilar && actual && actual.id !== v && !SIN_PILA.includes(actual.id) && !(v === 'vResumen' && VISTAS_CORREO.includes(actual.id))) pila.push(actual.id);
+  document.querySelectorAll('.vista').forEach(x => x.classList.toggle('activa', x.id === v));
+  const paso = Tt('pasos.' + v);
+  $('paso').textContent = [paso, A && A.vendedora && v !== 'vPin' ? Tt('venta', { vendedora: A.vendedora }) : ''].filter(Boolean).join(' · ');
+  $('cancelar').hidden = ['vClave','vCargando','vBloqueo','vFin'].includes(v);
+  $('cancelar').textContent = Tt(v === 'vApp' ? 'barra.terminar' : 'barra.cancelar');   // ya pagó: solo cierra su sesión
+  if (v !== 'vApp') { clearInterval(appTimer); clearTimeout(correoOtraTimer); }
+  window.scrollTo(0, 0);
+}
+function atras(){ const actual = (document.querySelector('.vista.activa') || {}).id; let v; do v = pila.pop(); while (v && v === actual); if (v) ir(v, { apilar: false }); }
+document.querySelectorAll('[data-atras]').forEach(b => b.onclick = atras);
+
+/** De regreso al kiosco: se descarta el sello de venta (la siguiente venta pide PIN otra vez). */
+function volverKiosco(){ clearTimeout(finTimer); venta.quitar(); A = null; location.href = KIOSCO; }
+
+/* --------------------------------------------------------------- contraseña de la tablet */
+function irClave(msg){ ir('vClave', { apilar: false }); if (msg) $('claveError').textContent = msg; setTimeout(() => $('clave').focus(), 60); }
+async function entrar(){
+  const clave = $('clave').value; if (!clave) return;
+  $('claveOk').disabled = true; $('claveError').textContent = '';
+  try { const j = await llamar('entrar', { clave }); ls.set(TOKEN_KEY, j.token); $('clave').value = ''; irPin(); }
+  catch (e) { $('claveError').textContent = Tt(errDe(e) === 'clave' ? 'clave.incorrecta' : errDe(e) === 'demasiados-intentos' ? 'clave.demasiados' : 'clave.red'); }
+  finally { $('claveOk').disabled = false; }
+}
+
+/* --------------------------------------------------------------- 0. PIN de recepción */
+let pin = '', pinEnVuelo = false, pinPendiente = null;   // pinPendiente: { vista, ok } cuando se pide a media venta
+$('pinTeclado').innerHTML = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map(k => `<button data-k="${k}" aria-label="${k === '⌫' ? 'Borrar' : k === '✓' ? 'Listo' : k}">${k}</button>`).join('');
+$('pinTeclado').querySelectorAll('button').forEach(b => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === '⌫') pin = pin.slice(0, -1);
+  else if (k === '✓') { if (pin.length >= 4) mandarPin(); return; }
+  else if (pin.length < 6) pin += k;
+  pintarPin();
+  if (pin.length === 6) setTimeout(mandarPin, 150);
+});
+function pintarPin(){ $('pinPuntos').innerHTML = '<i></i>'.repeat(pin.length); }
+function pantallaPin(msg){
+  pin = ''; pintarPin();
+  $('pinTitulo').textContent = Tt('pin.titulo'); $('pinTexto').innerHTML = msg ? T(msg) : T('pin.texto');
+  $('pinNota').textContent = Tt('pin.nota'); $('pinVolver').textContent = Tt('pin.volver'); $('pinError').textContent = '';
+  ir('vPin', { apilar: false });
+}
+/** Entrada desde el kiosco: siempre pide PIN (la venta anterior, si quedó, se descarta). */
+async function irPin(){
+  venta.quitar(); A = null; nuevaAlta(); limpiarCampos(); pila = []; pinPendiente = null; clearTimeout(reenvioTimer);
+  if (!DEMO && !ls.get(TOKEN_KEY)) { irClave(); return; }
+  pantallaPin();
+  try { const j = await llamar('altaPin', {}); if (j && j.configurado === false) $('pinError').textContent = Tt('pin.sinPines'); } catch (e) { if (e.auth) return; }
+}
+/** A media venta el sello venció: se pide el PIN y, al aceptarlo, se vuelve a la misma pantalla. */
+function pedirPinOtraVez(){
+  return new Promise(ok => {
+    const vista = (document.querySelector('.vista.activa') || {}).id;
+    pinPendiente = { vista, ok };
+    pantallaPin('pin.vencido');
+  });
+}
+async function mandarPin(){
+  if (pinEnVuelo || pin.length < 4) return;
+  pinEnVuelo = true; $('pinError').textContent = '';
+  const intento = pin; pin = ''; pintarPin();                 // el PIN no se queda ni en memoria
+  try {
+    const j = await llamar('altaPin', { pin: intento });
+    venta.poner(j.venta);
+    const quien = j.vendedora || '';
+    if (pinPendiente) {                                    // la venta sigue; queda a nombre de quien tecleó el PIN ahora
+      const p = pinPendiente; pinPendiente = null;
+      if (A) A.vendedora = quien;
+      ir(p.vista, { apilar: false }); p.ok(); return;
+    }
+    A.vendedora = quien;
+    await cargarCatalogo();
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e);
+    const r = e.resp || {};
+    $('pinError').textContent = er === 'pin' ? Tt('pin.pin') + (r.segundos ? ' ' + Tt('pin.espera', { segundos: r.segundos }) : '')
+      : er === 'pin-espera' ? Tt('pin.espera', { segundos: r.segundos || 2 })
+      : er === 'pin-bloqueado' ? Tt('pin.bloqueado', { minutos: r.minutos || 15, hasta: r.hasta || '' })
+      : er === 'sin-pines' ? Tt('pin.sinPines') : Tt('pin.red');
+  } finally { pinEnVuelo = false; }
+}
+$('pinVolver').onclick = () => cancelar();
+
+async function cargarCatalogo(){
+  $('cargandoTxt').textContent = Tt('cargando.planes'); ir('vCargando', { apilar: false });
+  try {
+    const j = await api('altaCatalogo');
+    CAT = { planes: j.planes || [], elementos: j.elementos || {}, beneficios: j.beneficios || {}, largo: j.largo || null, prueba: j.prueba || null };
+    if (j.vendedora) A.vendedora = j.vendedora;
+  } catch (e) {
+    if (e.auth) return;
+    pantallaPin(); $('pinError').textContent = Tt('cargando.planesError'); return;
+  }
+  // Horarios de ejemplo en segundo plano: si Bookings falla, simplemente no se muestran.
+  HOR = null;
+  api('altaHorarios').then(j => { HOR = {}; for (const d of j.disciplinas || []) HOR[d.nombre] = d.horarios || []; if ($('vElemento').classList.contains('activa')) irElemento(false); }).catch(() => {});
+  pila = []; irTipo();                                  // primero el plan: la clienta indecisa ve todo sin dar sus datos
+}
+// Vistas del correo, los 4 dígitos y el registro: al entrar a ellas o al terminarlas se quitan de «Atrás» (Atrás regresa al plan).
+const VISTAS_CORREO = ['vCorreo', 'vConfirma', 'vCel', 'vRegistro', 'vHola'];
+const sinCorreoEnPila = () => { pila = pila.filter(v => !VISTAS_CORREO.includes(v)); };
+function irCorreo(){
+  A.reto = null; A.ult4 = ''; A.verif = null; A.fallosCel = 0; A.correoConfirmado = false; $('correoError').textContent = '';
+  const actual = (document.querySelector('.vista.activa') || {}).id;
+  sinCorreoEnPila(); if (actual && !VISTAS_CORREO.includes(actual) && !SIN_PILA.includes(actual)) pila.push(actual);
+  ir('vCorreo', { apilar: false }); setTimeout(() => $('correo').focus(), 80);
+}
+/** Ya eligió plan: sin identificarse (4 dígitos o registro), a dar su correo; ya identificada, al resumen. */
+function siguiente(){ if (A.verif) irResumen(); else irCorreo(); }
+
+
+/* --------------------------------------------------------------- 2. correo → ¿está bien escrito? (v3: sin código por correo) */
+/** El mensaje de error va a la caja .error de la pantalla que se ve. */
+function errorAqui(msg){ const v = document.querySelector('.vista.activa'); const e = v && v.querySelector('.error'); if (e) e.textContent = msg; }
+function correoOk(){
+  const email = $('correo').value.trim().toLowerCase();
+  const formato = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email), sug = sugerirCorreo(email);
+  if (!formato && !sug) { $('correoError').textContent = Tt('correo.revisa'); return; }
+  if (email !== A.email) { A.reto = null; A.fallosCel = 0; A.ult4 = ''; }
+  A.email = email; A.sugerencia = sug; $('correoError').textContent = '';
+  // En grande, para que lo revise: «¿Está bien escrito? Con este entrarás a la app». Si parece error de dedo, la sugerencia.
+  $('confCorreo').textContent = email; $('confError').textContent = '';
+  $('confSug').hidden = !sug;
+  if (sug) { $('confSugTxt').innerHTML = T('confirma.quisiste', { sugerencia: sug }); $('confUsar').textContent = Tt('confirma.usar', { sugerencia: sug }); }
+  $('confSi').hidden = !formato;                       // sin formato válido solo queda usar la sugerencia o corregir
+  $('confSi').className = 'btn ' + (sug ? 'sec' : 'pri');   // con sugerencia, el botón fuerte es «Sí, usar …»
+  ir('vConfirma');
+}
+$('correoOk').onclick = correoOk;
+$('correo').addEventListener('keydown', e => { if (e.key === 'Enter') correoOk(); });
+$('confSi').onclick = () => buscarCorreo();
+$('confUsar').onclick = () => { A.email = A.sugerencia; $('correo').value = A.email; A.sugerencia = null; buscarCorreo(); };
+$('confCorregir').onclick = () => { ir('vCorreo', { apilar: false }); setTimeout(() => $('correo').focus(), 80); };
+
+/** Ya confirmó su correo: ¿existe en Wix? Sí → 4 dígitos; no → registro. También se usa para volver a identificarla. */
+let buscando = false;
+async function buscarCorreo(){
+  if (buscando || !A.email) return;
+  buscando = true; $('confSi').disabled = true; $('confUsar').disabled = true;
+  try {
+    const j = await api('altaBuscar', { email: A.email });
+    A.correoConfirmado = true; A.reto = j.reto;
+    if (!j.existe) { irRegistro(); return; }
+    if (j.sinContacto) { irCel(); celSinSalida(Tt('cel.sinContacto')); return; }
+    if (j.sinTelefono) { irCel(); celSinSalida(Tt('cel.sinTelefono')); return; }
+    irCel();
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e);
+    errorAqui(TX.correo.errores[er] ? Tt('correo.errores.' + er) : Tt('correo.errores.red'));
+  } finally { buscando = false; $('confSi').disabled = false; $('confUsar').disabled = false; }
+}
+
+/* --------------------------------------------------------------- 2c. ya tiene cuenta: 4 últimos de su celular */
+$('teclado').innerHTML = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map(k => `<button data-k="${k}" aria-label="${k === '⌫' ? 'Borrar' : k === '✓' ? 'Listo' : k}">${k}</button>`).join('');
+$('teclado').querySelectorAll('button').forEach(b => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === '⌫') A.ult4 = A.ult4.slice(0, -1);
+  else if (k === '✓') { if (A.ult4.length === 4) verificarCel(); return; }
+  else if (A.ult4.length < 4) A.ult4 += k;
+  pintarPuntos();
+  if (A.ult4.length === 4) setTimeout(verificarCel, 180);
+});
+function pintarPuntos(){ $('puntos').querySelectorAll('i').forEach((x, i) => x.classList.toggle('lleno', i < (A ? A.ult4.length : 0))); }
+function irCel(){
+  A.ult4 = ''; pintarPuntos(); $('celError').textContent = '';
+  $('teclado').hidden = false; $('puntos').hidden = false; $('celTexto').hidden = false; $('celNota').hidden = false; $('celRecepcion').hidden = true;
+  ir('vCel');
+}
+/** Tras 2 fallos (o sin celular en Wix): ya no se teclea más aquí; queda «Usar otro correo» (o pasar con recepción).
+ *  Se esconde lo que pedía teclear (contradecía al mensaje rojo) y sale una línea para recepción. */
+function celSinSalida(msg){ A.ult4 = ''; pintarPuntos(); ['teclado','puntos','celTexto','celNota'].forEach(id => { $(id).hidden = true; });
+  $('celRecepcion').hidden = false; $('celError').textContent = msg; }
+$('celOtroCorreo').onclick = () => irCorreo();
+let verificando = false;
+async function verificarCel(){
+  if (verificando || !A.reto || A.ult4.length !== 4) return;
+  verificando = true; $('celError').textContent = '';
+  const ult4 = A.ult4;
+  try {
+    // `previo`: el «verif» que se venció (si se registró aquí, sus notas para recepción no se pierden).
+    const j = await api('altaVerificar', { reto: A.reto, ult4, ...(A.verifViejo ? { previo: A.verifViejo } : {}) });
+    A.verif = j.verif; A.existe = !j.nueva; A.nombreV = j.nombre || ''; A.planes = j.planes || []; A.pideColonia = !!j.pideColonia;
+    A.reto = null; A.ult4 = ''; A.verifViejo = null;
+    sinCorreoEnPila();                                 // «Atrás» desde el resumen regresa al plan, no al correo
+    if (j.nueva) irResumen(); else irHola();           // recién registrada: de regreso a su resumen
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e), r = e.resp || {};
+    A.ult4 = ''; pintarPuntos();
+    if (er === 'verificacion') {
+      A.fallosCel++;
+      if (r.agotado || A.fallosCel >= 2) celSinSalida(Tt('cel.agotado'));
+      else $('celError').textContent = Tt('cel.malo') + ' ' + Tt('cel.queda1') + (r.segundos ? ' ' + Tt('cel.espera', { segundos: r.segundos }) : '');
+    } else if (er === 'espera') $('celError').textContent = Tt('cel.espera', { segundos: r.segundos || 2 });
+    else if (er === 'agotado') celSinSalida(Tt('cel.agotado'));
+    else if (er === 'venta-tope') celSinSalida(Tt('cel.ventaTope'));
+    else if (er === 'no-encontrada') celSinSalida(Tt('cel.sinContacto'));
+    else if (er === 'sin-telefono') celSinSalida(Tt('cel.sinTelefono'));
+    else if (er === 'ocupado') celSinSalida(Tt('cel.ocupado', { minutos: r.minutos || 15 }));
+    else if (['reto', 'usado', 'cambio'].includes(er)) { A.reto = null; celSinSalida(Tt(er === 'cambio' ? 'cel.cambio' : 'cel.reto')); }
+    else $('celError').textContent = Tt('cel.red');
+  } finally { verificando = false; }
+}
+
+/** «¡Hola de nuevo!», sus planes vivos y, si su contacto no tiene Colonia, se le pide una vez (con «Saltar»). */
+function irHola(){
+  $('holaTitulo').textContent = Tt('hola.titulo', { nombre: A.nombreV });
+  $('quien').innerHTML = A.planes.length ? `<b>${T('hola.yaTienes')}</b><br>${A.planes.map(p => `${esc(p.nombre)} <small>(${esc(p.estado)})</small>`).join('<br>')}` : T('hola.nada');
+  $('holaColoniaCaja').hidden = !A.pideColonia; $('holaSaltar').hidden = !A.pideColonia; $('holaError').textContent = '';
+  $('holaOk').textContent = Tt(A.pideColonia ? 'hola.guardar' : 'hola.boton'); $('holaOk').disabled = false;
+  ir('vHola', { apilar: false });
+}
+$('holaOk').onclick = async () => {
+  if (!A.pideColonia) { irResumen(); return; }
+  const col = $('holaColonia').value.trim().replace(/\s+/g, ' ');
+  if (col.length < 2) { $('holaError').textContent = Tt('hola.coloniaMal'); return; }
+  $('holaOk').disabled = true;
+  try { const j = await api('altaColonia', { verif: A.verif, colonia: col }); A.verif = j.verif || A.verif; A.pideColonia = false; irResumen(); }
+  catch (e) {
+    if (e.auth) return;
+    // Ya tenía colonia (alguien se la puso en Wix mientras): no se pisa y se sigue.
+    if (errDe(e) === 'ya-tiene') { if (e.resp && e.resp.verif) A.verif = e.resp.verif; A.pideColonia = false; irResumen(); return; }
+    $('holaOk').disabled = false; $('holaError').textContent = Tt(errDe(e) === 'colonia' ? 'hola.coloniaRara' : 'cel.red');
+  }
+};
+$('holaSaltar').onclick = () => { A.pideColonia = false; irResumen(); };
+
+/* --------------------------------------------------------------- 2e. nueva: registro desde cero */
+/** Días del mes elegido (febrero: 29, por si no da año). Sin mes, 31. Si el día elegido ya no cabe, se borra. */
+const DIAS_MES = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+function pintarDias(){
+  const m = +$('regMes').value, a = +$('regAnio').value, antes = $('regDia').value;
+  let n = m ? DIAS_MES[m - 1] : 31;
+  if (m === 2 && a >= 1900 && !((a % 4 === 0 && a % 100 !== 0) || a % 400 === 0)) n = 28;
+  $('regDia').innerHTML = `<option value="">${esc(Tt('registro.dia'))}</option>` + Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  $('regDia').value = antes && +antes <= n ? antes : '';
+}
+$('regMes').innerHTML = `<option value="">${esc(Tt('registro.mes'))}</option>` + (TX.registro.meses || []).map((m, i) => `<option value="${i + 1}">${esc(m)}</option>`).join('');
+pintarDias();
+$('regMes').addEventListener('change', pintarDias);
+$('regAnio').addEventListener('input', () => { if ($('regAnio').value.replace(/\D/g, '').length === 4) pintarDias(); });
+/** Celular de México como lo hace el backend (celularMX): 52 o 521 al frente se quitan; nunca se recorta. null si no son 10. */
+function celular10(s){
+  let d = String(s || '').replace(/\D/g, '');
+  // Con «+» al frente tiene que ser +52 (o +521) y 10 dígitos completos: un «+52 33 1234 56» recortado no pasa.
+  if (/^\s*\+/.test(String(s || '')) && !((d.length === 12 && d.startsWith('52')) || (d.length === 13 && d.startsWith('521')))) return null;
+  if (d.length === 12 && d.startsWith('52')) d = d.slice(2);
+  else if (d.length === 13 && d.startsWith('521')) d = d.slice(3);
+  return /^[1-9]\d{9}$/.test(d) ? d : null;
+}
+const celBonito = d => `${d.slice(0, 2)} ${d.slice(2, 6)} ${d.slice(6)}`;
+$('regCelular').addEventListener('input', () => { const d = celular10($('regCelular').value); $('regCelVes').textContent = d ? Tt('registro.celularVes', { celular: celBonito(d) }) : ''; });
+function irRegistro(){
+  $('regCorreo').textContent = A.email; $('regError').textContent = ''; $('regOk').disabled = false; pintarDias();
+  ir('vRegistro'); setTimeout(() => $('regNombre').focus(), 80);
+}
+const soloNombre = s => s.trim().replace(/\s+/g, ' ');
+let registrando = false;
+async function registroOk(){
+  if (registrando) return;
+  const nombre = soloNombre($('regNombre').value), apellido = soloNombre($('regApellido').value), colonia = soloNombre($('regColonia').value);
+  const tel = celular10($('regCelular').value);
+  const cumple = { dia: $('regDia').value, mes: $('regMes').value, anio: $('regAnio').value.replace(/\D/g, '') };
+  const mal = k => { $('regError').textContent = Tt('registro.errores.' + k); };
+  if (nombre.length < 2) return mal('nombre');
+  if (apellido.length < 2) return mal('apellido');
+  if (!tel) return mal('telefono');
+  if (colonia.length < 2) return mal('colonia');
+  if ((cumple.dia || cumple.mes || cumple.anio) && !(cumple.dia && cumple.mes)) return mal('cumple');
+  registrando = true; $('regOk').disabled = true; $('regError').textContent = '';
+  try {
+    const j = await api('altaRegistro', { reto: A.reto, correoConfirmado: true, nombre, apellido, telefono: tel, colonia, cumple, ...(A.corrige ? { corrige: A.corrige } : {}) });
+    A.verif = j.verif; A.existe = false; A.nombreV = j.nombre || `${nombre} ${apellido}`; A.planes = []; A.reto = null; A.corrige = null;
+    sinCorreoEnPila(); irResumen();
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e), r = e.resp || {};
+    // El correo apareció en Wix mientras tanto: no se registra como nueva, va por los 4 dígitos.
+    if (er === 'existe' && r.sinContacto) { irCel(); celSinSalida(Tt('cel.sinContacto')); return; }
+    if (er === 'existe' && r.reto) { A.reto = r.reto; irCel(); if (r.sinTelefono) celSinSalida(Tt('cel.sinTelefono')); return; }
+    // Pasó el tiempo del reto: se vuelve a buscar el correo (los datos tecleados se quedan en la pantalla).
+    if (er === 'reto' || er === 'usado') { A.reto = null; await buscarCorreo(); return; }
+    mal(er === 'colonia' ? 'coloniaRara' : TX.registro.errores[er] ? er : 'red');   // vacía ya la atajó la tablet
+  } finally { registrando = false; $('regOk').disabled = false; }
+}
+$('regOk').onclick = registroOk;
+$('regColonia').addEventListener('keydown', e => { if (e.key === 'Enter') registroOk(); });
+
+
+/* --------------------------------------------------------------- 2. el plan, explicado con datos reales */
+function svgEl(el, t = 56){ const e = EL[el]; if (!e) return ''; return `<svg class="el" width="${t}" height="${t}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11.5" fill="${e[0]}"/>${e[2]}</svg>`; }
+const ppc = p => p.precioPorClase || Infinity;
+const desde = xs => Math.min(...xs.map(ppc));
+const ul = xs => (xs && xs.length ? `<ul>${xs.map(x => `<li>${x}</li>`).join('')}</ul>` : '');
+
+/** 2a. ¿Membresía o paquete? Qué es cada uno, beneficios (perks reales) y letra chica (términos reales). */
+function irTipo(){
+  const B = CAT.beneficios || {}, BM = B.membresia || {}, BP = B.paquete || {};
+  const ms = CAT.planes.filter(p => p.tipo === 'membresia'), ps = CAT.planes.filter(p => p.tipo === 'paquete');
+  $('tipoTitulo').textContent = Tt('tipo.titulo'); $('tipoSub').textContent = Tt('tipo.sub');
+  const cartas = [];
+  if (ms.length) {
+    const d = { desdePorClase: pesos(desde(ms)) };
+    let h = `<h2>${T('tipo.membresia.nombre')}</h2><div class="lema">${T('tipo.membresia.lema')}</div>${ul(TX.tipo.membresia.puntos.map((_, i) => T('tipo.membresia.puntos.' + i, d)))}`;
+    if ((BM.todas || []).length) h += `<div class="grupo">${T('tipo.membresia.todas')}</div>${ul(BM.todas.map(esc))}`;
+    for (const g of BM.grupos || []) if ((g.perks || []).length)
+      h += `<div class="grupo">${T('tipo.membresia.solo', { familias: lista((g.familias || []).map(f => Tt('tipo.membresia.familias.' + f) || f)) })}</div>${ul(g.perks.map(esc))}`;
+    if (BM.cancelacion) h += `<div class="chica">${T('tipo.membresia.letraChica', { cancelacion: BM.cancelacion })}</div>`;
+    cartas.push(`<div class="carta">${h}<button class="btn pri" data-t="membresia">${T('tipo.membresia.boton')}</button></div>`);
+  }
+  if (ps.length) {
+    const d = { desdePorClase: pesos(desde(ps)), vigencias: lista(BP.vigencias || []) };
+    const h = `<h2>${T('tipo.paquete.nombre')}</h2><div class="lema">${T('tipo.paquete.lema')}</div>${ul(TX.tipo.paquete.puntos.map((_, i) => T('tipo.paquete.puntos.' + i, d)))}`;
+    cartas.push(`<div class="carta">${h}<button class="btn sec" data-t="paquete">${T('tipo.paquete.boton')}</button></div>`);
+  }
+  $('tipoLista').innerHTML = cartas.join('');
+  $('tipoLista').querySelectorAll('button').forEach(b => b.onclick = () => { A.tipo = b.dataset.t; irElemento(); });
+  // v4: el botón aparte de trimestrales y semestrales (de todos los elementos: aún no elige) y, si existe, el plan de prueba.
+  const pr = CAT.prueba;
+  $('tipoExtra').innerHTML = botonLargo(null) + (pr ? `<div class="carta prueba"><div class="grupo">${T('prueba.seccion')}</div><h2>${esc(pr.nombre)}</h2>
+    <div>${pr.recurrente ? T('prueba.cobroRecurrente', { precio: pesos(pr.precio), cada: cadaDe(pr.cicloTexto) }) : esc(precioCon(pr))}</div><div class="chica">${T('prueba.aviso')}</div><button class="btn sec" data-prueba="1">${T('prueba.boton')}</button></div>` : '');
+  conectarLargo($('tipoExtra'));
+  const bp = $('tipoExtra').querySelector('[data-prueba]');
+  if (bp) bp.onclick = () => { A.tipo = pr.tipo; A.elemento = null; A.clases = null; elegirPlan(pr); };
+  ir('vTipo');
+}
+
+/* --------------------------------------------------------------- v4: planes de largo plazo (trimestrales y semestrales) */
+/** Botón «Ver planes trimestrales y semestrales». el = null → de todos los elementos. Presume «más baratos que la mensual y
+ *  el paquete de las mismas clases» solo si el backend dice que es cierto (CAT.largo.masBarato, por elemento o en total). */
+function botonLargo(el){
+  const L = CAT.largo || {}, x = el ? (L.elementos || {})[el] : L;
+  if (!x || !x.n) return '';
+  return `<button class="btn sec" data-largo="${esc(el || '')}">${T(x.masBarato ? 'largo.boton' : 'largo.botonSinPresumir')}</button>`;
+}
+function conectarLargo(caja){ caja.querySelectorAll('[data-largo]').forEach(b => b.onclick = () => irLargo(b.dataset.largo || null)); }
+function irLargo(el){
+  const L = CAT.largo || {}, info = el ? (L.elementos || {})[el] : L, presume = !!(info && info.masBarato);
+  const xs = CAT.planes.filter(p => p.largo && (!el || p.elemento === el));
+  $('largoTitulo').textContent = el ? Tt('largo.tituloEl', { elemento: EL[el][1] }) : Tt('largo.titulo');
+  $('largoSub').textContent = Tt(presume ? 'largo.sub' : 'largo.subSinPresumir');
+  const cmp = (p, c, k) => (!c ? '' : `<p>${T(c.masBarato ? `largo.${k}` : `largo.${k}No`, { nombre: c.nombre, porClase: pesos(c.porClase),
+    porClaseOtro: pesos(c.porClaseOtro), ahorroClase: pesos(c.ahorroClase), ahorroPeriodo: pesos(c.ahorroPeriodo), periodo: p.cicloTexto })}</p>`);
+  const carta = p => {
+    const canc = (p.letraChica || []).find(l => /cancelaci[oó]n anticipada/i.test(l));
+    return `<div class="carta"><h2 style="font-size:22px">${esc(p.nombre)}</h2>
+      <div class="lema">${T('largo.cobro', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) })}</div>
+      <div style="font-size:19px">${T('largo.clases', { clases: p.clases, frecuencia: p.frecuencia })} · <b>${T('largo.porClase', { porClase: pesos(p.precioPorClase) })}</b></div>
+      ${cmp(p, p.largo.mensual, 'vsMensual')}${cmp(p, p.largo.paquete, 'vsPaquete')}${notaFaltan([p])}
+      ${canc ? `<div class="chica">${T('largo.cancelacion', { cancelacion: canc })}${p.largo.compromiso ? ' ' + T('largo.compromiso', { meses: p.largo.compromiso }) : ''}</div>` : ''}
+      <button class="btn pri" data-id="${esc(p.planId)}">${T('largo.elegir')}</button></div>`;
+  };
+  $('largoLista').innerHTML = ORDEN_EL.filter(e => xs.some(p => p.elemento === e)).map(e =>
+    (el ? '' : `<h2 class="largo-el">${svgEl(e, 40)}${EL[e][1]}</h2>`) + `<div class="planes2">${xs.filter(p => p.elemento === e).map(carta).join('')}</div>`).join('');
+  $('largoLetra').textContent = Tt('largo.letra');
+  $('largoLista').querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+    const p = xs.find(x => x.planId === b.dataset.id); if (!p) return;
+    A.tipo = 'membresia'; A.elemento = p.elemento; A.clases = claveClases(p); elegirPlan(p);
+  });
+  ir('vLargo');
+}
+
+/** 2b. Elemento: disciplinas (Bookings) y algunos horarios reales de esta semana. */
+function disciplinasDeElemento(el){
+  const e = (CAT.elementos || {})[el];
+  if (e && e.disciplinas && e.disciplinas.length) return e.disciplinas;
+  const p = CAT.planes.find(x => x.elemento === el && x.textoDisciplinas);
+  return p ? [p.textoDisciplinas] : [];
+}
+function irElemento(navegar = true){
+  const els = ORDEN_EL.filter(el => CAT.planes.some(p => p.tipo === A.tipo && p.elemento === el));
+  $('elTitulo').textContent = Tt('elemento.titulo'); $('elSub').textContent = Tt('elemento.sub');
+  $('elLista').innerHTML = els.map(el => {
+    const ds = disciplinasDeElemento(el), d = desde(CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === el));
+    const horas = HOR ? ds.map(x => (HOR[x] && HOR[x].length ? `<div>${T('elemento.linea', { disciplina: x, horarios: HOR[x].slice(0, 5).join(', ') })}</div>` : '')).join('') : '';
+    return `<div class="carta elegible" data-e="${el}" role="button" tabindex="0"><h2>${svgEl(el, 48)}${EL[el][1]}</h2>
+      <div style="font-size:20px">${T('elemento.incluye', { disciplinas: lista(ds) })}</div>
+      ${Number.isFinite(d) ? `<div class="grupo">${T('elemento.desde', { porClase: pesos(d) })}</div>` : ''}
+      ${horas ? `<div class="grupo">${T('elemento.horarios')}</div><div class="horas">${horas}</div>` : ''}</div>`;
+  }).join('');
+  $('elLista').querySelectorAll('[data-e]').forEach(b => b.onclick = () => { A.elemento = b.dataset.e; irClases(); });
+  if (navegar) ir('vElemento');
+}
+
+/** 2c. Cuántas clases: precio, precio por clase y la de mejor precio por clase marcada. */
+const deLaCasilla = () => CAT.planes.filter(p => p.tipo === A.tipo && p.elemento === A.elemento);
+const claveClases = p => (p.ilimitada ? 'ilimitada' : String(p.clases));
+function textoClases(g, xs){
+  if (g === 'ilimitada') return 'Ilimitadas';
+  const fr = [...new Set(xs.map(p => p.frecuencia || ''))];
+  return Tt('clases.opcion', { clases: g, frecuencia: fr.length === 1 ? fr[0] : '' }).trim();
+}
+/** Disciplinas que le faltan a un plan frente a su elemento (p. ej. un plan al que Bookings no le liga una disciplina; lectura
+ *  real de Bookings. FUEGO Paquete 12 y AGUA Paquete 18 sin Barre: resuelto en Wix el 9-nov). */
+const faltanDe = p => (((CAT.elementos || {})[p.elemento] || {}).incompletos || []).find(i => i.nombre === p.nombre);
+const notaFaltan = xs => {
+  const fs = xs.map(faltanDe).filter(Boolean); if (!fs.length) return '';
+  const faltan = lista([...new Set(fs.flatMap(f => f.faltan))]);
+  return `<small class="falta">${T(fs.length === xs.length ? 'clases.sinDisciplina' : 'clases.algunasSin', { faltan })}</small>`;
+};
+/** «$1,090 cada mes» en membresías; «$1,340 · Vigencia de 1 mes» en paquetes. */
+const precioCon = p => (p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) : `${pesos(p.precio)} · ${p.etiquetaDuracion}`);
+function irClases(){
+  const ps = deLaCasilla(), grupos = [...new Set(ps.map(claveClases))], mejor = desde(ps);
+  $('clasesTitulo').textContent = Tt('clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
+  $('clasesSub').textContent = Tt('clases.sub');
+  $('clasesLista').innerHTML = grupos.map(g => {
+    const xs = ps.filter(p => claveClases(p) === g), d = desde(xs), top = d === mejor;
+    const precio = xs.length === 1 ? `<small>${esc(precioCon(xs[0]))}</small>` : '';
+    const porClase = Number.isFinite(d) ? `<span class="ppc">${xs.length === 1 ? T('clases.porClase', { porClase: pesos(d) }) : T('clases.desde', { porClase: pesos(d) })}</span>` : '';
+    return `<button class="op${top ? ' destacada' : ''}" data-g="${g}">${esc(textoClases(g, xs))}${precio}${porClase}${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}${notaFaltan(xs)}</button>`;
+  }).join('');
+  $('clasesLista').querySelectorAll('button').forEach(b => b.onclick = () => {
+    A.clases = b.dataset.g; const xs = ps.filter(p => claveClases(p) === A.clases);
+    if (xs.length === 1) elegirPlan(xs[0]); else irDuracion(xs);
+  });
+  $('clasesExtra').innerHTML = botonLargo(A.elemento); conectarLargo($('clasesExtra'));   // v4: también si eligió paquete
+  ir('vClases');
+}
+// Si los planes de la casilla no se llaman igual (fuera de la palabra de duración), se enseña el nombre (p. ej. «AGUA Serena»).
+const nombreBase = n => String(n || '').replace(/\b(mensual|trimestral|semestral|anual)\b/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+function irDuracion(xs){
+  const conNombre = new Set(xs.map(p => nombreBase(p.nombre))).size > 1, mejor = desde(xs);
+  $('durTitulo').textContent = Tt(A.tipo === 'membresia' ? 'duracion.titulo' : 'clases.titulo', { elemento: EL[A.elemento][1], tipo: Tt('clases.' + A.tipo) });
+  $('durSub').textContent = A.tipo === 'membresia' ? Tt('duracion.sub') : '';
+  $('durLista').innerHTML = xs.map((p, i) => { const top = ppc(p) === mejor;
+    // «$6,480 cada 6 meses (se cobra por adelantado)»: que no se lea como cobro mensual (revisión 9-nov).
+    const cobro = p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) + (p.familia && p.familia !== 'mensual' ? ` (${Tt('duracion.adelantado')})` : '') : pesos(p.precio);
+    return `<button class="op${top ? ' destacada' : ''}" data-i="${i}">${esc(p.etiquetaDuracion)}${conNombre ? `<small>${esc(p.nombre)}</small>` : ''}<small>${esc(cobro)}</small>${p.precioPorClase ? `<span class="ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}${notaFaltan([p])}</button>`; }).join('');
+  $('durLista').querySelectorAll('button').forEach(b => b.onclick = () => elegirPlan(xs[+b.dataset.i]));
+  ir('vDuracion');
+}
+function elegirPlan(p){
+  A.plan = p;
+  if (p.tipo === 'paquete' && p.equivalente && CAT.planes.some(x => x.planId === p.equivalente.planId)) irEmpuje(); else siguiente();
+}
+
+/** 2e. Eligió paquete y la membresía equivalente sale más barata: tarjeta con el ahorro (con su supuesto en letra chica). */
+function irEmpuje(){
+  const p = A.plan, e = p.equivalente, m = CAT.planes.find(x => x.planId === e.planId);
+  // v4.1: con centavos (e.cent, enteros): por clase del paquete − por clase de la membresía = ahorro por clase, y ese × las
+  // clases de un cobro = el ahorro del cobro, exactos a la vista.
+  const c = e.cent;
+  const d = { membresia: m.nombre, porClase: pesosC(c.porClaseMembresia), ahorroClase: pesosC(c.ahorroClase), ahorroCobro: pesosC(c.ahorroCobro, true), ahorroAnio: pesosC(c.ahorroAnio, true),
+    porClasePaquete: pesosC(c.porClasePaquete), clasesM: m.clases, frecuenciaM: m.frecuencia, ciclosAnio: String(e.ciclosAnio) };
+  $('empTitulo').textContent = Tt('empuje.titulo');
+  // Antes de «Cambiar a membresía» se ve qué se cobra, cada cuándo, y el cargo si cancela (revisión 9-nov).
+  const canc = (m.letraChica || []).find(l => /cancelaci[oó]n anticipada/i.test(l));
+  $('empCarta').innerHTML = `<p>${T(e.conMesAnio ? 'empuje.texto' : 'empuje.textoSoloClase', d)}</p><p>${T('empuje.cobro', { precio: pesos(m.precio), cada: cadaDe(m.cicloTexto) })}</p>`
+    + `<p class="chica">${T('empuje.comparado', d)}</p>${canc ? `<p class="chica">${T('empuje.cancelacion', { cancelacion: canc })}</p>` : ''}${e.conMesAnio ? `<p class="chica">${T('empuje.letra', d)}</p>` : ''}`;
+  $('empCambiar').textContent = Tt('empuje.cambiar'); $('empSeguir').textContent = Tt('empuje.seguir');
+  $('empCambiar').onclick = () => { A.tipo = 'membresia'; A.plan = m; siguiente(); };
+  $('empSeguir').onclick = () => siguiente();
+  ir('vEmpuje');
+}
+
+/* --------------------------------------------------------------- 3. resumen y pase */
+const ymdGDL = d => new Date(d.getTime() - 6 * 3600e3).toISOString().slice(0, 10);
+/** Cada cuándo se cobra el ahorro de UN cobro: «al mes» en una mensual; si no, «cada 45 días», «cada 3 meses». */
+const frecCobro = m => (m.duracion === 'mensual' ? 'al mes' : cadaDe(m.cicloTexto));
+const cadaDe = t => { const m = /^(\d+) (.+)$/.exec(t || ''); if (!m) return t || ''; return m[1] === '1' ? 'cada ' + m[2] : 'cada ' + t; };
+function filaEmpieza(){
+  const p = A.plan; if (!p) return '';
+  if (p.tipo !== 'membresia' || $('resInicio').hidden || !$('inicio').value || $('inicio').value === ymdGDL(new Date())) return Tt('resumen.empiezaHoy');
+  const [y, m, d] = $('inicio').value.split('-'); return Tt('resumen.empiezaDia', { fecha: `${d}/${m}/${y}` });
+}
+function pintarFilas(){
+  const p = A.plan, mem = p.tipo === 'membresia';
+  const filas = [
+    [Tt('resumen.plan'), p.nombre],
+    [Tt('resumen.precio'), pesos(p.precio) + (mem ? ' ' + cadaDe(p.cicloTexto) : '')],
+    p.precioPorClase ? [Tt('resumen.porClase'), pesos(p.precioPorClase)] : null,
+    p.prueba && !p.clases ? null : [Tt('resumen.clases'), mem ? Tt('resumen.clasesMembresia', { clases: p.clases, frecuencia: p.frecuencia }) : Tt('resumen.clasesPaquete', { clases: p.clases, vigencia: p.vigenciaTexto || p.etiquetaDuracion })],
+    (p.disciplinas || []).length ? [Tt('resumen.incluye'), lista(p.disciplinas)] : null,
+    [Tt('resumen.empieza'), filaEmpieza()],
+    [Tt('resumen.renueva'), mem ? Tt('resumen.renuevaMembresia', { cada: cadaDe(p.cicloTexto) }) : Tt('resumen.renuevaPaquete', { vigencia: p.vigenciaTexto || '' })],
+    [Tt('resumen.para'), A.nombreV],
+    A.vendedora ? [Tt('resumen.vende'), A.vendedora] : null
+  ].filter(Boolean);
+  $('resFilas').innerHTML = filas.map(([a, b]) => `<div class="fila"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('');
+}
+function irResumen(){
+  const p = A.plan, e = p.equivalente; A.repetido = false;
+  $('resNombre').textContent = p.nombre;
+  $('resPrecio').textContent = pesos(p.precio);
+  $('resPrueba').hidden = !p.prueba; $('resPrueba').textContent = p.prueba ? Tt(p.recurrente ? 'prueba.resumenRecurrente' : 'prueba.resumen') : '';
+  const refuerzo = p.tipo === 'membresia' && e;
+  $('resRefuerzo').hidden = !refuerzo;
+  // Revisión v4.1: las MISMAS cifras con centavos que la tarjeta «¿y si mejor membresía?» (e.cent), para que no cambien
+  // segundos después de tocar «Cambiar a membresía». {frecuencia}: «al mes» o «cada 45 días» / «cada 3 meses».
+  if (refuerzo) $('resRefuerzo').innerHTML = T(e.conMesAnio ? 'resumen.refuerzo' : 'resumen.refuerzoSoloClase', { paquete: e.nombre, porClasePaquete: pesosC(e.cent.porClasePaquete),
+    ahorroClase: pesosC(e.cent.ahorroClase), ahorroCobro: pesosC(e.cent.ahorroCobro, true), frecuencia: frecCobro(p), ahorroAnio: pesosC(e.cent.ahorroAnio, true) });
+  $('resInicio').hidden = !(p.tipo === 'membresia' && p.inicioLibre);
+  $('inicioTxt').textContent = Tt('resumen.inicio');
+  const hoy = ymdGDL(new Date());
+  $('inicio').min = hoy; $('inicio').max = ymdGDL(new Date(Date.now() + 60 * 864e5)); if (!$('inicio').value) $('inicio').value = hoy;
+  pintarFilas();
+  // El correo es lo único que no se corrige después de pagar (es su cuenta de la app): en grande, para que recepción lo
+  // revise. Una nueva puede cambiarlo (vuelve al correo; su contacto con el correo malo queda anotado para recepción).
+  $('resCorreo').textContent = A.email; $('resCambiar').hidden = A.existe;
+  $('resLetra').innerHTML = [(p.perks || []).length ? `<b>${T('resumen.beneficios')}</b>${ul(p.perks.map(esc))}` : '',
+    (p.letraChica || []).length ? `<b>${T('resumen.letraChica')}</b>${ul(p.letraChica.map(esc))}` : '',
+    p.largo && p.largo.compromiso ? `<p class="chica">${T('largo.compromiso', { meses: p.largo.compromiso })}</p>` : ''].join('');   // trimestral / semestral
+  $('resSeguro').textContent = Tt('resumen.seguro'); $('pagar').textContent = Tt('resumen.pagar');
+  $('resError').textContent = ''; $('pagar').disabled = false;
+  ir('vResumen');
+}
+$('inicio').addEventListener('change', () => { if (A && A.plan) pintarFilas(); });
+$('resCambiar').onclick = () => {
+  if (!A || A.existe) return;
+  A.corrige = A.verifViejo = A.verif || A.corrige; A.verif = null;   // si vuelve a poner el mismo correo, sus notas siguen
+  irCorreo(); pila = pila.filter(v => v !== 'vResumen');            // «Atrás» no regresa a un resumen sin verificación
+};
+async function pagar(){
+  const p = A.plan; if (!p || !A.verif || $('pagar').disabled) return;
+  $('pagar').disabled = true; $('resError').textContent = '';
+  const datos = { verif: A.verif, planId: p.planId };       // la vendedora la pone el backend (sello «venta»)
+  if (!$('resInicio').hidden && $('inicio').value) datos.inicio = $('inicio').value;
+  if (A.repetido) datos.repetido = true;
+  try {
+    const j = await api('altaPase', datos);
+    $('cargandoTxt').textContent = Tt('cargando.pago'); ir('vCargando', { apilar: false });
+    marca.poner(j.base);                             // desde aquí puede quedar una sesión de la clienta en ESE sitio
+    pruebaRec.poner(!!(p.prueba && p.recurrente));
+    if (DEMO) { demoUltimoCorreo = A.email; demoPruebaRec = !!(p.prueba && p.recurrente); }
+    navegar(j.url);
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e);
+    $('pagar').disabled = false;
+    if (er === 'repetido') {
+      // Ya tiene ESE plan vivo (activo, por empezar o pausado): doble cobro recurrente si se vende otro sin querer.
+      if (window.confirm(Tt('pagar.repetido', { plan: p.nombre }))) { A.repetido = true; pagar(); }
+      else $('resError').textContent = Tt('pagar.noSeCobro');
+      return;
+    }
+    // La verificación venció (20 min): no se pierde el plan. Se busca otra vez su correo: como su contacto ya existe
+    // (también si se acaba de registrar), va por los 4 dígitos y de ahí regresa a este resumen.
+    if (er === 'verif') { A.verifViejo = A.verif; A.verif = null; A.reto = null; A.ult4 = ''; $('resError').textContent = Tt('pagar.verif'); setTimeout(() => { if (A && !A.verif) buscarCorreo(); }, 1800); return; }
+    $('resError').textContent = Tt(TX.pagar.errores[er] ? 'pagar.errores.' + er : 'pagar.red');
+  }
+}
+$('pagar').onclick = pagar;
+
+/* --------------------------------------------------------------- 4. ya pagó: la app con SU correo exacto */
+async function irApp(recibo){
+  nuevaAlta(); A.recibo = recibo; pila = [];
+  const datos = { appNombre: CFG.appNombre, appCodigo: CFG.appCodigo, correo: 'tu correo' };
+  // Revisión v4.1: plan de prueba recurrente → recuadro rojo «hay que CANCELAR esta orden» (no depende de Slack).
+  const avisoPrueba = si => { $('appPrueba').hidden = !si; $('appPrueba').textContent = si ? Tt('app.avisoPrueba') : ''; };
+  avisoPrueba(pruebaRec.tomar());
+  $('appTitulo').textContent = Tt('app.titulo'); $('appSub').textContent = Tt('app.sub');
+  $('appCorreoTit').textContent = Tt('app.correoTitulo'); $('appAviso').textContent = Tt('app.aviso'); $('appCorreo').textContent = '…';
+  $('appPregunta').textContent = Tt('app.pregunta'); $('siReservo').textContent = Tt('app.si'); $('noReservo').textContent = Tt('app.no');
+  $('btnCorreoOtra').textContent = Tt('app.botonOtra');
+  $('correoMsg').textContent = ''; $('btnCorreo').disabled = false; $('btnCorreo').hidden = true; $('btnCorreoOtra').hidden = true;
+  // Tres caminos (revisión 9-nov): Gmail → Google; otro correo con venta confirmada → botón «crear contraseña»;
+  // venta sin confirmar o correo desconocido → «¿Olvidaste tu contraseña?» en la app (nunca se nombra un botón escondido).
+  const pintaPasos = modo => {
+    const k = { google: 'pasosGoogle', correo: 'pasosCorreo', olvido: 'pasosOlvido' }[modo];
+    $('appPasos').innerHTML = TX.app[k].map((_, i) => `<li>${T(`app.${k}.${i}`, datos)}</li>`).join('');
+    $('btnCorreo').textContent = Tt(modo === 'google' ? 'app.botonCorreoRespaldo' : 'app.botonCorreo');
+    $('btnCorreo').className = 'btn ' + (modo === 'google' ? 'sec' : 'pri');
+  };
+  const avisoRecepcion = () => { $('correoMsg').style.color = 'var(--alerta)'; $('correoMsg').textContent = Tt('app.avisoRecepcion'); };
+  datos.correo = Tt('app.correoDesconocido');
+  pintaPasos('olvido');
+  ir('vApp', { apilar: false });
+  // Tope propio de esta pantalla (no el de 3 min): cuenta atrás visible, y al llegar a cero se cierra su sesión.
+  const hasta = Date.now() + ABIERTA_MS;
+  const pinta = () => { const r = Math.max(0, hasta - Date.now()), m = Math.floor(r / 60000), s2 = Math.floor(r / 1000) % 60;
+    $('cuentaTxt').innerHTML = T('app.cuenta', { tiempo: `${m}:${String(s2).padStart(2, '0')}` }); if (r <= 0) { clearInterval(appTimer); salirSitio(); } };
+  clearInterval(appTimer); pinta(); appTimer = setInterval(pinta, 1000);
+  cargarQRLib().then(() => { $('qrApp').innerHTML = qrBonito(CFG.appLiga); }).catch(() => { $('qrApp').innerHTML = `<span class="cargando">${T('app.sinQR', datos)}</span>`; });
+  try {
+    const j = await api('altaApp', { recibo });
+    if (!A || A.recibo !== recibo) return;
+    datos.correo = j.correo; $('appCorreo').textContent = j.correo; avisoPrueba(!!j.pruebaRecurrente);
+    pintaPasos(j.google ? 'google' : j.registrada ? 'correo' : 'olvido');
+    $('btnCorreo').hidden = !j.registrada;
+    if (!j.registrada) avisoRecepcion();
+  } catch (e) {
+    if (e.auth || !A || A.recibo !== recibo) return;
+    $('appCorreo').textContent = Tt('app.correoDesconocido'); pintaPasos('olvido'); avisoRecepcion();
+  }
+}
+function ofrecerOtra(){ clearTimeout(correoOtraTimer); correoOtraTimer = setTimeout(() => { if (A && A.recibo) $('btnCorreoOtra').hidden = false; }, 60000); }
+async function mandarCorreo(otra){
+  if (!A || !A.recibo) return;
+  const btn = otra ? $('btnCorreoOtra') : $('btnCorreo');
+  btn.disabled = true; $('correoMsg').style.color = 'var(--ok)'; $('correoMsg').textContent = Tt('correoApp.enviando');
+  try {
+    const j = await api('altaCorreo', otra ? { recibo: A.recibo, otra: true } : { recibo: A.recibo });
+    if (j.ya) {
+      $('correoMsg').style.color = 'var(--alerta)';
+      $('correoMsg').textContent = Tt(otra ? 'correoApp.yaDos' : 'correoApp.yaUna');
+    } else $('correoMsg').textContent = Tt(otra ? 'correoApp.otraVez' : 'correoApp.listo');
+    if (otra) $('btnCorreoOtra').hidden = true; else ofrecerOtra();
+  } catch (e) {
+    if (e.auth) return; btn.disabled = false; $('correoMsg').style.color = 'var(--alerta)';
+    const er = errDe(e);
+    $('correoMsg').textContent = Tt(er === 'recibo' ? 'correoApp.recibo' : er === 'sin-venta' ? 'correoApp.sinVenta' : 'correoApp.fallo');
+    if (er === 'sin-venta' || er === 'recibo') btn.hidden = true;
+  }
+}
+$('btnCorreo').onclick = () => mandarCorreo(false);
+$('btnCorreoOtra').onclick = () => mandarCorreo(true);
+$('siReservo').onclick = () => salirSitio();
+$('noReservo').onclick = () => { $('cargandoTxt').textContent = Tt('cargando.calendario'); ir('vCargando', { apilar: false }); navegar(marca.base() + '/classes?altaReserva=1'); };
+
+/* --------------------------------------------------------------- terminar / cancelar: SIEMPRE se cierra su sesión y se vuelve al kiosco */
+function salirSitio(){
+  $('cargandoTxt').textContent = Tt('cargando.cerrando'); ir('vCargando', { apilar: false });
+  navegar(marca.base() + '/?salir=1' + (DEV ? '&dev=1' : ''));
+}
+function cancelar(){
+  if (marca.hay()) { salirSitio(); return; }
+  volverKiosco();
+}
+$('cancelar').onclick = cancelar;
+function fin(titulo, texto){
+  nuevaAlta(); limpiarCampos(); pila = []; venta.quitar();
+  $('finTitulo').textContent = titulo; $('finTexto').textContent = texto || '';
+  $('finAuto').textContent = Tt('fin.auto'); $('finVolver').textContent = Tt('fin.boton');
+  ir('vFin', { apilar: false });
+  clearTimeout(finTimer); finTimer = setTimeout(volverKiosco, 12000);
+}
+$('finVolver').onclick = () => volverKiosco();
+// No se pudo cerrar su sesión: la tablet NO vuelve sola; se queda en rojo hasta que recepción lo resuelva.
+function irBloqueo(){ nuevaAlta(); limpiarCampos(); pila = []; clearTimeout(finTimer); ir('vBloqueo', { apilar: false }); }
+$('bloqueoReintentar').onclick = () => salirSitio();
+$('bloqueoListo').onclick = () => { if (window.confirm(Tt('bloqueo.confirmar'))) { marca.quitar(); volverKiosco(); } };
+
+/* --------------------------------------------------------------- regreso del sitio (#hash) */
+function alRegresar(){
+  const h = location.hash || '';
+  if (h) history.replaceState(null, '', location.pathname + location.search);   // el recibo no se queda en la barra
+  let m;
+  if ((m = /^#pagado=([A-Za-z0-9_.-]{20,2000})$/.exec(h))) { irApp(m[1]); return true; }
+  if (h === '#fin') { marca.quitar(); fin(Tt('fin.gracias'), Tt('fin.cerrada')); return true; }
+  if (h === '#reservada') { marca.quitar(); fin(Tt('fin.reservada'), Tt('fin.reservadaTexto')); return true; }
+  if (h === '#cancelado=sesion-abierta') { irBloqueo(); return true; }               // la marca se queda puesta
+  if ((m = /^#cancelado=([a-z-]{1,30})$/.exec(h))) {
+    marca.quitar();
+    const [t, x] = (TX.motivos || {})[m[1]] || TX.motivos.error; fin(t, x); return true;
+  }
+  return false;
+}
+
+/* --------------------------------------------------------------- navegación (en demo se simula el sitio) */
+let demoUltimoCorreo = '', demoPruebaRec = false;
+function navegar(url){
+  if (!DEMO) { location.href = url; return; }
+  setTimeout(() => {
+    location.hash = url.includes('?alta=') ? '#pagado=demo-recibo-de-prueba-000000' : url.includes('altaReserva') ? '#reservada' : '#fin';
+    alRegresar();
+  }, 1200);
+}
+
+/* --------------------------------------------------------------- QR (el mismo del kiosco) */
+let qrLib = null;
+function cargarQRLib(){
+  if (window.QRCode) return Promise.resolve();
+  if (qrLib) return qrLib;
+  qrLib = new Promise((ok, mal) => {
+    const s = document.createElement('script');
+    s.src = QR_SRC; s.integrity = QR_SRI; s.crossOrigin = 'anonymous'; s.referrerPolicy = 'no-referrer';
+    const to = setTimeout(() => mal(new Error('timeout')), 5000);
+    s.onload = () => { clearTimeout(to); ok(); }; s.onerror = () => { clearTimeout(to); mal(new Error('qr')); };
+    document.head.appendChild(s);
+  }).catch(e => { qrLib = null; throw e; });
+  return qrLib;
+}
+function qrBonito(texto){
+  const tmp = document.createElement('div');
+  const q = new QRCode(tmp, { text: texto, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.H });
+  const m = q._oQRCode, n = m.getModuleCount(), M = 2, T = n + 2 * M;
+  const enOjo = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  const centro = Math.round(n * 0.24), c0 = Math.floor((n - centro) / 2);
+  const enCentro = (r, c) => r >= c0 - 1 && r <= c0 + centro && c >= c0 - 1 && c <= c0 + centro;
+  let puntos = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+    if (m.isDark(r, c) && !enOjo(r, c) && !enCentro(r, c)) puntos += `<circle cx="${c + M + .5}" cy="${r + M + .5}" r=".43"/>`;
+  const ojo = (r, c) => `<rect x="${c + M + .5}" y="${r + M + .5}" width="6" height="6" rx="1.9" fill="none" stroke="#9A4215" stroke-width="1"/>
+    <rect x="${c + M + 2}" y="${r + M + 2}" width="3" height="3" rx="1" fill="#9A4215"/>`;
+  const lado = centro + 1, x0 = c0 + M - .5;
+  return `<svg viewBox="0 0 ${T} ${T}" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+    <g fill="#424949">${puntos}</g>${ojo(0, 0)}${ojo(0, n - 7)}${ojo(n - 7, 0)}
+    <rect x="${x0}" y="${x0}" width="${lado}" height="${lado}" rx="${lado * .28}" fill="#fff"/>
+    <image href="${ICONO_HERA}" x="${x0 + lado * .1}" y="${x0 + lado * .1}" width="${lado * .8}" height="${lado * .8}" preserveAspectRatio="xMidYMid meet"/></svg>`;
+}
+
+
+/* --------------------------------------------------------------- eventos e inactividad */
+$('claveOk').onclick = entrar;
+$('clave').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+['pointerdown', 'keydown', 'input'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); }, { passive: true }));
+setInterval(() => {                                   // 3 min sin tocar en cualquier paso = cancelar (cerrar su sesión y volver al kiosco)
+  const v = (document.querySelector('.vista.activa') || {}).id;
+  if (['vClave', 'vCargando', 'vFin', 'vApp', 'vBloqueo'].includes(v)) return;   // vApp tiene su propio tope
+  if (Date.now() - ultimoToque > INACTIVIDAD_MS) { ultimoToque = Date.now(); cancelar(); }
+}, 5000);
+window.addEventListener('hashchange', alRegresar);
+window.addEventListener('pageshow', e => { if (e.persisted && marca.hay() && !location.hash) salirSitio(); });   // «Atrás» del navegador
+
+// Textos fijos de las pantallas (data-tx / data-ph) desde textos-alta.js
+document.querySelectorAll('[data-tx]').forEach(x => { x.innerHTML = T(x.dataset.tx).replace(/&lt;br&gt;/g, '<br>'); });
+document.querySelectorAll('[data-ph]').forEach(x => { x.placeholder = Tt(x.dataset.ph); });
+
+if (!alRegresar()) {
+  if (marca.hay()) salirSitio();                     // se recargó con una sesión de clienta posiblemente abierta
+  else irPin();
+}
+
+/* =====================================================================
+   Modo demostración (solo en localhost): planes, horarios y personas inventados, sin red.
+   Contraseña: demo · PIN de recepción: 1234 · correo que empiece con "ya" = clienta con cuenta (4 dígitos: 1234; pide
+   su colonia); "sincel" = cuenta sin celular; cualquier otro = registro de nueva. Prueba «gmial.com» para ver el
+   «¿Quisiste decir…?». Un correo de Gmail enseña el camino «Continuar con Google»; uno que empiece con "sinventa" enseña
+   el paso de la app cuando la venta no se alcanzó a confirmar.
+   ===================================================================== */
+let demoFallos = 0;
+function demoApi(accion, datos){
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  const falla = (error, extra = {}) => Promise.reject(Object.assign(new Error(error), { resp: { error, ...extra } }));
+  const id = n => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+  if (accion === 'entrar') return espera(300).then(() => datos.clave === 'demo' ? { ok: true, token: 'demo' } : falla('clave'));
+  if (accion === 'altaPin') return espera(300).then(() => datos.pin == null ? { ok: true, configurado: true }
+    : datos.pin === '1234' ? { ok: true, venta: 'demo-venta', vendedora: 'Recepción Demo' } : falla('pin'));
+  if (accion === 'altaCatalogo') return espera(300).then(() => {
+    // Catálogo DE EJEMPLO (precios inventados con la forma de los de Wix).
+    const planes = []; let n = 1;
+    const base = { AIRE: 100, TIERRA: 120, FUEGO: 150, AGUA: 170 }, disc = { AIRE: ['Yoga', 'Pilates Mat'], TIERRA: ['Barre', 'Yoga', 'Pilates Mat'],
+      FUEGO: ['Pilates Reformer', 'Barre', 'Pilates Mat'], AGUA: ['Pilates Reformer', 'Barre', 'Yoga', 'Pilates Mat'] };
+    const letraM = ['En caso de cancelar una membresía activa antes de concluir 2 ciclos de pago, se aplicará un cargo de cancelación anticipada de $500. (ejemplo)'];
+    const letraP = ['Las cancelaciones fuera de tiempo y las inasistencias no son reembolsables ni canjeables. (ejemplo)'];
+    for (const el of ORDEN_EL) for (const c of [4, 8, 12]) {
+      const m = { planId: id(n++), nombre: `${el} - Membresia ${c} Clases`, tipo: 'membresia', elemento: el, clases: c, duracion: 'mensual', etiquetaDuracion: 'Mensual', frecuencia: 'al mes',
+        precio: base[el] * c, precioPorClase: base[el], inicioLibre: true, cicloTexto: '1 mes', familia: 'mensual', disciplinas: disc[el], perks: ['Beneficio de ejemplo'], letraChica: letraM };
+      const t = c >= 8 ? { planId: id(n++), nombre: `${el} - Membresía Trimestral ${c} Clases`, tipo: 'membresia', elemento: el, clases: c, duracion: 'trimestral', etiquetaDuracion: 'Trimestral', frecuencia: 'al mes',
+        precio: Math.round(base[el] * c * 3 * .9), precioPorClase: Math.round(base[el] * .9), inicioLibre: true, cicloTexto: '3 meses', familia: 'trimestral', disciplinas: disc[el], perks: ['Beneficio de ejemplo'], letraChica: letraM } : null;
+      const p = { planId: id(n++), nombre: `${el} - Paquete ${c} Clases`, tipo: 'paquete', elemento: el, clases: c, duracion: 'vigencia-1-mes', etiquetaDuracion: 'Vigencia de 1 mes', frecuencia: '',
+        precio: Math.round(base[el] * c * 1.2), precioPorClase: Math.round(base[el] * 1.2), inicioLibre: false, vigenciaTexto: '1 mes', familia: 'paquete', disciplinas: disc[el], perks: ['Pago único (ejemplo)'], letraChica: letraP };
+      const cmp = (pq, mm, ciclos) => ({ porClasePaquete: pq.precioPorClase, porClaseMembresia: mm.precioPorClase, ahorroClase: pq.precioPorClase - mm.precioPorClase,
+        ahorroMes: Math.round((pq.precioPorClase - mm.precioPorClase) * c), ahorroAnio: Math.round((pq.precioPorClase - mm.precioPorClase) * c * 12), ciclosAnio: ciclos, conMesAnio: true,
+        cent: { porClasePaquete: pq.precioPorClase * 100, porClaseMembresia: mm.precioPorClase * 100, ahorroClase: (pq.precioPorClase - mm.precioPorClase) * 100, clases: c,
+          ahorroCobro: (pq.precioPorClase - mm.precioPorClase) * 100 * c, ahorroAnio: (pq.precioPorClase - mm.precioPorClase) * 100 * c * 12 } });
+      p.equivalente = { planId: m.planId, nombre: m.nombre, clases: c, frecuencia: 'al mes', precio: m.precio, ...cmp(p, m, 12) };
+      m.equivalente = { planId: p.planId, nombre: p.nombre, clases: c, vigenciaTexto: '1 mes', precio: p.precio, ...cmp(p, m, 12) };
+      if (t) t.equivalente = { planId: p.planId, nombre: p.nombre, clases: c, vigenciaTexto: '1 mes', precio: p.precio, ...cmp(p, t, 4) };
+      // v4: comparaciones de la trimestral contra la mensual y el paquete (misma fórmula que alta.compararLargo).
+      const vs = o => { const pp = t.precio / (c * 3), po = o.precio / c, si = pp < po;
+        return { planId: o.planId, nombre: o.nombre, precio: o.precio, porClase: Math.round(pp), porClaseOtro: Math.round(po), veces: 3, masBarato: si,
+          ahorroClase: si ? Math.round(po) - Math.round(pp) : null, ahorroPeriodo: si ? Math.round(o.precio * 3 - t.precio) : null }; };
+      if (t) t.largo = { mensual: vs(m), paquete: vs(p), compromiso: '6 meses' };
+      planes.push(m, p); if (t) planes.push(t);
+    }
+    const elementos = Object.fromEntries(ORDEN_EL.map(el => [el, { disciplinas: disc[el], incompletos: [], fuente: 'bookings' }]));
+    const beneficios = { membresia: { todas: ['Beneficio de ejemplo para todas'], grupos: [{ familias: ['mensual'], perks: ['Beneficio de ejemplo mensual'] }, { familias: ['trimestral'], perks: ['Beneficio de ejemplo trimestral'] }],
+      cancelacion: letraM[0], variantesCancelacion: 1 }, paquete: { todas: ['Pago único (ejemplo)'], vigencias: ['1 mes'] } };
+    const largos = planes.filter(x => x.largo), barato = xs => xs.length > 0 && xs.every(x => x.largo.mensual.masBarato && x.largo.paquete.masBarato);
+    const largo = { n: largos.length, masBarato: barato(largos), elementos: Object.fromEntries(ORDEN_EL.map(el => { const xs = largos.filter(x => x.elemento === el); return [el, { n: xs.length, masBarato: barato(xs) }]; })) };
+    // Con ?prueba en la URL, el demo enseña también la sección del plan de prueba (?prueba=recurrente: el de cobro cada mes).
+    const qp = new URLSearchParams(location.search).get('prueba');
+    const prueba = qp === 'recurrente' ? { planId: id(999), nombre: 'PRUEBA - Cobro con tarjeta (ejemplo)', prueba: true, recurrente: true, tipo: 'membresia', elemento: null, clases: null,
+      duracion: 'mensual', etiquetaDuracion: 'Mensual', precio: 10, precioPorClase: null, frecuencia: '', inicioLibre: false, cicloTexto: '1 mes', familia: 'mensual', disciplinas: [], perks: [], letraChica: [] }
+      : qp != null ? { planId: id(999), nombre: 'PRUEBA alta mostrador (ejemplo)', prueba: true, tipo: 'paquete', elemento: null, clases: 1,
+      duracion: 'vigencia-1-semana', etiquetaDuracion: 'Vigencia de 1 semana', precio: 10, precioPorClase: 10, frecuencia: '', inicioLibre: false, vigenciaTexto: '1 semana', familia: 'paquete', disciplinas: [], perks: [], letraChica: [] } : null;
+    return { ok: true, planes, elementos, beneficios, largo, prueba, omitidos: [], vendedora: 'Recepción Demo' };
+  });
+  if (accion === 'altaHorarios') return espera(500).then(() => ({ ok: true, disciplinas: [
+    { nombre: 'Pilates Reformer', horarios: ['lun 7:00', 'mar 19:00', 'mié 8:00', 'jue 20:00'] }, { nombre: 'Barre', horarios: ['lun 9:00', 'mié 19:00', 'vie 8:00'] },
+    { nombre: 'Yoga', horarios: ['mar 7:00', 'jue 19:30', 'sáb 9:00'] }, { nombre: 'Pilates Mat', horarios: ['lun 8:00', 'mié 7:00', 'vie 19:00'] }] }));
+  // v3: correo que empiece con "ya" = ya tiene cuenta (celular que termina en 1234; pide colonia); "sincel" = cuenta sin
+  // celular en Wix; cualquier otro = nueva (registro). En el registro, un celular que termine en 0000 hace como si fuera
+  // de otro contacto (en la tablet no se nota: solo marca el aviso de Slack).
+  if (accion === 'altaBuscar') return espera(400).then(() => {
+    const e = String(datos.email);
+    return /^(ya|sincel)/.test(e) ? { ok: true, existe: true, reto: 'demo-reto|' + e, ...(/^sincel/.test(e) ? { sinTelefono: true } : {}) } : { ok: true, existe: false, reto: 'demo-nueva|' + e };
+  });
+  if (accion === 'altaVerificar') return espera(400).then(() => {
+    demoFallos = (demoFallos || 0);
+    if (datos.ult4 !== '1234') { demoFallos++; return falla('verificacion', { segundos: 2, ...(demoFallos >= 2 ? { agotado: true } : {}) }); }
+    demoFallos = 0;
+    if (datos.previo) return { ok: true, verif: 'demo-verif', existe: true, nueva: true, nombre: 'Clienta D.', planes: [], pideColonia: false };
+    return { ok: true, verif: 'demo-verif', existe: true, nombre: 'Clienta D.', planes: [{ nombre: 'TIERRA - Paquete 4 Clases', estado: 'activa' }], pideColonia: true };
+  });
+  if (accion === 'altaRegistro') return espera(500).then(() => ({ ok: true, verif: 'demo-verif', existe: false, nombre: `${datos.nombre} ${datos.apellido}`, planes: [] }));
+  if (accion === 'altaColonia') return espera(300).then(() => ({ ok: true, guardada: true, verif: 'demo-verif' }));
+  if (accion === 'altaPase') return espera(500).then(() => ({ ok: true, pase: 'demo', url: 'demo/?alta=demo', base: SITIO }));
+  if (accion === 'altaApp') return espera(300).then(() => { const c = demoUltimoCorreo || ('clienta.demo' + '@' + 'gmail.com');
+    return { ok: true, correo: c, google: /@(gmail|googlemail)\.com$/.test(c), registrada: !/^sinventa/.test(c), ...(demoPruebaRec ? { pruebaRecurrente: true } : {}) }; });
+  if (accion === 'altaCorreo') return espera(500).then(() => ({ ok: true }));
+  return falla('accion');
+}
+if (DEMO) document.body.insertAdjacentHTML('beforeend', '<div class="demo">DEMO · datos inventados · contraseña: demo · PIN: 1234</div>');
+</script>
+</body>
+</html>
