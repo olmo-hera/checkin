@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-idZf4hGTz/U9oiKRrIiGuigdWrVCDDjINGkOxijULuA=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-w2dJA2QaYgCziZNHooW/Ik27qd3c8tNJdDlRP/xv7Gs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -836,7 +836,9 @@ const CONFIG_ALTA = {
   appNombre: 'Fit by Wix',
   appCodigo: 'XBVK52',
   // Liga de invitación a Hera en Fit by Wix (la misma del QR del kiosco).
-  appLiga: 'https://checkin.herazenter.com/app.html' // página que manda a App Store o Google Play (9-nov: la liga de Wix caía en mobileappinvite si no tenía la app)
+  appLiga: 'https://checkin.herazenter.com/app.html', // página que manda a App Store o Google Play (9-nov: la liga de Wix caía en mobileappinvite si no tenía la app)
+  // Olmo 9-nov: beneficio de membresía. Las clases que pase de su plan (p. ej. la 5ª en una de 4) van a precio de clase de prueba.
+  precioClaseExtra: 180
 };
 
 /* v9 (Olmo, 9-nov): membresías ANUALES. NO existen en Wix (verificado el 9-nov-2026: 0 planes «anual» en el catálogo): vienen
@@ -903,6 +905,10 @@ const TEXTOS_ALTA = {
       doce: 'con {clases} clases al mes, pago mensual',
       // v9: bloque destacado dentro de la ficha. Los beneficios salen de Wix (beneficiosPorTipo); el ahorro, del catálogo.
       beneficiosTit: 'Beneficios de membresía',
+      // Olmo 9-nov: {precio} sale de CONFIG_ALTA.precioClaseExtra.
+      claseExtra: 'Clases extra a *{precio}*',
+      claseExtraNota: 'precio de clase de prueba, si un mes quieres más de las de tu plan (ej.: la 5ª en una de 4)',
+      claseExtraLinea: 'Clases extra (más de las de tu plan, ej.: la 5ª en una de 4): {precio} cada una, a precio de clase de prueba.',
       masLargo: '+{n} beneficios en trimestral y semestral',
       // {pct}: el mayor ahorro por clase de una membresía contra el paquete de las MISMAS clases (centavos de Wix, redondeado
       // hacia abajo). Solo membresías que se cobran cada ciclo (las mismas del precio grande).
@@ -1982,7 +1988,9 @@ function irTipo(){
     const masLargo = (BM.grupos || []).filter(g => !gruposFicha.includes(g)).reduce((n, g) => n + (g.perks || []).length, 0);
     const famPerks = g => perksLista((g.perks || []).map(x => ({ x })));
     let cuerpo = '';
-    if ((BM.todas || []).length) cuerpo += `<h3>${T('tipo.membresia.todas')}</h3>${perksLista(BM.todas.map(x => ({ x })))}`;
+    // Olmo 9-nov: clases extra a precio de clase de prueba (CONFIG_ALTA.precioClaseExtra), en todas las membresías.
+    const extra = CFG.precioClaseExtra > 0 ? Tt('tipo.membresia.claseExtraLinea', { precio: pesos(CFG.precioClaseExtra) }) : '';
+    if ((BM.todas || []).length || extra) cuerpo += `<h3>${T('tipo.membresia.todas')}</h3>${perksLista([...(extra ? [extra] : []), ...(BM.todas || [])].map(x => ({ x })))}`;
     for (const g of BM.grupos || []) if ((g.perks || []).length) cuerpo += `<h3>${T('tipo.membresia.solo', { familias: fam(g) })}</h3>${famPerks(g)}`;
     if (BM.cancelacion) cuerpo += `<h3>${T('tipo.membresia.letraChica')}</h3><p>${esc(BM.cancelacion)}</p>`;
     // El ejemplo concreto del «hasta X%» (el plan donde pasa), para que no parezca contradecir los «desde».
@@ -1990,6 +1998,7 @@ function irTipo(){
     const ejTxt = ej ? T('tipo.membresia.ahorroEjemplo', { elemento: EL[ej.elemento] ? EL[ej.elemento][1] : ej.elemento, clases: ej.clases,
       porClase: pesos(ej.equivalente.porClaseMembresia), porClasePaquete: pesos(ej.equivalente.porClasePaquete) }) : '';   // pesos cerrados (los centavos, solo en el empuje)
     const items = [pct > 0 ? `<li class="ben-ahorro">${ico('ahorro', 22)}<span><b>${T('tipo.membresia.ahorro', { pct })}</b><small>${T('tipo.membresia.ahorroNota')}${ejTxt ? ` · ${ejTxt}` : ''}</small></span></li>` : '',
+      CFG.precioClaseExtra > 0 ? `<li>${ico('precio', 22)}<span><b>${T('tipo.membresia.claseExtra', { precio: pesos(CFG.precioClaseExtra) })}</b><small>${T('tipo.membresia.claseExtraNota')}</small></span></li>` : '',
       ...perksFicha.map(x => `<li>${ico(icoPerk(x), 22)}<span>${esc(x)}</span></li>`)].filter(Boolean);
     const bloqueBen = items.length ? `<div class="ben"><div class="ben-tit">${svgLaurel(26)}<span>${T('tipo.membresia.beneficiosTit')}</span></div><ul>${items.join('')}</ul></div>` : '';
     // v9: el precio grande, con el plan de 12 clases (ver doceDe).
@@ -2462,7 +2471,8 @@ function irResumen(){
   // El correo es lo único que no se corrige después de pagar (es su cuenta de la app): en grande, para que recepción lo
   // revise. Una nueva puede cambiarlo (vuelve al correo; su contacto con el correo malo queda anotado para recepción).
   $('resCorreo').textContent = A.email; $('resCambiar').hidden = A.existe;
-  $('resLetra').innerHTML = [(p.perks || []).length ? `<b>${T('resumen.beneficios')}</b>${ul(p.perks.map(esc))}` : '',
+  const perksRes = [...(p.perks || []), ...(p.tipo === 'membresia' && CFG.precioClaseExtra > 0 ? [Tt('tipo.membresia.claseExtraLinea', { precio: pesos(CFG.precioClaseExtra) })] : [])];
+  $('resLetra').innerHTML = [perksRes.length ? `<b>${T('resumen.beneficios')}</b>${ul(perksRes.map(esc))}` : '',
     (p.letraChica || []).length ? `<b>${T('resumen.letraChica')}</b>${ul(p.letraChica.map(esc))}` : '',
     p.largo && p.largo.compromiso ? `<p class="chica">${T('largo.compromiso', { meses: p.largo.compromiso })}</p>` : ''].join('');   // trimestral / semestral
   $('resLetra').hidden = !$('resLetra').innerHTML;
