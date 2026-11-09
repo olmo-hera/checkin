@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Kp+2mATosMWKbuVcwvYQ/TXuflO+aIW+6O64b2pGCvY=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Ez0tPdn3Oy8aWcbl35cH9Ru6abLDo4dVqPsiK5GBqk=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -175,6 +175,10 @@ button.fila-r:active{background:var(--arena-suave)}
 .exito{position:fixed;left:0;right:0;margin:0 auto;bottom:18px;width:min(860px,94vw);max-height:62vh;background:#fff;border-radius:26px;
   box-shadow:0 10px 40px rgba(43,43,43,.22);z-index:20;display:none;flex-direction:column;align-items:center;gap:10px;padding:18px 22px 14px;text-align:center;overflow:auto;cursor:pointer}
 .exito > *{flex-shrink:0}
+/* Mantener el dedo pausa la cuenta (como historia de Instagram): sin menú de copiar/guardar imagen ni texto seleccionado. */
+.exito,.exito *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* El QR es un <img>: con presión larga el iPad lo «levanta» para arrastrarlo y cancela el toque. Así el dedo cae en la tarjeta. */
+.exito img{-webkit-user-drag:none;pointer-events:none}
 .exito .cabeza{display:flex;align-items:center;gap:14px;justify-content:center}
 .plan{display:inline-flex;align-items:center;gap:8px;font-size:18px;color:var(--carbon);background:#fff;border-radius:999px;padding:6px 16px 6px 10px;box-shadow:var(--sombra)}
 .exito.abierto{display:flex;animation:sube .22s ease-out}
@@ -370,7 +374,7 @@ button.fila-r:active{background:var(--arena-suave)}
   <div id="eAviso"></div>
   <div id="eQR"></div>
   <div class="cuenta-atras"><i id="eBarra"></i></div>
-  <small style="color:#6F6F6F">Toca para cerrar</small>
+  <small style="color:#6F6F6F" id="eAyuda">Toca para cerrar · deja el dedo para leer con calma</small>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -515,7 +519,7 @@ function red(ok, txt){
 
 /* --------------------------------------------------------------- contraseña */
 function irClave(msg){
-  $('velo').classList.remove('abierto'); $('exito').classList.remove('abierto'); claseAbierta = null;
+  $('velo').classList.remove('abierto'); cerrarExito(); claseAbierta = null;
   $('veloVerif').classList.remove('abierto'); $('veloReservar').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
   const ya = $('vClave').classList.contains('activa');
   if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
@@ -722,12 +726,62 @@ function pintarPerfil(p){
   if (p.aviso) $('eAviso').innerHTML = `<div class="aviso" style="--c:${colores[p.aviso.tipo] || '#788991'}">${emoji[p.aviso.tipo] || ''}${esc(p.aviso.texto)}</div>`;
   if (p.qr) { pintarQR(p.qr); arrancarCuenta(10000); }
 }
+/* Cuenta atrás de la tarjeta. Olmo (9-nov): como historia de Instagram, mientras haya un dedo en la tarjeta la barra se
+   detiene (para alcanzar a leer) y al soltar sigue desde donde iba; un toque corto la cierra como antes. Con el dedo puesto
+   más de TOPE_PAUSA se cierra de todos modos: sus datos no se quedan en pantalla si algo se queda recargado en la tablet. */
+const TOPE_PAUSA = 60000, MS_TOQUE = 350;
+let cuenta = null;                                   // { restante, desde, pausada, vuelta }
 function arrancarCuenta(ms){
   const b = $('eBarra'); b.style.transition = 'none'; b.style.width = '100%';
-  requestAnimationFrame(() => requestAnimationFrame(() => { b.style.transition = `width ${ms}ms linear`; b.style.width = '0%'; }));
+  const pausada = !!(cuenta && cuenta.pausada);      // llegó el QR (10 s) con el dedo puesto: sigue en pausa, ya con 10 s
+  cuenta = { restante: ms, desde: Date.now(), pausada, vuelta: 0 };
+  if (pausada) { clearTimeout(cierre); cierre = setTimeout(cerrarExito, TOPE_PAUSA); }   // el tope cuenta desde esta tarjeta
+  else correrCuenta();
+}
+function correrCuenta(){
+  const b = $('eBarra'), c = cuenta, ms = c.restante, vuelta = ++c.vuelta;
+  c.desde = Date.now();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (cuenta !== c || c.pausada || c.vuelta !== vuelta) return;
+    b.style.transition = `width ${ms}ms linear`; b.style.width = '0%';
+  }));
   clearTimeout(cierre); cierre = setTimeout(cerrarExito, ms);
 }
-function cerrarExito(){ clearTimeout(cierre); turno++; $('exito').classList.remove('abierto'); }
+function pausarCuenta(){
+  const c = cuenta;
+  if (!c || c.pausada || !$('exito').classList.contains('abierto')) return;
+  clearTimeout(cierre);
+  c.restante = Math.max(0, c.restante - (Date.now() - c.desde));
+  c.pausada = true; c.vuelta++;
+  const b = $('eBarra'), w = b.getBoundingClientRect().width, total = b.parentElement.getBoundingClientRect().width;
+  b.style.transition = 'none'; b.style.width = (total ? Math.min(100, w / total * 100) : 0) + '%';
+  cierre = setTimeout(cerrarExito, TOPE_PAUSA);
+}
+function seguirCuenta(){
+  if (!cuenta || !cuenta.pausada) return;
+  cuenta.pausada = false;
+  correrCuenta();
+}
+function cerrarExito(){
+  if (hayDedo()) toqueLargo = true;                  // se cerró con el dedo puesto (tope, quitar check-in): su clic al soltar no cierra la siguiente
+  clearTimeout(cierre); cuenta = null; dedos.clear(); tactiles = 0; turno++; $('exito').classList.remove('abierto');
+}
+// Dedos sobre la tarjeta: pausa con el primero, sigue cuando se levanta el último. El clic que llega después de soltar una
+// pausa larga no cierra la tarjeta (eso es «leer», no «tocar»). toqueLargo se reinicia al empezar cada toque: si el navegador
+// no manda el clic tras una presión larga, el siguiente toque corto sí cierra.
+// Táctil (la tablet) va con eventos touch*, NO con pointer*: en cuanto el dedo se arrastra (desplazar la tarjeta, un dedo que
+// se resbala) el navegador manda pointercancel y ya no avisa cuándo se suelta; los touch* siguen llegando hasta touchend.
+// Mouse y lápiz van con pointer* (dedos = sus pointerId).
+const dedos = new Set();
+let tactiles = 0, toqueDesde = 0, toqueLargo = false;
+const hayDedo = () => dedos.size > 0 || tactiles > 0;
+const tactilesEnTarjeta = e => [...e.touches].filter(t => $('exito').contains(t.target)).length;
+function empezarToque(){ if (!hayDedo()) { toqueDesde = Date.now(); toqueLargo = false; } }
+function terminarToque(){
+  if (hayDedo()) return;
+  toqueLargo = toqueLargo || Date.now() - toqueDesde >= MS_TOQUE;   // si cerrarExito ya lo marcó, se queda marcado
+  seguirCuenta();
+}
 
 let qrLib = null;
 /* --------------------------------------------------------------- reservar desde su celular (QR bonito) */
@@ -1142,7 +1196,18 @@ async function pedirWakeLock(){ try { if ('wakeLock' in navigator && !wakeLock) 
 $('claveOk').onclick = entrar;
 $('clave').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
 $('volver').onclick = () => { claseAbierta = null; ir('vInicio'); pintarInicio(); };
-$('exito').onclick = cerrarExito;
+$('exito').addEventListener('touchstart', e => { empezarToque(); tactiles = tactilesEnTarjeta(e); pausarCuenta(); }, { passive:true });
+['touchend', 'touchcancel'].forEach(ev => $('exito').addEventListener(ev, e => { tactiles = tactilesEnTarjeta(e); terminarToque(); }, { passive:true }));
+$('exito').addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch') return;             // lo llevan los touch*
+  empezarToque(); dedos.add(e.pointerId);
+  try { $('exito').setPointerCapture(e.pointerId); } catch (_) {}
+  pausarCuenta();
+});
+['pointerup', 'pointercancel'].forEach(ev => $('exito').addEventListener(ev, e => { if (dedos.delete(e.pointerId)) terminarToque(); }));
+$('exito').addEventListener('contextmenu', e => e.preventDefault());   // Android: la presión larga no abre menú
+$('exito').addEventListener('dragstart', e => e.preventDefault());
+$('exito').onclick = () => { if (toqueLargo) { toqueLargo = false; return; } cerrarExito(); };
 $('q').oninput = buscar;
 $('noregBtn').onclick = () => $('veloNoreg').classList.add('abierto');
 $('noregCerrar').onclick = () => $('veloNoreg').classList.remove('abierto');
@@ -1180,8 +1245,19 @@ $('rPedir').onclick = async () => {
 };
 $('veloReservar').addEventListener('click', e => { if (e.target.id === 'veloReservar') $('veloReservar').classList.remove('abierto'); });
 ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
+// Olmo (9-nov): leer con el dedo en la pantalla también cuenta como actividad (sobre todo en «Mi cuenta»). El pointerdown
+// solo llega al primer toque y el navegador cancela el puntero en cuanto empieza a desplazarse, así que se escuchan los
+// eventos táctiles (siguen llegando mientras el dedo se mueve) y el scroll de cualquier contenedor (fase de captura; incluye
+// el que sigue por inercia). Con el dedo quieto sobre la pantalla tampoco se cierra, pero solo hasta TOPE_DEDO: si algo se
+// queda recargado en la tablet, los datos de la clienta no se quedan a la vista.
+const TOPE_DEDO = 180000;
+let dedosAbajo = 0;
+['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(ev => document.addEventListener(ev, e => { dedosAbajo = e.touches.length; ultimoToque = Date.now(); }, { passive:true, capture:true }));
+document.addEventListener('scroll', () => { ultimoToque = Date.now(); }, { passive:true, capture:true });
+document.addEventListener('wheel', () => { ultimoToque = Date.now(); }, { passive:true, capture:true });
 setInterval(() => {                                          // inactividad: vuelve al inicio
-  const quieto = Date.now() - ultimoToque;
+  const sinTocar = Date.now() - ultimoToque;
+  const quieto = dedosAbajo > 0 && sinTocar < TOPE_DEDO ? 0 : sinTocar;   // dedo puesto = sigue leyendo
   if (claseAbierta && quieto > 45000 && !$('exito').classList.contains('abierto')) { claseAbierta = null; ir('vInicio'); pintarInicio(); }
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
