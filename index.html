@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Ez0tPdn3Oy8aWcbl35cH9Ru6abLDo4dVqPsiK5GBqk=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RsiXIBJF8A+qCNvDdHir4WcpnMjgArbmpzQMkeyXPBw=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,6 +42,13 @@ input{font:inherit;font-size:20px;-webkit-user-select:text;user-select:text}
 .red{position:absolute;top:18px;right:24px;font-size:13px;color:var(--gris);display:flex;align-items:center;gap:6px}
 .punto{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .punto.off{background:var(--alerta)}
+/* Refrescar y pantalla completa junto a «En línea» (Olmo, 9-nov): en pantalla completa no hay barra del navegador. */
+.icono-red{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:none;color:var(--gris);padding:0}
+.icono-red svg{width:19px;height:19px;display:block}
+.icono-red:active{background:var(--arena-suave)}
+.icono-red[hidden]{display:none}
+.icono-red.gira svg{animation:gira .8s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
 
 main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;max-width:1080px;margin:0 auto}
 .vista{display:none;flex-direction:column;align-items:center;gap:22px;animation:entra .22s ease-out;width:100%}
@@ -249,7 +256,10 @@ button.fila-r:active{background:var(--arena-suave)}
 <body>
 
 <header class="top">
-  <div class="red"><span class="punto" id="punto"></span><span id="estadoTxt"></span><button class="noreg" id="noregBtn" hidden></button></div>
+  <div class="red"><span class="punto" id="punto"></span><span id="estadoTxt"></span>
+    <button class="icono-red" id="btnRefrescar" aria-label="Refrescar la pantalla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></button>
+    <button class="icono-red" id="btnPantalla" aria-label="Pantalla completa" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+    <button class="noreg" id="noregBtn" hidden></button></div>
   <img class="logo" src="https://static.wixstatic.com/media/9d6afa_882d2a3243604a24a1b6a47b0ad5fdbf~mv2.png/v1/fill/w_400,h_197/logo.png" alt="Hera Zenter" id="logo">
   <div class="reloj"><span id="fecha"></span> · <b id="hora">--:--</b></div>
 </header>
@@ -1218,7 +1228,24 @@ $('noregOk').addEventListener('pointerdown', () => { $('noregOk').textContent = 
 ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $('noregOk').addEventListener(ev, () => { clearTimeout(presion); if ($('veloNoreg').classList.contains('abierto')) $('noregOk').textContent = 'Mantén presionado: ya los marqué'; }));
 const fs = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
 const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
-if (fs && !standalone) { $('pantallaCompleta').hidden = false; $('pantallaCompleta').onclick = () => fs.call(document.documentElement); }
+const enPantallaCompleta = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function pedirPantallaCompleta(){ try { const p = fs.call(document.documentElement); if (p && p.catch) p.catch(() => {}); } catch (_) {} }
+// El ícono solo sale fuera de pantalla completa (no se ofrece salir: la tablet es de las clientas). Al salir (gesto del
+// sistema, o al refrescar, que la quita) vuelve a aparecer.
+function pintarPantalla(){ $('btnPantalla').hidden = !fs || standalone || enPantallaCompleta(); }
+if (fs && !standalone) { $('pantallaCompleta').hidden = false; $('pantallaCompleta').onclick = pedirPantallaCompleta; }
+$('btnPantalla').onclick = pedirPantallaCompleta;
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, pintarPantalla));
+pintarPantalla();
+// Refrescar = volver a cargar la página (trae la versión nueva y los datos). Los check-ins pendientes viven en el almacén
+// del navegador y se mandan solos al volver; si el navegador no guarda nada, no se recarga (se perderían): solo se piden
+// los datos otra vez.
+$('btnRefrescar').onclick = async () => {
+  const b = $('btnRefrescar'); if (b.classList.contains('gira')) return;
+  b.classList.add('gira');
+  if (almacenOk || !leerCola().length) { location.reload(); return; }
+  try { await cargar(); } finally { b.classList.remove('gira'); }
+};
 if (!almacenOk) $('sinAlmacen').hidden = false;
 if (!DEMO) $('manifest').href = 'manifest.json';
 
