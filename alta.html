@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yJV19c3vQNRPHXNYDHIyjHdk+khFLktsAyjJ49ihajE=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OckpnzsuyGrongOWScY39pmdnkKcyYiBCWPz7vePNFA=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -443,6 +443,28 @@ body.sin-scroll{overflow:hidden}
 .lg-n.ppc b{color:#34474F}
 .lg-n span{font-size:16px;color:var(--texto)}
 @media (max-width:420px){ .lg-n b{font-size:32px} .lg-n{padding:10px 12px} }
+/* Promos fase 1 (9-nov): Oferta de Bienvenida y Dúo/Tribu. Discretas: no compiten con las dos fichas ni con la franja de
+   pago por adelantado (cálidas, una línea; las condiciones en la hoja de siempre). Nunca tocan el precio grande. */
+.promos{display:flex;flex-wrap:wrap;gap:10px;width:100%}
+.bien-franja{flex:3 1 380px;display:flex;align-items:center;gap:12px;text-align:left;background:var(--terracota-suave);border:1.5px solid #E8C9B4;border-radius:14px;padding:12px 16px;min-height:56px}
+.bien-franja .t{flex:1;font-size:18px;font-weight:500;color:var(--carbon);line-height:1.3}
+.bien-franja .v{font-size:16px;color:var(--terracota);white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
+.grupo-btn{flex:1 1 200px;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid var(--crema);border-radius:14px;padding:12px 16px;font-size:18px;font-weight:500;color:var(--carbon);min-height:56px}
+.bien-franja:active,.grupo-btn:active{transform:scale(.99);background:var(--arena-suave)}
+.tile-regalo{font-size:16px;font-weight:500;color:var(--verde-texto);margin-top:2px}
+.emp-regalo{font-size:18px;line-height:1.35;text-align:center;color:var(--verde-texto)}
+.hoja table{width:100%;border-collapse:collapse;font-size:18px}
+.hoja th,.hoja td{text-align:left;padding:8px 6px;border-top:1px solid var(--arena)}
+.hoja th{font-size:16px;font-weight:500;color:var(--gris);border-top:0}
+.hoja td b{font-family:Poppins;font-weight:600;color:var(--verde-texto)}
+.hoja .ej{background:var(--arena-suave);border-radius:12px;padding:10px 14px}
+.bien-caja{background:var(--verde-suave);border:1.5px solid #B9D3BF;border-radius:14px;padding:12px 18px;font-size:19px;line-height:1.4;max-width:640px;width:100%;text-align:left;color:var(--verde-texto)}
+.bien-caja small{display:block;font-size:16px;color:var(--texto);margin-top:4px}
+.bien-recep{font-size:16px;color:var(--gris);text-decoration:underline;text-underline-offset:3px;padding:10px 6px;min-height:44px}
+.bien-ok{font-size:16px;color:var(--verde-texto)}
+.res-aviso{background:#FFF7E8;border:2px solid #E2C27A;border-radius:14px;padding:14px 18px;font-size:19px;line-height:1.4;max-width:640px;width:100%;text-align:left;color:var(--texto)}
+.casilla{display:flex;align-items:center;gap:12px;font-size:19px;color:var(--carbon);background:#fff;border:1.5px solid var(--crema);border-radius:14px;padding:12px 16px;max-width:640px;width:100%;text-align:left;min-height:56px}
+.casilla input{width:26px;height:26px;flex:none;accent-color:var(--terracota)}
 </style>
 </head>
 <body>
@@ -614,6 +636,7 @@ body.sin-scroll{overflow:hidden}
     <div class="precio" id="resPrecio"></div>
     <div class="aviso-prueba" id="resPrueba" hidden></div>
     <div class="refuerzo" id="resRefuerzo" hidden></div>
+    <div class="bien-caja" id="resBien" hidden></div><!-- promos: el regalo, arriba (lo decide el servidor) -->
     <div class="correo-app res-correo" id="resCorreoCaja"><small data-tx="resumen.correo"></small><div class="correo-grande grande" id="resCorreo"></div>
       <button class="btn sec" id="resCambiar" data-tx="resumen.cambiarCorreo" hidden></button></div>
     <div class="tarjeta" id="resFilas"></div>
@@ -622,9 +645,25 @@ body.sin-scroll{overflow:hidden}
       <input class="campo" id="inicio" type="date">
     </div>
     <div class="letra tarjeta" id="resLetra"></div>
+    <!-- Promos fase 1: el botón de recepción (sin derecho), la casilla de grupo y el aviso que reemplaza a «Pagar» -->
+    <button class="bien-recep" id="resBienRecep" hidden></button>
+    <label class="casilla" id="resGrupoCaja" hidden><input type="checkbox" id="resGrupo"><span id="resGrupoTxt"></span></label>
+    <div class="res-aviso" id="resAviso" hidden></div>
     <p class="nota" id="resSeguro"></p>
     <div class="error" id="resError"></div>
     <button class="btn pri" id="pagar"></button>
+    <button class="btn sec" id="resVolver" hidden></button>
+  </section>
+
+  <!-- Promos fase 1: PIN de una recepcionista para «hoy tomó su clase muestra» (lo valida el servidor) -->
+  <section class="vista" id="vMuestra">
+    <h1 id="muTitulo"></h1>
+    <p id="muTexto"></p>
+    <div class="pin-puntos" id="muPuntos"></div>
+    <div class="teclado" id="muTeclado"></div>
+    <div class="error" id="muError"></div>
+    <p class="nota" id="muNota"></p>
+    <button class="btn sec" id="muVolver"></button>
   </section>
 
   <!-- 4. YA PAGÓ: la app -->
@@ -701,7 +740,7 @@ const TEXTOS_ALTA = {
   // Orden (v3): primero el plan (sin dar datos), luego el correo (y los 4 dígitos o el registro), luego pagar.
   pasos: { vPin: 'Recepción', vTipo: 'Paso 1 · tu plan', vElemento: 'Paso 1 · elemento', vClases: 'Paso 1 · clases', vDuracion: 'Paso 1 · cada cuánto',
     vEmpuje: 'Paso 1 · tu plan', vLargo: 'Paso 1 · tu plan', vCorreo: 'Paso 2 · tu correo', vConfirma: 'Paso 2 · tu correo', vCel: 'Paso 2 · tu cuenta', vRegistro: 'Paso 2 · tus datos', vHola: 'Paso 2 · tu cuenta',
-    vResumen: 'Paso 3 · revisar y pagar', vApp: 'Paso 4 · la app' },
+    vResumen: 'Paso 3 · revisar y pagar', vMuestra: 'Paso 3 · revisar y pagar', vApp: 'Paso 4 · la app' },
   venta: 'Venta de {vendedora}',
   barra: { cancelar: 'Cancelar', terminar: 'Terminar' },
 
@@ -900,6 +939,80 @@ const TEXTOS_ALTA = {
     resumenRecurrente: '🧪 PLAN DE PRUEBA: solo para validar el cobro. El aviso a #recepcion dirá PRUEBA. Al terminar la prueba hay que CANCELAR esta orden en Wix para que no se vuelva a cobrar.'
   },
 
+  // Promos fase 1 (9-nov): Oferta de Bienvenida (PDF de Hera). Cuántas clases regala cada plan lo calcula el backend
+  // (regaloBienvenida en alta.js) y llega como `regalo` en el catálogo: aquí no se escribe la tabla a mano. Nada de esto
+  // cambia el precio grande ni el «desde». El derecho lo decide el servidor (Wix o el PIN de recepción), nunca la tablet.
+  bienvenida: {
+    franja: '🎁 Si te inscribes hoy, el día de tu clase muestra, te regalamos clases',
+    franjaVer: 'Ver condiciones ›',
+    titulo: '🎁 Oferta de bienvenida',
+    intro: 'Si te inscribes el mismo día de tu clase muestra, te regalamos clases:',
+    colClases: 'Clases', colPaquete: 'Paquete', colMembresia: 'Membresía mensual',
+    filaClases: '{clases} clases', celda: '+{n} de regalo', sinRegalo: '—',
+    usar: 'Las clases de regalo se usan en los próximos 2 meses.',
+    soloHoy: 'Solo el día de tu clase muestra.',
+    aplica: 'Aplica en {cantidades} clases.',
+    noAplica: 'No aplica en planes trimestrales, semestrales, ilimitados, AGUA Serena ni de 24 clases.',
+    // En las fichas de «¿cuántas clases?» y «¿cada cuánto?», debajo del número y en chico.
+    ficha: '+{n} de regalo',
+    // «¿y si mejor membresía?»: solo si la membresía regala más que el paquete.
+    empuje: 'Y si hoy es tu clase muestra, la membresía te regala más: *+{mem}* clases en lugar de *+{paq}*.',
+    // Resumen, si el servidor dice que tiene derecho (lo confirmó Wix o recepción con su PIN).
+    resumen: '🎁 Hoy te llevas *+{n} clases de regalo* · úsalas en los próximos 2 meses',
+    // Con derecho y «Venimos en grupo» marcada: la tablet no cobra (ni avisa del bono), así que se le pide recordarlo.
+    enGrupo: '🎁 Tu regalo de bienvenida (*+{n} clases*) también aplica: recuérdaselo a recepción al armar tu grupo.',
+    // Letra chica y aclarado: el precio grande NO cambia.
+    primerMes: 'Tu primer mes: {porClase} por clase con tu regalo ({precio} entre {total} clases, si las usas todas ese mes).',
+    // Para recepción, discreto, cuando Wix no lo confirmó solo (también si es nueva).
+    boton: 'Recepción: hoy tomó su clase muestra',
+    confirmo: '✓ Lo confirmó {quien}',
+    pinTitulo: 'Oferta de bienvenida',
+    pinTexto: 'Recepción: escribe *tu* PIN para confirmar que hoy tomó su clase muestra.',
+    pinNota: 'El aviso de la venta dirá que tú lo confirmaste.',
+    pinVolver: 'Volver sin confirmar',
+    // Con el anticipo de $500 vivo, la tablet no cobra (el anticipo se descuenta del plan y eso lo hace recepción).
+    bloqueo: 'Tienes tu oferta apartada con tu anticipo de $500. Termina tu inscripción con recepción para que se te descuente.',
+    volver: 'Volver al check-in',
+    errores: { verif: 'Pasó mucho tiempo. Toca «Volver sin confirmar»: le pediremos confirmar otra vez que es ella.', red: 'Sin conexión. Intenta otra vez.' }
+  },
+
+  // Promos fase 1 (9-nov): Dúo y Tribu Hera, SOLO informativa (todavía no hay cupones: espera la decisión GRU1 de Olmo). El
+  // ejemplo sale del catálogo real (la membresía de `ejemplo`, precio de lista y con cada %, redondeado a pesos).
+  grupo: {
+    boton: '👯 ¿Vienen juntas? Dúo y Tribu Hera',
+    titulo: '👯 Dúo y Tribu Hera',
+    intro: 'Si se inscriben juntas, cada una tiene descuento en *su* membresía mensual de 8 clases o más, todos los meses mientras siga activa.',
+    escalones: [
+      { pct: 10, quienes: 'Para 2', nombre: 'Dúo Hera, p. ej. mamá e hija' },
+      { pct: 12, quienes: 'Para 3' },
+      { pct: 15, quienes: 'Para 4' },
+      { pct: 20, quienes: 'Para 5 o más', nombre: 'Tribu Hera' }
+    ],
+    escalon: '{quienes}: *{pct} %*', escalonNombre: ' ({nombre})',
+    reglasTit: 'Cómo funciona',
+    reglas: [
+      'Al menos la mitad del grupo son inscripciones nuevas o regresos de 60 días o más (de 5, al menos 3).',
+      'El % queda fijo desde que se arma el grupo.',
+      'Después pueden sumarse amigas nuevas con el mismo %, hasta 8.',
+      'Es compatible con la Oferta de Bienvenida.',
+      'Regalo de permanencia: una clase de cortesía al cumplir 3 meses juntas.'
+    ],
+    noAplicaTit: 'No aplica',
+    noAplica: 'En membresías de 4 clases, paquetes, clases sueltas, TotalPass, Wellhub, Fitpass ni planes de 3, 6 o 12 meses.',
+    cancelaTit: 'Si cancelas',
+    cancela: 'Si cancelas (o se cancela por falta de pago), pierdes tu descuento. Puedes volver a un grupo después de 60 días.',
+    ejemplo: { elemento: 'FUEGO', clases: 12 },
+    ejemploTit: 'Ejemplo: {plan}',
+    ejemploLista: 'Precio de lista: *{precio}* cada mes',
+    ejemploFila: '{quienes} (−{pct} %): *{precio}* cada mes, cada una',
+    ejemploNota: 'Con los precios de hoy, redondeado a pesos.',
+    // Resumen: solo si eligió una membresía mensual de 8 clases o más. Marcada, la tablet NO cobra (así no se cobra el
+    // precio completo que luego habría que reembolsar).
+    casilla: 'Venimos en grupo (Dúo o Tribu)',
+    aviso: 'Recepción arma tu grupo y te da tu código de descuento para inscribirte desde tu celular.',
+    volver: 'Volver al check-in'
+  },
+
   empuje: {
     titulo: 'Antes de pagar: ¿y si mejor membresía? 💛',
     // v6 (Olmo, 9-nov: «la información está bien, pero la siento difícil de leer»): por bloques. Los precios por clase llevan
@@ -1056,7 +1169,10 @@ const TEXTOS_ALTA = {
     noSeCobro: 'No se cobró nada. Elige otro plan o pasa a recepción.',
     verif: 'Pasó mucho tiempo. Por seguridad, confirma otra vez que eres tú: sigues con el mismo plan.',
     errores: { ocupado: 'Hay muchos intentos fallidos. Espera unos minutos.', demasiadas: 'Demasiados intentos. Pasa a recepción.',
-      plan: 'Ese plan ya no está a la venta. Toca Cancelar y empieza otra vez.', inicio: 'Revisa la fecha de inicio (de hoy a 60 días).' },
+      plan: 'Ese plan ya no está a la venta. Toca Cancelar y empieza otra vez.', inicio: 'Revisa la fecha de inicio (de hoy a 60 días).',
+      bloqueo: 'Tienes tu oferta apartada con tu anticipo de $500. Termina tu inscripción con recepción para que se te descuente.',
+      // Revisión 9-nov: Wix no dejó revisar si tiene el anticipo de $500; mejor no cobrar que cobrar de más.
+      reintenta: 'No pudimos revisar tus planes en este momento. No se cobró nada: intenta otra vez en un minuto o pasa con recepción.' },
     red: 'No se pudo preparar el pago. Revisa el internet e intenta otra vez.'
   },
   correoApp: {
@@ -1247,12 +1363,13 @@ let A = null;                // la alta en curso
 let pila = [];               // vistas para «Atrás»
 let ultimoToque = Date.now(), finTimer = null, reenvioTimer = null, appTimer = null, correoOtraTimer = null;
 function nuevaAlta(){ const v = A && A.vendedora; A = { vendedora: v || null, email: '', sugerencia: null, correoConfirmado: false, reto: null, ult4: '', fallosCel: 0,
-  verif: null, verifViejo: null, corrige: null, existe: false, nombreV: '', planes: [], pideColonia: false, tipo: null, elemento: null, clases: null, plan: null, repetido: false, recibo: null }; }
+  verif: null, verifViejo: null, corrige: null, existe: false, nombreV: '', planes: [], pideColonia: false, tipo: null, elemento: null, clases: null, plan: null, repetido: false, recibo: null,
+  bienvenida: null, grupo: false }; }   // promos fase 1: lo que el SERVIDOR dijo de la Oferta de Bienvenida (solo para enseñar) y la casilla de grupo
 function limpiarCampos(){ ['correo','regNombre','regApellido','regCelular','regColonia','regDia','regMes','regAnio','holaColonia','inicio'].forEach(id => { if ($(id)) $(id).value = ''; });
   ['correoError','confError','celError','regError','holaError','resError','pinError','correoMsg','regCelVes'].forEach(id => { if ($(id)) $(id).textContent = ''; });
   $('quien').textContent = ''; }
 
-const SIN_PILA = ['vCargando','vClave','vFin','vBloqueo','vHola','vPin'];
+const SIN_PILA = ['vCargando','vClave','vFin','vBloqueo','vHola','vPin','vMuestra'];
 function ir(v, { apilar = true } = {}){
   const actual = document.querySelector('.vista.activa');
   if (apilar && actual && actual.id !== v && !SIN_PILA.includes(actual.id) && !(v === 'vResumen' && VISTAS_CORREO.includes(actual.id))) pila.push(actual.id);
@@ -1441,7 +1558,7 @@ async function verificarCel(){
   try {
     // `previo`: el «verif» que se venció (si se registró aquí, sus notas para recepción no se pierden).
     const j = await api('altaVerificar', { reto: A.reto, ult4, ...(A.verifViejo ? { previo: A.verifViejo } : {}) });
-    A.verif = j.verif; A.existe = !j.nueva; A.nombreV = j.nombre || ''; A.planes = j.planes || []; A.pideColonia = !!j.pideColonia;
+    A.verif = j.verif; A.existe = !j.nueva; A.nombreV = j.nombre || ''; A.planes = j.planes || []; A.pideColonia = !!j.pideColonia; A.bienvenida = j.bienvenida || null;
     A.reto = null; A.ult4 = ''; A.verifViejo = null;
     sinCorreoEnPila();                                 // «Atrás» desde el resumen regresa al plan, no al correo
     if (j.nueva) irResumen(); else irHola();           // recién registrada: de regreso a su resumen
@@ -1532,7 +1649,7 @@ async function registroOk(){
   registrando = true; $('regOk').disabled = true; $('regError').textContent = '';
   try {
     const j = await api('altaRegistro', { reto: A.reto, correoConfirmado: true, nombre, apellido, telefono: tel, colonia, cumple, ...(A.corrige ? { corrige: A.corrige } : {}) });
-    A.verif = j.verif; A.existe = false; A.nombreV = j.nombre || `${nombre} ${apellido}`; A.planes = []; A.reto = null; A.corrige = null;
+    A.verif = j.verif; A.existe = false; A.nombreV = j.nombre || `${nombre} ${apellido}`; A.planes = []; A.reto = null; A.corrige = null; A.bienvenida = j.bienvenida || null;
     sinCorreoEnPila(); irResumen();
   } catch (e) {
     if (e.auth) return;
@@ -1646,7 +1763,7 @@ function irTipo(){
   $('tipoLista').querySelectorAll('[data-t]').forEach(b => b.onclick = () => { A.tipo = b.dataset.t; irElemento(); });
   // v4: el botón aparte de trimestrales y semestrales (de todos los elementos: aún no elige) y, si existe, el plan de prueba.
   const pr = CAT.prueba;
-  $('tipoExtra').innerHTML = botonLargo(null) + (pr ? `<div class="carta prueba"><div class="grupo">${T('prueba.seccion')}</div><h2>${esc(pr.nombre)}</h2>
+  $('tipoExtra').innerHTML = botonLargo(null) + bloquePromos() + (pr ? `<div class="carta prueba"><div class="grupo">${T('prueba.seccion')}</div><h2>${esc(pr.nombre)}</h2>
     <div>${pr.recurrente ? T('prueba.cobroRecurrente', { precio: pesos(pr.precio), cada: cadaDe(pr.cicloTexto) }) : esc(precioCon(pr))}</div><div class="chica">${T('prueba.aviso')}</div><button class="btn sec" data-prueba="1">${T('prueba.boton')}</button></div>` : '');
   conectarLargo($('tipoExtra'));
   const bp = $('tipoExtra').querySelector('[data-prueba]');
@@ -1879,7 +1996,7 @@ function irClases(){
       if (Number.isFinite(ppc(m))) porClase = `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(ppc(m)) })}</span>`;
       precio = `<small>${esc(precioCon(m))}</small>`;
     }
-    return `<button class="op tile${top ? ' destacada' : ''}${top && hayLargo ? ' sello2' : ''}" data-g="${g}" aria-label="${esc(textoClases(g, xs))}">${top ? `<span class="mejor">${sello}</span>` : ''}${num}<span class="tile-sep"></span>${porClase}${precio}${notaFaltan(xs)}</button>`;
+    return `<button class="op tile${top ? ' destacada' : ''}${top && hayLargo ? ' sello2' : ''}" data-g="${g}" aria-label="${esc(textoClases(g, xs))}">${top ? `<span class="mejor">${sello}</span>` : ''}${num}${fichaRegalo(regaloDe(opcionesDe(xs)))}<span class="tile-sep"></span>${porClase}${precio}${notaFaltan(xs)}</button>`;
   }).join('');
   $('clasesLista').querySelectorAll('button').forEach(b => b.onclick = () => {
     A.clases = b.dataset.g; const xs = opcionesDe(ps.filter(p => claveClases(p) === A.clases));
@@ -1906,7 +2023,7 @@ function irDuracion(xs){
   $('durLista').innerHTML = xs.map((p, i) => { const top = ppc(p) === mejor;
     // «$6,480 cada 6 meses (se cobra por adelantado)»: que no se lea como cobro mensual (revisión 9-nov).
     const cobro = p.tipo === 'membresia' ? Tt('duracion.precio', { precio: pesos(p.precio), cada: cadaDe(p.cicloTexto) }) + (p.familia && p.familia !== 'mensual' ? ` (${Tt('duracion.adelantado')})` : '') : pesos(p.precio);
-    return `<button class="op tile${top ? ' destacada' : ''}" data-i="${i}">${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}<span class="tile-num txt">${esc(p.etiquetaDuracion)}</span>${conNombre ? `<small class="nombre">${esc(p.nombre)}</small>` : ''}<span class="tile-sep"></span>${p.precioPorClase ? `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}<small>${esc(cobro)}</small>${notaFaltan([p])}</button>`; }).join('');
+    return `<button class="op tile${top ? ' destacada' : ''}" data-i="${i}">${top ? `<span class="mejor">${T('clases.mejor')}</span>` : ''}<span class="tile-num txt">${esc(p.etiquetaDuracion)}</span>${conNombre ? `<small class="nombre">${esc(p.nombre)}</small>` : ''}${fichaRegalo(p.regalo)}<span class="tile-sep"></span>${p.precioPorClase ? `<span class="tile-ppc">${T('clases.porClase', { porClase: pesos(p.precioPorClase) })}</span>` : ''}<small>${esc(cobro)}</small>${notaFaltan([p])}</button>`; }).join('');
   $('durLista').querySelectorAll('button').forEach(b => b.onclick = () => elegirPlan(xs[+b.dataset.i]));
   ir('vDuracion');
 }
@@ -1938,6 +2055,7 @@ function irEmpuje(){
       <span class="emp-flecha" aria-hidden="true">→</span>
       <div class="emp-lado emp-mem"><span class="emp-et">${T('empuje.membresia', d)}</span><span class="emp-pc">${T('empuje.porClaseMem', d)}</span></div></div>
     <div class="emp-ahorro">${e.conMesAnio ? `<b>${T('empuje.ahorro', d)}</b><small>${T('empuje.ahorroClase', d)}</small>` : `<b>${T('empuje.ahorroSoloClase', d)}</b>`}</div>
+    ${p.regalo > 0 && m.regalo > p.regalo ? `<p class="emp-regalo">${T('bienvenida.empuje', { mem: m.regalo, paq: p.regalo })}</p>` : ''}
     <p class="emp-cobro">${T('empuje.cobro', { precio: pesos(m.precio), cada: cadaDe(m.cicloTexto) })}</p>
     ${cond ? enlaceHoja('empuje', Tt('largo.condiciones'), cond) : ''}`;
   $('empCambiar').textContent = Tt('empuje.cambiar'); $('empSeguir').textContent = Tt('empuje.seguir');
@@ -2002,16 +2120,17 @@ function irResumen(){
   $('resLetra').hidden = !$('resLetra').innerHTML;
   $('resSeguro').textContent = Tt('resumen.seguro'); $('pagar').textContent = Tt('resumen.pagar');
   $('resError').textContent = ''; $('pagar').disabled = false;
+  pintarPromos();
   ir('vResumen');
 }
 $('inicio').addEventListener('change', () => { if (A && A.plan) pintarFilas(); });
 $('resCambiar').onclick = () => {
   if (!A || A.existe) return;
-  A.corrige = A.verifViejo = A.verif || A.corrige; A.verif = null;   // si vuelve a poner el mismo correo, sus notas siguen
+  A.corrige = A.verifViejo = A.verif || A.corrige; A.verif = null; A.bienvenida = null;   // si vuelve a poner el mismo correo, sus notas siguen
   irCorreo(); pila = pila.filter(v => v !== 'vResumen');            // «Atrás» no regresa a un resumen sin verificación
 };
 async function pagar(){
-  const p = A.plan; if (!p || !A.verif || $('pagar').disabled) return;
+  const p = A.plan; if (!p || !A.verif || $('pagar').disabled || noSeCobra()) return;   // promos: anticipo vivo o grupo
   $('pagar').disabled = true; $('resError').textContent = '';
   const datos = { verif: A.verif, planId: p.planId };       // la vendedora la pone el backend (sello «venta»)
   if (!$('resInicio').hidden && $('inicio').value) datos.inicio = $('inicio').value;
@@ -2035,11 +2154,127 @@ async function pagar(){
     }
     // La verificación venció (20 min): no se pierde el plan. Se busca otra vez su correo: como su contacto ya existe
     // (también si se acaba de registrar), va por los 4 dígitos y de ahí regresa a este resumen.
+    // Promos: el servidor encontró el anticipo de $500 vivo: la tablet no cobra (lo termina recepción).
+    if (er === 'bloqueo') { A.bienvenida = { ...(A.bienvenida || {}), bloqueo: true }; pintarPromos(); return; }
     if (er === 'verif') { A.verifViejo = A.verif; A.verif = null; A.reto = null; A.ult4 = ''; $('resError').textContent = Tt('pagar.verif'); setTimeout(() => { if (A && !A.verif) buscarCorreo(); }, 1800); return; }
     $('resError').textContent = Tt(TX.pagar.errores[er] ? 'pagar.errores.' + er : 'pagar.red');
   }
 }
 $('pagar').onclick = pagar;
+
+/* --------------------------------------------------------------- promos fase 1: Oferta de Bienvenida y Dúo/Tribu Hera
+   La tablet solo ENSEÑA: cuántas clases regala cada plan (`regalo`) lo pone el backend en el catálogo, y quién tiene
+   derecho lo dice el servidor (Wix al verificar, o recepción con su PIN en altaBienvenidaPin); el pase lleva el derecho
+   sellado y el regalo se recalcula ahí con el plan. Nada de esto cambia el precio grande ni el «desde». Fase 1: no se crean
+   órdenes de bono ni cupones (recepción asigna el bono con el aviso de Slack; el grupo lo arma recepción). */
+/** La tabla del regalo, con los `regalo` que el backend le puso a cada plan: [[clases, { paquete, membresia }], …]. */
+function tablaRegalo(){
+  const m = new Map();
+  for (const p of CAT.planes) if (p.regalo > 0 && p.clases) { const f = m.get(p.clases) || {}; if (f[p.tipo] == null) f[p.tipo] = p.regalo; m.set(p.clases, f); }
+  return [...m].sort((a, b) => a[0] - b[0]);
+}
+/** El regalo de una ficha solo si todas sus opciones regalan lo mismo (AGUA 18 junta el de 1 mes y el Serena, que no regala:
+ *  ahí se dice en la ficha de cada vigencia). */
+const regaloDe = xs => { const rs = [...new Set(xs.map(p => p.regalo || 0))]; return rs.length === 1 ? rs[0] : 0; };
+const fichaRegalo = n => (n > 0 ? `<small class="tile-regalo">${T('bienvenida.ficha', { n })}</small>` : '');
+/** Dúo/Tribu: solo membresía MENSUAL de 8 clases o más (no paquetes, ni de 4, ni trimestral o semestral, ni la de prueba). */
+const esDeGrupo = p => !!p && !p.prueba && p.tipo === 'membresia' && p.duracion === 'mensual' && p.clases >= 8;
+/** Ejemplo del grupo con el precio REAL de la membresía de TX.grupo.ejemplo (FUEGO 12): de lista y con cada %, a pesos. */
+function ejemploGrupo(){
+  const G = TX.grupo || {}, e = G.ejemplo || {};
+  const p = CAT.planes.find(x => esDeGrupo(x) && x.elemento === e.elemento && x.clases === e.clases);
+  return p ? { nombre: p.nombre, precio: p.precio, filas: (G.escalones || []).map(s => ({ quienes: s.quienes, pct: s.pct, precio: pesos(Math.round(p.precio * (100 - s.pct) / 100)) })) } : null;
+}
+/** Hojas de condiciones de las dos promos (mismo molde que «ⓘ Condiciones»). */
+function hojasPromos(){
+  HOJAS.delete('bienvenida');
+  const tabla = tablaRegalo();
+  if (tabla.length) {
+    const celda = n => (n ? `<b>${T('bienvenida.celda', { n })}</b>` : T('bienvenida.sinRegalo'));
+    HOJAS.set('bienvenida', { titulo: Tt('bienvenida.titulo'), cuerpo: `<p>${T('bienvenida.intro')}</p>
+      <table><thead><tr><th>${T('bienvenida.colClases')}</th><th>${T('bienvenida.colPaquete')}</th><th>${T('bienvenida.colMembresia')}</th></tr></thead>
+      <tbody>${tabla.map(([c, f]) => `<tr><td>${T('bienvenida.filaClases', { clases: c })}</td><td>${celda(f.paquete)}</td><td>${celda(f.membresia)}</td></tr>`).join('')}</tbody></table>
+      ${ul([T('bienvenida.usar'), T('bienvenida.soloHoy'), T('bienvenida.aplica', { cantidades: lista(tabla.map(x => String(x[0]))) }), T('bienvenida.noAplica')])}` });
+  }
+  const G = TX.grupo || {}, ej = ejemploGrupo();
+  HOJAS.set('grupo', { titulo: Tt('grupo.titulo'), cuerpo: `<p>${T('grupo.intro')}</p>
+    ${ul((G.escalones || []).map(e => T('grupo.escalon', e) + (e.nombre ? T('grupo.escalonNombre', e) : '')))}
+    <h3>${T('grupo.reglasTit')}</h3>${ul((G.reglas || []).map((_, i) => T('grupo.reglas.' + i)))}
+    <h3>${T('grupo.noAplicaTit')}</h3><p>${T('grupo.noAplica')}</p><h3>${T('grupo.cancelaTit')}</h3><p>${T('grupo.cancela')}</p>
+    ${ej ? `<h3>${T('grupo.ejemploTit', { plan: nombreLimpio(ej.nombre) })}</h3><div class="ej"><p>${T('grupo.ejemploLista', { precio: pesos(ej.precio) })}</p>${ul(ej.filas.map(f => T('grupo.ejemploFila', f)))}<p class="nota">${T('grupo.ejemploNota')}</p></div>` : ''}` });
+}
+/** «¿Membresía o paquete?»: la franja de la Oferta de Bienvenida y el botón de Dúo/Tribu (cada uno abre su hoja). */
+function bloquePromos(){
+  hojasPromos();
+  const bien = HOJAS.has('bienvenida') ? `<button type="button" class="bien-franja" data-hoja="bienvenida"><span class="t">${T('bienvenida.franja')}</span><span class="v">${T('bienvenida.franjaVer')}</span></button>` : '';
+  const grupo = CAT.planes.some(esDeGrupo) ? `<button type="button" class="grupo-btn" data-hoja="grupo">${T('grupo.boton')}</button>` : '';
+  return bien || grupo ? `<div class="promos">${bien}${grupo}</div>` : '';
+}
+/** La tablet no cobra con el anticipo vivo (se descuenta del plan en el panel) ni si viene en grupo (recepción le da su código). */
+const noSeCobra = () => !!(A && A.plan && ((A.bienvenida || {}).bloqueo || (esDeGrupo(A.plan) && A.grupo)));
+/** Resumen: recuadro del regalo (si el servidor dijo que tiene derecho), botón discreto de recepción, casilla de grupo y
+ *  el aviso que reemplaza a «Pagar» cuando no se cobra aquí. */
+function pintarPromos(){
+  const p = A.plan, B = A.bienvenida || {}, reg = p.regalo || 0, bloqueo = !!B.bloqueo;
+  const con = reg > 0 && !!B.derecho && !bloqueo;
+  // En grupo la tablet no cobra y el aviso de Slack (el que pide el bono) no sale: no se promete «hoy te llevas», se le
+  // dice que lo recuerde a recepción al armar el grupo (revisión 9-nov).
+  const enGrupo = esDeGrupo(p) && !!A.grupo;
+  $('resBien').hidden = !con;
+  $('resBien').innerHTML = !con ? '' : enGrupo ? T('bienvenida.enGrupo', { n: reg })
+    + (B.quien ? `<small class="bien-ok">${T('bienvenida.confirmo', { quien: B.quien })}</small>` : '') : T('bienvenida.resumen', { n: reg })
+    + (p.tipo === 'membresia' ? `<small>${T('bienvenida.primerMes', { porClase: pesos(p.precio / (p.clases + reg)), precio: pesos(p.precio), total: p.clases + reg })}</small>` : '')
+    + (B.quien ? `<small class="bien-ok">${T('bienvenida.confirmo', { quien: B.quien })}</small>` : '');
+  $('resBienRecep').hidden = !(reg > 0 && !B.derecho && !bloqueo && A.verif); $('resBienRecep').textContent = Tt('bienvenida.boton');
+  $('resGrupoCaja').hidden = !(esDeGrupo(p) && !bloqueo); $('resGrupoTxt').textContent = Tt('grupo.casilla'); $('resGrupo').checked = !!A.grupo;
+  const aviso = bloqueo ? Tt('bienvenida.bloqueo') : enGrupo ? Tt('grupo.aviso') : '';
+  $('resAviso').hidden = !aviso; $('resAviso').textContent = aviso;
+  $('pagar').hidden = !!aviso; $('resSeguro').hidden = !!aviso;
+  $('resVolver').hidden = !aviso; $('resVolver').textContent = Tt(bloqueo ? 'bienvenida.volver' : 'grupo.volver');
+}
+$('resGrupo').addEventListener('change', () => { if (A && A.plan) { A.grupo = $('resGrupo').checked; pintarPromos(); } });
+$('resVolver').onclick = () => cancelar();
+$('resBienRecep').onclick = () => irMuestra();
+
+/* «Recepción: hoy tomó su clase muestra»: el PIN de una recepcionista (el servidor lo compara con alta_pines con los mismos
+   topes que el de «Nueva venta» y re-sella su verificación). El PIN no se queda en la tablet. */
+let muPin = '', muEnVuelo = false;
+$('muTeclado').innerHTML = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map(k => `<button data-k="${k}" aria-label="${k === '⌫' ? 'Borrar' : k === '✓' ? 'Listo' : k}">${k}</button>`).join('');
+$('muTeclado').querySelectorAll('button').forEach(b => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === '⌫') muPin = muPin.slice(0, -1);
+  else if (k === '✓') { if (muPin.length >= 4) mandarMuestra(); return; }
+  else if (muPin.length < 6) muPin += k;
+  pintarMuestra();
+  if (muPin.length === 6) setTimeout(mandarMuestra, 150);
+});
+function pintarMuestra(){ $('muPuntos').innerHTML = '<i></i>'.repeat(muPin.length); }
+function irMuestra(){
+  if (!A || !A.verif) return;
+  muPin = ''; pintarMuestra();
+  $('muTitulo').textContent = Tt('bienvenida.pinTitulo'); $('muTexto').innerHTML = T('bienvenida.pinTexto');
+  $('muNota').textContent = Tt('bienvenida.pinNota'); $('muVolver').textContent = Tt('bienvenida.pinVolver'); $('muError').textContent = '';
+  ir('vMuestra');
+}
+async function mandarMuestra(){
+  if (muEnVuelo || muPin.length < 4 || !A || !A.verif) return;
+  muEnVuelo = true; $('muError').textContent = '';
+  const intento = muPin; muPin = ''; pintarMuestra();
+  try {
+    const j = await api('altaBienvenidaPin', { verif: A.verif, pin: intento });
+    A.verif = j.verif || A.verif; A.bienvenida = j.bienvenida || A.bienvenida;
+    irResumen();
+  } catch (e) {
+    if (e.auth) return;
+    const er = errDe(e), r = e.resp || {};
+    if (er === 'bloqueo') { A.bienvenida = { ...(A.bienvenida || {}), bloqueo: true }; irResumen(); return; }
+    $('muError').textContent = er === 'pin' ? Tt('pin.pin') + (r.segundos ? ' ' + Tt('pin.espera', { segundos: r.segundos }) : '')
+      : er === 'pin-espera' ? Tt('pin.espera', { segundos: r.segundos || 2 })
+      : er === 'pin-bloqueado' ? Tt('pin.bloqueado', { minutos: r.minutos || 15, hasta: r.hasta || '' })
+      : er === 'sin-pines' ? Tt('pin.sinPines') : er === 'verif' ? Tt('bienvenida.errores.verif') : Tt('bienvenida.errores.red');
+  } finally { muEnVuelo = false; }
+}
+$('muVolver').onclick = () => irResumen();
 
 /* --------------------------------------------------------------- 4. ya pagó: la app con SU correo exacto */
 async function irApp(recibo){
@@ -2214,7 +2449,9 @@ if (!alRegresar()) {
 /* =====================================================================
    Modo demostración (solo en localhost): planes, horarios y personas inventados, sin red.
    Contraseña: demo · PIN de recepción: 1234 · correo que empiece con "ya" = clienta con cuenta (4 dígitos: 1234; pide
-   su colonia); "sincel" = cuenta sin celular; cualquier otro = registro de nueva. Prueba «gmial.com» para ver el
+   su colonia); "sincel" = cuenta sin celular; cualquier otro = registro de nueva. Promos: "yamuestra" = Wix confirma su
+   clase muestra de hoy (regalo en el resumen); "yaanticipo" = anticipo de $500 vivo (no cobra); el PIN de «hoy tomó su
+   clase muestra» también es 1234. Prueba «gmial.com» para ver el
    «¿Quisiste decir…?». Un correo de Gmail enseña el camino «Continuar con Google»; uno que empiece con "sinventa" enseña
    el paso de la app cuando la venta no se alcanzó a confirmar.
    ===================================================================== */
@@ -2252,6 +2489,7 @@ function demoApi(accion, datos){
         return { planId: o.planId, nombre: o.nombre, precio: o.precio, porClase: Math.round(pp), porClaseOtro: Math.round(po), veces: 3, masBarato: si,
           ahorroClase: si ? Math.round(po) - Math.round(pp) : null, ahorroPeriodo: si ? Math.round(o.precio * 3 - t.precio) : null }; };
       if (t) t.largo = { mensual: vs(m), paquete: vs(p), compromiso: '6 meses' };
+      m.regalo = { 4: 2, 8: 3, 12: 4 }[c]; p.regalo = { 4: 1, 8: 2, 12: 3 }[c];   // promos: lo que pondría regaloBienvenida
       planes.push(m, p); if (t) planes.push(t);
     }
     const elementos = Object.fromEntries(ORDEN_EL.map(el => [el, { disciplinas: disc[el], incompletos: [], fuente: 'bookings' }]));
@@ -2285,10 +2523,15 @@ function demoApi(accion, datos){
     demoFallos = (demoFallos || 0);
     if (datos.ult4 !== '1234') { demoFallos++; return falla('verificacion', { segundos: 2, ...(demoFallos >= 2 ? { agotado: true } : {}) }); }
     demoFallos = 0;
-    if (datos.previo) return { ok: true, verif: 'demo-verif', existe: true, nueva: true, nombre: 'Clienta D.', planes: [], pideColonia: false };
-    return { ok: true, verif: 'demo-verif', existe: true, nombre: 'Clienta D.', planes: [{ nombre: 'TIERRA - Paquete 4 Clases', estado: 'activa' }], pideColonia: true };
+    // Promos: «yamuestra…» = Wix confirma su clase muestra de hoy; «yaanticipo…» = tiene el anticipo de $500 vivo.
+    const e = String(datos.reto || '').split('|')[1] || '';
+    const bienvenida = { derecho: /^yamuestra/.test(e), por: /^yamuestra/.test(e) ? 'wix' : null, bloqueo: /^yaanticipo/.test(e) };
+    if (datos.previo) return { ok: true, verif: 'demo-verif', existe: true, nueva: true, nombre: 'Clienta D.', planes: [], pideColonia: false, bienvenida };
+    return { ok: true, verif: 'demo-verif', existe: true, nombre: 'Clienta D.', planes: [{ nombre: 'TIERRA - Paquete 4 Clases', estado: 'activa' }], pideColonia: true, bienvenida };
   });
-  if (accion === 'altaRegistro') return espera(500).then(() => ({ ok: true, verif: 'demo-verif', existe: false, nombre: `${datos.nombre} ${datos.apellido}`, planes: [] }));
+  if (accion === 'altaRegistro') return espera(500).then(() => ({ ok: true, verif: 'demo-verif', existe: false, nombre: `${datos.nombre} ${datos.apellido}`, planes: [], bienvenida: { derecho: false, por: null, bloqueo: false } }));
+  // Promos: el PIN de recepción para «hoy tomó su clase muestra» (el mismo del demo: 1234).
+  if (accion === 'altaBienvenidaPin') return espera(400).then(() => datos.pin === '1234' ? { ok: true, verif: 'demo-verif', bienvenida: { derecho: true, por: 'recepcion', bloqueo: false, quien: 'Recepción Demo' } } : falla('pin'));
   if (accion === 'altaColonia') return espera(300).then(() => ({ ok: true, guardada: true, verif: 'demo-verif' }));
   if (accion === 'altaPase') return espera(500).then(() => ({ ok: true, pase: 'demo', url: 'demo/?alta=demo', base: SITIO }));
   if (accion === 'altaApp') return espera(300).then(() => { const c = demoUltimoCorreo || ('clienta.demo' + '@' + 'gmail.com');
