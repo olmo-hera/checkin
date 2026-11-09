@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RsiXIBJF8A+qCNvDdHir4WcpnMjgArbmpzQMkeyXPBw=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k3pGGMlvOtppAN9ObFJDGFuB065opLaqu7ybDi6bAOs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -189,6 +189,9 @@ button.fila-r:active{background:var(--arena-suave)}
 .exito .cabeza{display:flex;align-items:center;gap:14px;justify-content:center}
 .plan{display:inline-flex;align-items:center;gap:8px;font-size:18px;color:var(--carbon);background:#fff;border-radius:999px;padding:6px 16px 6px 10px;box-shadow:var(--sombra)}
 .exito.abierto{display:flex;animation:sube .22s ease-out}
+/* Vistazo (dedo sostenido en un nombre de la lista): la misma tarjeta, sin palomita ni cuenta atrás; se cierra al soltar. */
+.exito.vistazo .palomita,.exito.vistazo .cuenta-atras,.exito.vistazo #eAyuda{display:none}
+.persona{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .palomita{width:52px;height:52px;border-radius:50%;background:var(--ok);display:grid;place-items:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1);flex:none}
 @keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
 .exito h1{font-size:30px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap}
@@ -622,15 +625,44 @@ function pintarClase(){
     </button>`).join('');
   const cerrada = !checkinAbierto(c, ahoraMs()) && ahoraMs() > new Date(c.inicio).getTime();
   $('ayudaClase').textContent = cerrada ? 'La tolerancia de 10 minutos terminó. Si llegas tarde, pasa a recepción.'
-    : 'Toca tu nombre para hacer check-in. Si te equivocas, tócalo otra vez.';
-  document.querySelectorAll('.persona').forEach(b => b.onclick = () => {
-    const r = c.reservas.find(x => x.id === b.dataset.id); if (!r) return;
-    alternar(r, c);
+    : 'Toca tu nombre para hacer check-in. Si te equivocas, tócalo otra vez. Deja el dedo en tu nombre para ver tus clases.';
+  document.querySelectorAll('.persona').forEach(b => {
+    b.onclick = () => {
+      if (b._vistazo) { b._vistazo = false; return; }  // el clic que llega al soltar un vistazo no hace check-in
+      const r = c.reservas.find(x => x.id === b.dataset.id); if (!r) return;
+      alternar(r, c);
+    };
+    prepararVistazo(b, () => c.reservas.find(x => x.id === b.dataset.id), c);
   });
+}
+/* Vistazo (Olmo, 9-nov): con el dedo sostenido en un nombre se abre su tarjeta (la misma del check-in) SIN hacer check-in,
+   y al soltar se cierra. Táctil con touch* (el navegador cancela los pointer* si el dedo se mueve un poco); si el dedo se
+   desplaza más de MOV_VISTAZO px antes de tiempo es que está recorriendo la lista y no se abre nada. Mouse con pointer*.
+   El aviso de «soltar» se escucha en el propio botón: el toque sigue perteneciendo a él aunque la tarjeta quede encima. */
+const MS_VISTAZO = 450, MOV_VISTAZO = 12;
+// Red de seguridad: si el último dedo se levanta en cualquier parte y quedó un vistazo abierto, se cierra.
+['touchend', 'touchcancel'].forEach(ev => document.addEventListener(ev, e => { if (exitoVistazo && !e.touches.length) cerrarExito(); }, { passive:true, capture:true }));
+function prepararVistazo(b, reserva, c){
+  let t = null, x0 = 0, y0 = 0;
+  const empezar = (x, y) => {
+    b._vistazo = false; x0 = x; y0 = y; clearTimeout(t);
+    t = setTimeout(() => { const r = reserva(); if (!r) return; b._vistazo = true; mostrarExito(r, c, true); }, MS_VISTAZO);
+  };
+  const mover = (x, y) => { if (t && Math.hypot(x - x0, y - y0) > MOV_VISTAZO) { clearTimeout(t); t = null; } };
+  const soltar = () => { clearTimeout(t); t = null; if (b._vistazo && exitoVistazo) cerrarExito(); };
+  b.addEventListener('touchstart', e => { if (e.touches.length === 1) empezar(e.touches[0].clientX, e.touches[0].clientY); }, { passive:true });
+  b.addEventListener('touchmove', e => { if (e.touches[0]) mover(e.touches[0].clientX, e.touches[0].clientY); }, { passive:true });
+  b.addEventListener('touchend', soltar, { passive:true });
+  b.addEventListener('touchcancel', soltar, { passive:true });
+  b.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') empezar(e.clientX, e.clientY); });
+  b.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') mover(e.clientX, e.clientY); });
+  b.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') soltar(); });
+  b.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !b._vistazo) { clearTimeout(t); t = null; } });
+  b.addEventListener('contextmenu', e => e.preventDefault());
 }
 /** Repintar sin comerse un toque: si alguien acaba de tocar, espera un momento. */
 function repintar(){
-  if (Date.now() - ultimoToque < 2000) { clearTimeout(repintar._t); repintar._t = setTimeout(repintar, 2000); return; }
+  if (exitoVistazo || Date.now() - ultimoToque < 2000) { clearTimeout(repintar._t); repintar._t = setTimeout(repintar, 2000); return; }
   if ($('vInicio').classList.contains('activa')) pintarInicio();
   if ($('vClase').classList.contains('activa')) pintarClase();
 }
@@ -657,7 +689,8 @@ function marcarLocal(id, llego){
   clases.forEach(c => c.reservas.forEach(x => { if (x.id === id) x.llego = llego; }));
   repintarYa();
 }
-function repintarYa(){ if ($('vClase').classList.contains('activa')) pintarClase(); if ($('vInicio').classList.contains('activa')) pintarInicio(); }
+function repintarYa(){ if (exitoVistazo) return;   // no se cambia la lista bajo el dedo de un vistazo; el repintado de 15 s la pone al día
+  if ($('vClase').classList.contains('activa')) pintarClase(); if ($('vInicio').classList.contains('activa')) pintarInicio(); }
 
 function marcarCheckin(r, c){
   const mio = perfiles.get(r.id); perfiles.clear(); if (mio) perfiles.set(r.id, mio);   // su número cambia si toma otra clase hoy
@@ -675,15 +708,16 @@ function quitarCheckin(r, c){
 
 /* --------------------------------------------------------------- éxito */
 let cierre = null;
-function mostrarExito(r, c){
+function mostrarExito(r, c, vistazo = false){
   const mio = ++turno;
-  $('eTitulo').innerHTML = RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}!`;
+  exitoVistazo = vistazo; $('exito').classList.toggle('vistazo', vistazo);
+  $('eTitulo').innerHTML = vistazo ? esc(r.nombre) : RE_MARKET.test(r.nombre) ? '¡Listo!' : `¡Listo, ${esc(primer(r.nombre))}!`;
   exitoIns = RE_MARKET.test(r.nombre) ? null : r.ins;
   $('eMedallas').innerHTML = exitoIns ? medallas(exitoIns) : '';
   $('eSub').textContent = `${c.disciplina} · ${hhmm(c.inicio)}${c.coach ? ' con ' + c.coach : ''}`;
   $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
   $('exito').classList.add('abierto');
-  arrancarCuenta(6000);
+  if (!vistazo) arrancarCuenta(6000);
   Promise.resolve(pedirPerfil(r.id)).then(p => { if (mio === turno && $('exito').classList.contains('abierto')) pintarPerfil(p); });
 }
 /** Las insignias completas al abrir la tarjeta: cada una en grande y con su nombre. */
@@ -734,7 +768,7 @@ function pintarPerfil(p){
   const colores = { cumple:'#9A4215', hito:'#7F866F', bienvenida:'#788991', ultima:'#B5651D', vence:'#B5651D', pocas:'#B5651D', ciclo:'#788991', termina:'#788991' };
   const emoji = { cumple:'🎂 ', hito:'🎉 ' };
   if (p.aviso) $('eAviso').innerHTML = `<div class="aviso" style="--c:${colores[p.aviso.tipo] || '#788991'}">${emoji[p.aviso.tipo] || ''}${esc(p.aviso.texto)}</div>`;
-  if (p.qr) { pintarQR(p.qr); arrancarCuenta(10000); }
+  if (p.qr) { pintarQR(p.qr); if (!exitoVistazo) arrancarCuenta(10000); }
 }
 /* Cuenta atrás de la tarjeta. Olmo (9-nov): como historia de Instagram, mientras haya un dedo en la tarjeta la barra se
    detiene (para alcanzar a leer) y al soltar sigue desde donde iba; un toque corto la cierra como antes. Con el dedo puesto
@@ -774,7 +808,7 @@ function seguirCuenta(){
 }
 function cerrarExito(){
   if (hayDedo()) toqueLargo = true;                  // se cerró con el dedo puesto (tope, quitar check-in): su clic al soltar no cierra la siguiente
-  clearTimeout(cierre); cuenta = null; dedos.clear(); tactiles = 0; turno++; $('exito').classList.remove('abierto');
+  clearTimeout(cierre); cuenta = null; dedos.clear(); tactiles = 0; turno++; $('exito').classList.remove('abierto', 'vistazo'); exitoVistazo = false;
 }
 // Dedos sobre la tarjeta: pausa con el primero, sigue cuando se levanta el último. El clic que llega después de soltar una
 // pausa larga no cierra la tarjeta (eso es «leer», no «tocar»). toqueLargo se reinicia al empezar cada toque: si el navegador
@@ -994,7 +1028,7 @@ function diaRelativo(d){
   if (dif === 0) return 'Hoy'; if (dif === 1) return 'Mañana'; if (dif === -1) return 'Ayer';
   return `${DIA3(d).charAt(0).toUpperCase() + DIA3(d).slice(1)} ${fechaCorta(d)}`;
 }
-let cuentaActual = null, cuentaPase = null, solicitudActual = null, exitoIns = null;
+let cuentaActual = null, cuentaPase = null, solicitudActual = null, exitoIns = null, exitoVistazo = false;
 const pedidas = new Set();                 // «disciplina|inicio» ya pedidas a recepción en esta consulta
 function pintarCuenta(u){
   cuentaActual = u;
