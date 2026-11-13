@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2mEdzG2gIjSXDy8x5INtB2TxKAWfG+wh4gWGlBZuzBU=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-w/L/fq+Pozbp36JVsLNigH+1l7u6j2Z5YyIqcM637C4=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -268,6 +268,60 @@ button.fila-r:active{background:var(--arena-suave)}
 .app-izq{display:flex;flex-direction:column;align-items:center;gap:8px}
 #veloApp .qr-bonito{width:230px;height:230px}
 @media (min-width:820px){ .app-grid{flex-direction:row;align-items:center;justify-content:center;gap:28px} .app-grid .pasos{margin:0} }
+/* Olmo 13-nov: banner de la promo «Propósito 2027» en el espacio de abajo del inicio. Los lugares vienen de promo.json. */
+#vInicio.activa{flex:1}
+.promo{margin-top:auto;width:min(860px,100%);display:flex;align-items:center;gap:26px;text-align:left;padding:22px 28px;border-radius:26px;
+  color:#F7F2EC;background:radial-gradient(90% 160% at 100% 0%,rgba(154,66,21,.65),transparent 60%),linear-gradient(135deg,#2E2E2E,#161616);
+  box-shadow:0 12px 32px rgba(43,43,43,.28);position:relative;overflow:hidden}
+.promo::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.10) 50%,transparent 60%);transform:translateX(-100%);animation:brillo 7s ease-in-out infinite}
+@keyframes brillo{0%,70%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.promo:active{filter:brightness(1.08)}
+.promo-izq{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.promo-eti{font-size:13px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--oro)}
+.promo-tit{font-family:Poppins;font-weight:600;font-size:34px;line-height:1.05;color:#fff;letter-spacing:-.01em}
+.promo-txt{font-size:17px;color:#E8DCD0;line-height:1.35}
+.promo-txt b{color:#fff;font-weight:500}
+.promo-ver{align-self:flex-start;margin-top:6px;font-size:15px;font-weight:500;color:var(--carbon);background:#F7F2EC;border-radius:999px;padding:7px 16px}
+.promo-der{display:flex;flex-direction:column;align-items:center;gap:6px;padding-left:24px;border-left:1px solid rgba(255,255,255,.14)}
+.promo-num{font-family:Poppins;font-weight:600;color:var(--oro);line-height:1}
+.promo-num b{font-size:56px;font-weight:600}.promo-num small{font-size:24px;color:#BFB3A6}
+.promo-lug{font-size:14px;color:#E8DCD0;letter-spacing:.04em}
+.puntos-promo{display:grid;grid-template-columns:repeat(10,8px);gap:5px;margin-top:4px}
+.puntos-promo i{width:8px;height:8px;border-radius:50%;background:var(--oro)}
+.puntos-promo i.ido{background:rgba(255,255,255,.16)}
+@media (prefers-reduced-motion:reduce){ .promo::after{animation:none;display:none} }
+/* Hoja de detalles */
+#veloPromo .hoja{width:min(940px,100%);max-height:96vh;overflow:auto;text-align:left;gap:16px;padding:0 0 calc(24px + env(safe-area-inset-bottom))}
+.promo-cab{display:flex;align-items:center;gap:24px;padding:28px 32px;color:#F7F2EC;border-radius:28px 28px 0 0;
+  background:radial-gradient(90% 160% at 100% 0%,rgba(154,66,21,.65),transparent 60%),linear-gradient(135deg,#2E2E2E,#161616)}
+.promo-cab h2{font-size:38px;color:#fff;margin:4px 0 6px}
+.promo-cab p{font-size:18px;color:#E8DCD0}
+.promo-cab p b{color:#fff;font-weight:500}
+.promo-cuerpo{display:flex;flex-direction:column;gap:16px;padding:4px 32px 0}
+.promo-cuerpo h3{font-family:Jost;font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gris);margin:6px 0 -4px}
+.incluye{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.incluye div{background:var(--arena-suave);border-radius:16px;padding:14px 16px;font-size:17px;color:var(--carbon);line-height:1.3}
+.incluye span{display:block;font-size:26px;margin-bottom:4px}
+.incluye small{display:block;font-size:14px;color:var(--gris);margin-top:2px}
+.promo-tabs{display:flex;gap:10px;flex-wrap:wrap}
+.promo-tab{flex:1;min-width:120px;padding:12px 10px;border-radius:14px;border:2px solid var(--c);color:var(--c);background:#fff;font-family:Poppins;font-weight:600;font-size:18px;letter-spacing:.02em}
+.promo-tab.activo{background:var(--c);color:#fff}
+.promo-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.promo-card{border:1.5px solid var(--crema);border-top:6px solid var(--c);border-radius:18px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:4px;color:var(--carbon)}
+.promo-card .cl{font-size:16px;color:var(--gris)}
+.promo-card .precio{font-family:Poppins;font-weight:600;font-size:34px;line-height:1.1;color:var(--carbon)}
+.promo-card .unico{font-size:14px;color:var(--gris)}
+.promo-card s{font-size:15px;color:var(--gris)}
+.promo-card .benef{margin:8px 0 2px;background:#FBF3E2;border-radius:12px;padding:9px 11px;font-size:15px;color:#6B4A12;line-height:1.3}
+.promo-card .benef b{display:block;font-family:Poppins;font-weight:600;font-size:19px;color:#8A5A12}
+.promo-card .renov{font-size:13px;color:var(--gris);border-top:1px solid var(--arena);padding-top:8px;margin-top:4px}
+.promo-pasos{font-size:17px;color:var(--carbon);line-height:1.45;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.promo-pasos b{color:var(--terracota);font-weight:500}
+.promo-chica{font-size:14px;color:var(--gris);line-height:1.45;background:var(--arena-suave);border-radius:14px;padding:12px 16px}
+.promo-pide{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;font-size:19px;color:var(--carbon);font-weight:500}
+.promo-pide .btn{min-width:200px}
+@media (max-width:640px){ .incluye,.promo-cards{grid-template-columns:1fr} .promo-cab{flex-direction:column;align-items:flex-start} .promo-der{border-left:0;padding-left:0} }
+@media (max-width:700px){ .promo{flex-direction:column;align-items:flex-start;gap:14px} .promo-tit{font-size:28px} .promo-cuerpo{padding:4px 18px 0} .promo-cab{padding:22px 18px} }
 @media (max-width:700px){
   .reserva-boton{bottom:calc(52px + env(safe-area-inset-bottom))}
   .top{padding:14px 16px 4px} main{padding:8px 16px 20px}
@@ -315,6 +369,20 @@ button.fila-r:active{background:var(--arena-suave)}
     <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
     <div class="resultados" id="resultados"></div>
     <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
+    <!-- Olmo 13-nov: promo «Propósito 2027». Se esconde sola al agotarse o después del 31-dic (promo.json). -->
+    <button class="promo" id="promoBanner" hidden aria-label="Propósito 2027: ver los detalles de la promo">
+      <span class="promo-izq">
+        <span class="promo-eti">Promo de fin de año</span>
+        <span class="promo-tit">Propósito 2027</span>
+        <span class="promo-txt">3 meses de membresía en un solo pago · <b>más de 1 mes en beneficios</b><br>Precio especial + 5 clases extra + tote negra de Hera</span>
+        <span class="promo-ver">Ver detalles ›</span>
+      </span>
+      <span class="promo-der">
+        <span class="promo-num"><b class="promoQuedan">29</b><small>/<span class="promoTotal">30</span></small></span>
+        <span class="promo-lug">lugares disponibles</span>
+        <span class="puntos-promo" aria-hidden="true"></span>
+      </span>
+    </button>
     <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
     <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
     <button class="aviso-sesion" id="avisoSesion" hidden>⚠️ Hay una cuenta de clienta abierta en otra pestaña · <b>Cerrarla</b></button>
@@ -404,6 +472,44 @@ button.fila-r:active{background:var(--arena-suave)}
     </ol>
     </div>
     <button class="btn sec" id="appCerrar" style="width:100%">Listo</button>
+  </div>
+</div>
+
+<div class="velo" id="veloPromo">
+  <div class="hoja">
+    <div class="promo-cab">
+      <div style="flex:1">
+        <span class="promo-eti">Promo de fin de año · Buen Fin</span>
+        <h2>Propósito 2027</h2>
+        <p>Membresía de 3 meses en un solo pago, con <b>más de 1 mes en beneficios</b>.</p>
+      </div>
+      <div class="promo-der">
+        <span class="promo-num"><b class="promoQuedan">29</b><small>/<span class="promoTotal">30</span></small></span>
+        <span class="promo-lug">lugares disponibles</span>
+        <span class="puntos-promo" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div class="promo-cuerpo">
+      <h3>Qué incluye</h3>
+      <div class="incluye">
+        <div><span>💳</span>Precio especial por tus 3 meses<small>Un solo pago al contratar</small></div>
+        <div><span>🎟️</span>5 clases extra<small>Para ti o para regalar · valen $900</small></div>
+        <div><span>👜</span>Tote negra de Hera<small>Pasas por ella a recepción</small></div>
+      </div>
+      <h3>Elige tu clase</h3>
+      <div class="promo-tabs" id="promoTabs"></div>
+      <h3>Tu precio por 3 meses</h3>
+      <div class="promo-cards" id="promoCards"></div>
+      <h3>Cómo funciona</h3>
+      <ol class="promo-pasos">
+        <li><b>Pagas una sola vez</b> y apartas tu lugar.</li>
+        <li><b>Empiezas cuando tú elijas</b>, a más tardar en enero. Si ya eres miembro, empieza en tu siguiente fecha de cobro.</li>
+        <li><b>Tus 5 clases extra</b> son tuyas: tómalas tú o regálaselas a quien quieras. Valen los mismos 3 meses de tu membresía.</li>
+        <li><b>Después de los 3 meses</b> tu membresía se renueva sola cada 3 meses al precio trimestral regular (lo ves en cada tarjeta). Si prefieres no renovar, avísanos antes del siguiente cobro.</li>
+      </ol>
+      <p class="promo-chica">Válida del 13 de noviembre al 31 de diciembre, o hasta agotar los 30 lugares. Aplica en membresías de 8, 12 y 18 clases al mes. Es un solo pago y no se combina con otras promos. Las clases extra no se cambian por dinero ni pasan a otro periodo. Si tienes paquete, las clases que te queden las sigues usando.</p>
+      <div class="promo-pide"><span>¿La quieres? Pídela en recepción y apartamos tu lugar 🌿</span><button class="btn pri" id="promoCerrar">Listo</button></div>
+    </div>
   </div>
 </div>
 
@@ -1488,6 +1594,54 @@ $('appBoton').onclick = () => {
 };
 $('appCerrar').onclick = () => $('veloApp').classList.remove('abierto');
 $('veloApp').addEventListener('click', e => { if (e.target.id === 'veloApp') $('veloApp').classList.remove('abierto'); });
+// Olmo 13-nov: promo «Propósito 2027». Los lugares que quedan viven en promo.json (junto a esta página) para cambiarlos
+// sin tocar el kiosco; si no llega, se usa el respaldo de aquí. Precios de la guía de recepción: por elemento y por 8/12/18
+// clases, [mes a mes, precio de la promo por 3 meses, renovación trimestral]. Beneficio = lo que ahorra + 5 clases a $180.
+const PROMO = { total: 30, quedan: 29, hasta: '2026-12-31' };
+const PROMO_PRECIOS = {"AIRE":[[1090,2446,2780],[1350,3027,3440],[1830,4105,4665]],"TIERRA":[[1390,3120,3545],[1680,3771,4285],[2190,4915,5585]],"FUEGO":[[1690,3793,4310],[2390,5364,6095],[3050,6846,7780]],"AGUA":[[1730,3881,4410],[2590,5812,6605],[3390,7608,8645]]};
+const PROMO_CLASES = [8, 12, 18], PROMO_EXTRA = 5 * 180;
+const PROMO_EL = [['AIRE', 'Aire', 'var(--aire)'], ['TIERRA', 'Tierra', 'var(--tierra-el)'], ['FUEGO', 'Fuego', 'var(--fuego)'], ['AGUA', 'Agua', 'var(--agua)']];
+const pesosPromo = n => '$' + Number(n).toLocaleString('es-MX');
+let promoEl = 'TIERRA';
+function ymdLocal() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+function pintarPromo() {
+  const vigente = PROMO.quedan > 0 && ymdLocal() <= Number(PROMO.hasta.replace(/-/g, ''));
+  $('promoBanner').hidden = !vigente;
+  if (!vigente) { $('veloPromo').classList.remove('abierto'); return; }
+  const idos = PROMO.total - PROMO.quedan;
+  document.querySelectorAll('.promoQuedan').forEach(e => { e.textContent = PROMO.quedan; });
+  document.querySelectorAll('.promoTotal').forEach(e => { e.textContent = PROMO.total; });
+  const puntos = Array.from({ length: PROMO.total }, (_, i) => `<i${i < idos ? ' class="ido"' : ''}></i>`).join('');
+  document.querySelectorAll('.puntos-promo').forEach(e => { e.innerHTML = puntos; });
+}
+function pintarPreciosPromo() {
+  const [, , color] = PROMO_EL.find(x => x[0] === promoEl);
+  $('promoTabs').innerHTML = PROMO_EL.map(([k, n, c]) => `<button class="promo-tab${k === promoEl ? ' activo' : ''}" data-el="${k}" style="--c:${c}">${n}</button>`).join('');
+  $('promoCards').innerHTML = PROMO_PRECIOS[promoEl].map(([mes, promo, renov], i) => {
+    const ahorro = mes * 3 - promo, benef = ahorro + PROMO_EXTRA;
+    return `<div class="promo-card" style="--c:${color}">
+      <span class="cl">${PROMO_CLASES[i]} clases al mes</span>
+      <span class="precio">${pesosPromo(promo)}</span>
+      <span class="unico">por 3 meses · un solo pago</span>
+      <s>Mes a mes: ${pesosPromo(mes * 3)}</s>
+      <span class="benef"><b>Te llevas ${pesosPromo(benef)} en beneficios</b>Ahorras ${pesosPromo(ahorro)} + 5 clases extra (${pesosPromo(PROMO_EXTRA)}). Más que 1 mes de membresía (${pesosPromo(mes)}).</span>
+      <span class="renov">Después se renueva cada 3 meses a ${pesosPromo(renov)}</span>
+    </div>`;
+  }).join('');
+}
+function cargarPromo() {
+  fetch('promo.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+    if (!j || !Number.isInteger(j.total) || !Number.isInteger(j.quedan) || j.total < 1 || j.total > 200) return;
+    PROMO.total = j.total; PROMO.quedan = Math.max(0, Math.min(j.quedan, j.total));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(j.hasta || '')) PROMO.hasta = j.hasta;
+  }).catch(() => {}).finally(pintarPromo);
+}
+$('promoBanner').onclick = () => { pintarPreciosPromo(); $('veloPromo').classList.add('abierto'); $('veloPromo').querySelector('.hoja').scrollTop = 0; };
+$('promoTabs').addEventListener('click', e => { const b = e.target.closest('[data-el]'); if (b) { promoEl = b.dataset.el; pintarPreciosPromo(); } });
+$('promoCerrar').onclick = () => $('veloPromo').classList.remove('abierto');
+$('veloPromo').addEventListener('click', e => { if (e.target.id === 'veloPromo') $('veloPromo').classList.remove('abierto'); });
+pintarPromo(); cargarPromo();
+setInterval(() => { if (!document.hidden) cargarPromo(); }, 5 * 60000);
 ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
 // Olmo (9-nov): leer con el dedo en la pantalla también cuenta como actividad (sobre todo en «Mi cuenta»). El pointerdown
 // solo llega al primer toque y el navegador cancela el puntero en cuanto empieza a desplazarse, así que se escuchan los
@@ -1506,6 +1660,7 @@ setInterval(() => {                                          // inactividad: vue
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
   if ($('veloApp').classList.contains('abierto') && quieto > 90000) $('veloApp').classList.remove('abierto');
+  if ($('veloPromo').classList.contains('abierto') && quieto > 90000) $('veloPromo').classList.remove('abierto');
   if ($('veloVerif').classList.contains('abierto') && quieto > 45000) cerrarVerificacion();
   if ($('vCuenta').classList.contains('activa') && quieto > 45000) salirCuenta();   // sus datos no se quedan en pantalla
 }, 5000);
