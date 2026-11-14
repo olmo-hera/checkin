@@ -279,10 +279,10 @@ button.fila-r:active{background:var(--arena-suave)}
   font:inherit;color:var(--b-texto);text-align:left;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   /* La sombra va en el contenedor para que siga la silueta recortada del papel. */
-  filter:drop-shadow(0 1px 1px rgba(66,73,73,.10)) drop-shadow(0 10px 22px rgba(66,73,73,.13));
+  filter:drop-shadow(0 1px 1px rgba(169,122,31,.18)) drop-shadow(0 10px 24px rgba(169,122,31,.24));   /* Olmo 13-nov: marco dorado (opción 2) */
   transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .18s ease;
 }
-.bol:active{transform:scale(.985);filter:drop-shadow(0 1px 1px rgba(66,73,73,.10)) drop-shadow(0 4px 10px rgba(66,73,73,.12))}
+.bol:active{transform:scale(.985);filter:drop-shadow(0 1px 1px rgba(169,122,31,.18)) drop-shadow(0 4px 10px rgba(169,122,31,.20))}
 .bol:focus-visible{outline:2px solid var(--b-terracota);outline-offset:6px;border-radius:20px}
 
 /* Papel: dos piezas (cuerpo + talón) y dos muescas recortadas sobre la perforación. */
@@ -290,7 +290,7 @@ button.fila-r:active{background:var(--arena-suave)}
   position:relative;display:grid;grid-template-columns:1fr var(--b-talon);
   min-height:150px;border-radius:16px;overflow:hidden;
   background:linear-gradient(180deg,#FCFAF7 0%,var(--b-arena-suave) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:inset 0 0 0 2.5px #C9972F,inset 0 0 0 4px rgba(255,255,255,.7);
   -webkit-mask:
     radial-gradient(circle at calc(100% - var(--b-talon)) 0,transparent var(--b-muesca),#000 calc(var(--b-muesca) + .5px)) top/100% 51% no-repeat,
     radial-gradient(circle at calc(100% - var(--b-talon)) 100%,transparent var(--b-muesca),#000 calc(var(--b-muesca) + .5px)) bottom/100% 51% no-repeat;
@@ -309,7 +309,7 @@ button.fila-r:active{background:var(--arena-suave)}
 /* Cuerpo del boleto */
 .bol-cuerpo{position:relative;padding:27px 28px 25px 32px;display:flex;flex-direction:column;justify-content:center;gap:7px}
 .bol-cuerpo::after,.bol-talon::after{ /* filete impreso, como en un boleto */
-  content:"";position:absolute;inset:12px;border:1px solid rgba(154,66,21,.20);border-radius:9px;pointer-events:none;
+  content:"";position:absolute;inset:12px;border:1px solid rgba(201,151,47,.55);border-radius:9px;pointer-events:none;
 }
 .bol-ceja{display:flex;align-items:center;gap:8px;
   font-family:Jost,Helvetica,Arial,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--b-terracota)}
@@ -332,9 +332,9 @@ button.fila-r:active{background:var(--arena-suave)}
   background:linear-gradient(180deg,#F5EEE6 0%,#EEE4D8 100%)}
 .bol-talon::before{ /* perforación punteada */
   content:"";position:absolute;left:-1px;top:calc(var(--b-muesca) + 6px);bottom:calc(var(--b-muesca) + 6px);width:2px;
-  background:radial-gradient(circle,rgba(66,73,73,.38) 1px,transparent 1.4px) center top/2px 8px repeat-y;
+  background:radial-gradient(circle,#C9972F 1.1px,transparent 1.5px) center top/2px 8px repeat-y;
 }
-.bol-lugar-et{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--b-gris)}
+.bol-lugar-et{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#A97A1F}
 .bol-lugar-num{font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;font-size:60px;line-height:1;letter-spacing:-.035em;color:var(--b-terracota);margin:4px 0 2px;font-variant-numeric:tabular-nums}
 .bol-lugar-de{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:500;font-size:15px;line-height:1.2;color:var(--b-carbon)}
 .bol-lugar-disp{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:400;font-size:13px;line-height:1.3;letter-spacing:.02em;color:var(--b-gris)}
