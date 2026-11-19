@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-G05RfvD60/mOVtgcu55B3aMGtTZ7AuMLrbScN6RMr1U=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-IXP1ASLTjfJ1R48Mr8VHJqf+HbwZBBJ1zAWREyHVVFY=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1717,7 +1717,7 @@ $('veloApp').addEventListener('click', e => { if (e.target.id === 'veloApp') $('
 // Olmo 13-nov: promo «Propósito 2027». Los lugares que quedan viven en promo.json (junto a esta página) para cambiarlos
 // sin tocar el kiosco; si no llega, se usa el respaldo de aquí. Precios de la guía de recepción: por elemento y por 8/12/18
 // clases, [mes a mes, precio de la promo por 3 meses, renovación trimestral]. Beneficio = lo que ahorra + 5 clases a $180.
-const PROMO = { total: 30, quedan: 29, hasta: '2026-12-31' };
+const PROMO = { total: 30, quedan: 27, hasta: '2026-12-31' };
 const PROMO_PRECIOS = {"AIRE":[[1090,2446,2780],[1350,3027,3440],[1830,4105,4665]],"TIERRA":[[1390,3120,3545],[1680,3771,4285],[2190,4915,5585]],"FUEGO":[[1690,3793,4310],[2390,5364,6095],[3050,6846,7780]],"AGUA":[[1730,3881,4410],[2590,5812,6605],[3390,7608,8645]]};
 const PROMO_CLASES = [8, 12, 18], PROMO_EXTRA = 5 * 180;
 // Color de cada elemento: solo se usa como punto en el selector, nunca como fondo de texto.
