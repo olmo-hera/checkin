@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://www.herazenter.com 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#EFE7DE">
+<title>Ver clase · Hera Zenter</title>
+<!-- F4 de docs/CONTROL_RECEPCION.md: lista de UNA clase para recepción (liga firmada de los avisos de #recepcion).
+     Solo lectura. Comparte origen con el kiosco: por eso CSP estricta, JS en clase.js (script-src 'self'), nada de
+     innerHTML, nada de localStorage y ningún script de terceros. El sello va en el #fragmento (no llega a Pages). -->
+<style>
+:root{
+  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#6F6F6F;
+  --arena:#EFE7DE; --arena-suave:#F7F2EC; --crema:#E8DCD0; --pizarra:#788991;
+  --ok:#4F7A5A; --alerta:#B5651D; --radio:16px; --sombra:0 1px 2px rgba(66,73,73,.08),0 6px 24px rgba(66,73,73,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--arena);color:var(--texto);font-family:Jost,"Avenir Next",Avenir,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+h1,h2,.marca{font-family:Poppins,"Avenir Next",Helvetica,Arial,sans-serif;font-weight:600;color:var(--carbon);letter-spacing:-.01em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+[hidden]{display:none!important}
+.envoltura{max-width:720px;margin:0 auto;padding:18px 16px 32px}
+.marca{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--terracota);text-align:center}
+header{display:flex;flex-direction:column;gap:6px;margin:10px 0 16px;text-align:center}
+header h1{font-size:26px;line-height:1.15}
+header .sub{font-size:16px;color:var(--gris)}
+.barra{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:6px}
+.actualizar{background:var(--terracota);color:#fff;border-radius:12px;padding:9px 18px;font-size:15px;font-weight:500}
+.actualizar:disabled{opacity:.6}
+.sello{font-size:14px;color:var(--gris)}
+.conteo{font-size:15px;color:var(--carbon);text-align:center;margin-bottom:10px}
+.aviso{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:22px 18px;text-align:center;font-size:17px;line-height:1.45;color:var(--carbon)}
+.lista{list-style:none;display:flex;flex-direction:column;gap:10px}
+.alumna{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.fila1{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nombre{font-size:19px;font-weight:500;color:var(--carbon);overflow-wrap:anywhere}
+a.nombre{color:var(--terracota);text-decoration:underline;text-underline-offset:3px}
+.lugares{flex:none;font-size:14px;color:var(--gris);margin-right:auto}
+.estado{flex:none;font-size:13px;font-weight:500;border-radius:999px;padding:4px 10px;background:var(--arena-suave);color:var(--gris);border:1px solid var(--crema)}
+.estado.llego{background:#E7F0E9;color:var(--ok);border-color:#C9DDCD}
+.estado.falto{background:#F7EADF;color:var(--alerta);border-color:#EBCDB4}
+.plan{font-size:15px;color:var(--gris)}
+.plan b{font-weight:500;color:var(--texto)}
+.pendientes{list-style:none;display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.pendientes li{font-size:15px;line-height:1.35;color:var(--texto);background:var(--arena-suave);border-radius:10px;padding:7px 10px}
+.pie{margin-top:18px;font-size:13px;color:var(--gris);text-align:center;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="envoltura">
+  <p class="marca">Hera Zenter · Recepción</p>
+  <header>
+    <h1 id="titulo">Ver clase</h1>
+    <p class="sub" id="sub"></p>
+    <div class="barra">
+      <button class="actualizar" id="actualizar" type="button">Actualizar</button>
+      <span class="sello" id="sello"></span>
+    </div>
+  </header>
+  <main>
+    <p class="aviso" id="aviso">Cargando…</p>
+    <p class="conteo" id="conteo" hidden></p>
+    <ul class="lista" id="lista"></ul>
+  </main>
+  <p class="pie">Solo lectura: esta página no cambia nada. Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción).</p>
+</div>
+<script src="clase.js"></script>
+</body>
+</html>

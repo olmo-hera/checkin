@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://www.herazenter.com 'self'; img-src 'self' https://static.wixstatic.com data:; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#EFE7DE">
+<title>Mostrador · Hera Zenter</title>
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_32,h_32/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<!-- Pantalla «Mostrador» (docs/MOSTRADOR.md): quién va llegando, para la compu de recepción. Entra con la misma contraseña
+     del kiosco (checkin_clave) y guarda SU token aparte (hera_mostrador_token): no toca el de la tablet. Comparte origen con
+     el kiosco: por eso CSP estricta, JS en mostrador.js (script-src 'self'), nada de innerHTML y ningún script de terceros. -->
+<style>
+:root{
+  --terracota:#9A4215; --carbon:#424949; --texto:#2B2B2B; --gris:#6F6F6F;
+  --arena:#EFE7DE; --arena-suave:#F7F2EC; --crema:#E8DCD0; --pizarra:#788991;
+  --ok:#4F7A5A; --alerta:#B5651D; --alerta-fondo:#FBEFE4; --alerta-borde:#EBCDB4;
+  --fuego:#E8613C; --agua:#3C8FD6; --aire:#6F9CCB; --tierra-el:#7A6A4F;
+  --radio:18px; --sombra:0 1px 2px rgba(66,73,73,.08),0 6px 24px rgba(66,73,73,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--arena);color:var(--texto);font-family:Jost,"Avenir Next",Avenir,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{min-height:100dvh}
+h1,h2,.marca{font-family:Poppins,"Avenir Next",Helvetica,Arial,sans-serif;font-weight:600;color:var(--carbon);letter-spacing:-.01em}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit}
+[hidden]{display:none!important}
+.marca{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--terracota)}
+
+/* ---- contraseña */
+.clave{max-width:400px;margin:12vh auto 0;padding:0 16px;text-align:center;display:flex;flex-direction:column;gap:14px}
+.clave h1{font-size:28px}
+.clave p{color:var(--gris);font-size:16px;line-height:1.45}
+.clave form{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.clave input{background:#fff;border:1px solid var(--crema);border-radius:14px;padding:14px 16px;font-size:18px;text-align:center}
+.clave input:focus{outline:2px solid var(--terracota);outline-offset:1px}
+.boton{background:var(--terracota);color:#fff;border-radius:14px;padding:13px 18px;font-size:17px;font-weight:500}
+.boton:disabled{opacity:.6}
+.error{color:var(--alerta);font-size:15px;min-height:1.3em}
+
+/* ---- barra */
+.barra{position:sticky;top:0;z-index:5;background:rgba(239,231,222,.94);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--crema)}
+.barra-in{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.titulo{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+.titulo h1{font-size:22px;line-height:1.1}
+.estado{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--gris)}
+.punto{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+.punto.off{background:var(--alerta)}
+.punto.dormido{background:var(--pizarra)}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip-btn{background:#fff;border:1px solid var(--crema);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--carbon);white-space:nowrap}
+.chip-btn.primario{background:var(--terracota);border-color:var(--terracota);color:#fff;font-weight:500}
+.chip-btn[aria-pressed="true"]{background:var(--carbon);border-color:var(--carbon);color:#fff}
+.nota-perm{font-size:13px;color:var(--alerta);max-width:280px;line-height:1.3}
+
+/* ---- cuerpo */
+.cuerpo{max-width:1280px;margin:0 auto;padding:18px 16px 40px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.cuerpo{grid-template-columns:minmax(0,1fr)}}
+.seccion h2{font-size:17px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+.seccion h2 small{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:400;font-size:14px;color:var(--gris)}
+.vacio{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:22px 18px;text-align:center;color:var(--gris);font-size:16px;line-height:1.45}
+.lista{list-style:none;display:flex;flex-direction:column;gap:12px}
+.mas{margin-top:10px;font-size:14px;color:var(--gris);text-align:center}
+
+.tarjeta{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:16px 18px;display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:4px 16px;align-items:start;border-left:5px solid transparent;transition:background-color 1.2s ease}
+.tarjeta.con-pendiente{border-left-color:var(--alerta)}
+.tarjeta.primera{border-left-color:var(--ok)}
+.tarjeta.nueva{background:#FFFDF8;animation:entra .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes entra{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.tarjeta.nueva{animation:none}}
+.circulo{grid-row:span 3;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;font-size:23px;letter-spacing:.02em;background:var(--pizarra)}
+.circulo.FUEGO{background:var(--fuego)} .circulo.AGUA{background:var(--agua)} .circulo.AIRE{background:var(--aire)} .circulo.TIERRA{background:var(--tierra-el)}
+.circulo.market{background:var(--crema);color:var(--carbon);font-size:26px}
+.nombre{font-size:22px;font-weight:500;color:var(--carbon);line-height:1.2;overflow-wrap:anywhere}
+a.nombre{color:var(--terracota);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.hora{font-size:15px;color:var(--gris);text-align:right;white-space:nowrap}
+.hora b{display:block;font-size:20px;font-weight:500;color:var(--carbon)}
+.clase{grid-column:2 / 4;font-size:16px;color:var(--gris)}
+.clase b{font-weight:500;color:var(--texto)}
+.detalle{grid-column:2 / 4;display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.insignias{display:flex;flex-wrap:wrap;gap:6px}
+.insignia{font-size:14px;background:var(--arena-suave);border:1px solid var(--crema);border-radius:999px;padding:3px 10px;color:var(--carbon)}
+.insignia.primera{background:#E7F0E9;border-color:#C9DDCD;color:var(--ok);font-weight:500}
+.insignia.cumple,.insignia.hito{background:#FBF3DF;border-color:#EBD9A6;color:#7A5A12}
+.plan{font-size:15px;color:var(--gris)}
+.plan b{font-weight:500;color:var(--texto)}
+.al-llegar{font-size:13px;color:var(--gris)}
+.pendientes{list-style:none;display:flex;flex-direction:column;gap:6px}
+.pendientes li{font-size:16px;line-height:1.35;background:var(--alerta-fondo);border:1px solid var(--alerta-borde);border-radius:12px;padding:8px 12px;color:var(--texto)}
+.avisos{list-style:none;display:flex;flex-direction:column;gap:4px}
+.avisos li{font-size:15px;color:var(--carbon);background:var(--arena-suave);border-radius:10px;padding:6px 10px}
+
+.proxima{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.proxima + .proxima{margin-top:12px}
+.proxima h3{font-size:16px;font-weight:500;color:var(--carbon);display:flex;justify-content:space-between;gap:10px}
+.proxima h3 span{font-weight:400;color:var(--gris);white-space:nowrap}
+.faltan{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.falta{display:flex;align-items:center;gap:8px;background:var(--arena-suave);border:1px solid var(--crema);border-radius:999px;padding:4px 12px 4px 4px;font-size:15px}
+.mini{width:28px;height:28px;border-radius:50%;background:var(--pizarra);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.listo{font-size:15px;color:var(--ok)}
+.pie{max-width:1280px;margin:0 auto;padding:0 16px 28px;font-size:13px;color:var(--gris);line-height:1.45}
+</style>
+</head>
+<body>
+<section class="clave" id="vistaClave" hidden>
+  <p class="marca">Hera Zenter · Recepción</p>
+  <h1>Mostrador</h1>
+  <p>Quién va llegando a cada clase, con sus pendientes. Usa la misma contraseña del kiosco de check-in.</p>
+  <form id="formClave" autocomplete="on">
+    <input id="clave" type="password" autocomplete="current-password" placeholder="Contraseña del kiosco" aria-label="Contraseña del kiosco" required>
+    <button class="boton" id="entrar" type="submit">Entrar</button>
+  </form>
+  <p class="error" id="errorClave" role="alert"></p>
+</section>
+
+<div id="vistaLista" hidden>
+  <header class="barra">
+    <div class="barra-in">
+      <div class="titulo">
+        <span class="marca">Hera Zenter · Recepción</span>
+        <h1>Mostrador</h1>
+        <span class="estado"><span class="punto" id="punto"></span><span id="estadoTxt">Conectando…</span></span>
+      </div>
+      <div class="ctl">
+        <button class="chip-btn primario" id="permiso" type="button" hidden>Activar avisos en esta compu</button>
+        <span class="nota-perm" id="notaPermiso" hidden></span>
+        <button class="chip-btn" id="probar" type="button" hidden>Probar aviso</button>
+        <button class="chip-btn" id="avisos" type="button" aria-pressed="false" title="Discretos: nombre e inicial y «trae pendiente». Con detalle: dice cuál pendiente (se ve en la esquina de la pantalla).">Avisos: discretos</button>
+        <button class="chip-btn" id="sonido" type="button" aria-pressed="false">Sonido: apagado</button>
+        <button class="chip-btn" id="actualizar" type="button">Actualizar</button>
+        <button class="chip-btn" id="salir" type="button">Salir</button>
+      </div>
+    </div>
+  </header>
+  <main class="cuerpo">
+    <section class="seccion" aria-labelledby="tLlegando">
+      <h2 id="tLlegando">Llegando ahora <small id="conteo"></small></h2>
+      <p class="vacio" id="vacio">Todavía no llega nadie hoy.</p>
+      <ul class="lista" id="llegadas" aria-live="polite"></ul>
+      <p class="mas" id="mas" hidden></p>
+    </section>
+    <aside class="seccion" aria-labelledby="tFaltan">
+      <h2 id="tFaltan">Faltan por llegar</h2>
+      <p class="vacio" id="sinProximas">Ninguna clase está por empezar.</p>
+      <div id="proximas"></div>
+    </aside>
+  </main>
+  <p class="pie">Solo lectura: esta pantalla no marca ni cobra nada. Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción). «Panel» = check-in marcado en Wix; su hora es cuando lo vio esta pantalla («hora desconocida» si lo vio tarde). Los pendientes son los que traía al llegar.</p>
+</div>
+<script src="mostrador.js"></script>
+</body>
+</html>
