@@ -22,8 +22,16 @@
   var ZONA = 'America/Mexico_City';
   var TOKEN_KEY = 'hera_mostrador_token', SONIDO_KEY = 'hera_mostrador_sonido', AVISOS_KEY = 'hera_mostrador_avisos', LIDER_KEY = 'hera_mostrador_lider';
   var VOLUMEN_KEY = 'hera_mostrador_volumen';
-  var RE_FICHA = /^https:\/\/manage\.wix\.com\/dashboard\/[0-9a-f-]{36}\/contacts\/view\/[0-9a-f-]{36}$/i;
+  var RE_FICHA = /^https:\/\/manage\.wix\.com\/dashboard\/([0-9a-f-]{36})\/contacts\/view\/([0-9a-f-]{36})$/i;
+  // v3 (Olmo 21-nov): cada pastilla lleva a la vista de Wix donde se resuelve. Lista blanca: solo manage.wix.com (armada aquí
+  // con la ficha ya validada) y el permalink de una nota de #recepcion. Pestaña «Suscripciones» de la ficha (verificado en
+  // Chrome el 21-nov). La sesión de la clase no tiene liga estable: la lista de reservas filtrada por ella es lo más cerca.
+  var RE_SLACK = /^https:\/\/herazenter\.slack\.com\/archives\/[A-Z0-9]{8,12}\/p\d{16}$/;
+  var TAB_SUSCRIPCIONES = 'efee1eb7-361a-4608-a229-9b2665ad668b';
+  var DESTINOS = { canjear: '⋯ → Gestionar participantes → Canjear sesión', cobrar: '⋯ → Gestionar participantes → cobrar',
+    suscripciones: 'abrir sus suscripciones', 'otra-ficha': 'abrir esa ficha', nota: 'abrir la nota en Slack' };
   var ELEMENTOS = { FUEGO: 1, AGUA: 1, AIRE: 1, TIERRA: 1 };
+  var RE_ID_SENAL = /^[A-Za-z0-9_-]{6,80}$/;
   /** ¿`k` es una llave PROPIA de `o`? («constructor» o «__proto__» no pasan como color o elemento.) */
   function tiene(o, k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k); }
   var MARCA_NUEVA_MS = 90000;                  // cuánto dura el resaltado de una llegada nueva
@@ -33,13 +41,24 @@
   var RECUADROS_VISIBLES = 3;                  // máx. a la vista; las demás «+N» (esperan su turno: su reloj corre al verse)
   var RECUADROS_TOPE = 8;                      // en la cola, como mucho 8 (una clase de Fitpass que llega junta no se eterniza)
   var RECUADRO_RECIENTE_MS = 3 * 60000;        // al volver la conexión no se anuncia como «hizo check-in» lo de hace rato
-  var REINTENTOS_SENAL = 2;                    // la señal pudo llegar antes que el ATTENDED de Wix: hasta 2 relecturas…
-  var REINTENTO_SEG = 2.1;                     // …a los 2.1 s (el tope del servidor es 1 «llegadas» cada 2 s)
+  // El recuadro sale de la señal; la LISTA espera a que Bookings muestre el ATTENDED (revisión 21-nov M3): si la señal trajo
+  // una llegada que la lista todavía no tiene, relecturas con espera creciente hasta verla (≈ 18 s tras la primera lectura);
+  // si no trae ninguna nueva (una retirada de la lista, una señal vieja sin lista), hasta 3 si nada cambió.
+  var ESPERAS_FRESCO = [2.1, 3, 5, 8];         // el tope del servidor es 1 «llegadas» cada 2 s
+  var REINTENTOS_CAMBIO = 3;
+  var ESPERADA_MS = 25000;                     // una llegada de la señal que la lista no trae en 25 s ya no se busca
+  var SILENCIO_MS = 90000;                     // falla pasajera de Wix (`f`): la cola de la tablet reintenta cada ~20 s
+  // v3.1 (caso real 21-nov, 17:22): el renglón PROVISIONAL de «Por resolver» (de la señal, con los pendientes que ya calculó
+  // el 🛎️) dura hasta que la lista trae su detalle; si la lista nunca la trae (Bookings muy atrás, o la quitaron en el
+  // panel), se va a los 5 min de su check-in.
+  var PROVISIONAL_MS = 5 * 60000;
+  var RE_CODIGO = /^[a-z-]{2,24}(?::[a-z0-9áéíóúñ*-]{1,24})?$/;
   var DETALLE_PRONTO_SEG = 2.1;                // una llegada nueva sin detalle (la lectura por la señal no lo calcula): otra vez a los 2.1 s
   var ESPERA_ERROR_SEG = 30;
   var TIEMPO_FETCH_MS = 20000;                 // una consulta colgada (wifi) se corta a los 20 s…
   var TIEMPO_SENAL_MS = 5000;                  // …y una señal (1 lectura por id) a los 5 s: no frena el repaso hasta 20 s
   var GRACIA_VIGIA_MS = 60000;                 // si pasó 1 min de la hora en que tocaba el sondeo, la pantalla se pone en rojo
+  var LATIDO_VIEJO_MS = 20 * 60000;            // Ideas v3: con clases en horario, la tablet lleva más de 20 min sin pedir datos
   var LIDER_VENCE_MS = 90000;                  // la pestaña que avisa debe renovar su candado cada 90 s
   var TAG_AVISO = 'hera-mostrador', TAG_PENDIENTE = 'hera-mostrador-pend';
   var TEXTOS = {
@@ -91,6 +110,8 @@
   function resaltado(t, detallado) {
     var det = t.detalle;
     if (det && det.pendientes && det.pendientes.length) return detallado ? det.pendientes.map(etiquetaAviso).join(' · ') : '⚠ trae pendiente';
+    // Por la señal: se sabe que trae y (v3.1) CUÁL, con los códigos que calculó el 🛎️ en el check-in.
+    if (!det && t.senal && t.senal.p) return detallado && (t.senal.temas || []).length ? t.senal.temas.map(etiquetaAviso).join(' · ') : '⚠ trae pendiente';
     if (det && (det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) return '🌱 primera clase';
     if (det && (det.insignias || []).some(function (x) { return x.tipo === 'cumple'; })) return '🎂 cumple hoy';
     return '';
@@ -102,7 +123,7 @@
     return String((p && p.etiqueta) || 'pendiente');
   }
   /** Cuerpo de una llegada sin nada que resaltar: «Sin pendientes» SOLO si de verdad llegó su detalle. */
-  function sinNada(t) { return t.detalle ? 'Sin pendientes' : 'Sin detalle todavía · revisa la pantalla'; }
+  function sinNada(t) { return t.detalle ? 'Sin pendientes' : t.senal ? 'hizo check-in' : 'Sin detalle todavía · revisa la pantalla'; }
 
   /** Mezcla una respuesta de `llegadas` con lo que ya hay. Devuelve { estado, nuevas, llegaron, cambio }:
    *  - `llegaron` = tarjetas vistas por primera vez (para el recuadro y el cuenco: en cuanto se ven, con o sin detalle);
@@ -160,15 +181,20 @@
     return { estado: { dia: resp.dia, cursor: resp.cursor || (cambioDia ? null : e.cursor), tarjetas: tarjetas, vistos: vistos, esperan: siguen, cargado: true,
       proximas: Array.isArray(resp.proximas) ? resp.proximas : [], horas: resp.horas !== false,
       total: Number(resp.total) > tarjetas.length ? Number(resp.total) : tarjetas.length, rezago: Number(resp.rezagoPanel) > 0,
-      ahora: resp.ahora || null }, nuevas: nuevas, llegaron: llegaron, cambio: cambio };
+      ahora: resp.ahora || null,
+      // v3: conteo por clase (subtítulos), latido de la tablet (la lectura por la señal no lo trae: se conserva) y si hay clases.
+      clases: Array.isArray(resp.clases) ? resp.clases : (cambioDia ? [] : (e.clases || [])),
+      tablet: resp.tablet !== undefined ? resp.tablet : (cambioDia ? null : (e.tablet || null)),
+      activo: resp.sondeo ? !!resp.sondeo.activo : (cambioDia ? true : e.activo !== false) }, nuevas: nuevas, llegaron: llegaron, cambio: cambio };
   }
 
   /** Junta lo que no se ha visto (por id, sin repetir) mientras la pestaña sigue en segundo plano: el resumen sale de TODO
    *  eso, así un aviso nuevo sin pendiente no borra el de quien sí traía. Se vacía al volver a la pestaña. */
   function acumular(sinVer, nuevas) {
-    var out = (sinVer || []).slice(), ids = {};
-    out.forEach(function (t) { ids[t.id] = 1; });
-    (nuevas || []).forEach(function (t) { if (!ids[t.id]) { ids[t.id] = 1; out.push(t); } });
+    var out = (sinVer || []).slice(), pos = {};
+    out.forEach(function (t, i) { pos[t.id] = i; });
+    // La misma llegada otra vez (primero por la señal, luego con su detalle): gana la más nueva, en su lugar.
+    (nuevas || []).forEach(function (t) { if (pos[t.id] != null) out[pos[t.id]] = t; else { pos[t.id] = out.length; out.push(t); } });
     return out;
   }
 
@@ -248,12 +274,14 @@
 
   /** Tema de un pendiente para su pastilla: { icono, tema, accion, urgencia, color } (lo manda el servidor). Si no viene
    *  (servidor viejo), se arma con su texto: lo de antes de «→» es el tema y lo de después la acción. */
-  var COLORES = { pago: 1, canje: 1, offline: 1, pausa: 1, nota: 1, neutro: 1, primera: 1, cumple: 1, aviso: 1 };
+  var COLORES = { pago: 1, canje: 1, offline: 1, pausa: 1, nota: 1, neutro: 1, primera: 1, cumple: 1, aviso: 1, equipo: 1 };
   function temaDe(p) {
     if (p && p.tema) {
       var x = { icono: String(p.icono || ''), tema: String(p.tema), accion: String(p.accion || ''), urgencia: Number(p.urgencia) || 6,
         color: tiene(COLORES, p.color) ? p.color : 'neutro', texto: p.texto };
       if (p.ficha && RE_FICHA.test(String(p.ficha))) x.ficha = String(p.ficha);   // 💵 plan en otra ficha: liga a ESA ficha
+      if (tiene(DESTINOS, p.destino)) x.destino = p.destino;                       // a qué vista de Wix lleva (v3)
+      if (p.destino === 'nota' && RE_SLACK.test(String(p.liga || ''))) x.liga = String(p.liga);
       return x;
     }
     var partes = String((p && (p.texto || p.etiqueta)) || 'Pendiente').split(/\s*→\s*/);
@@ -267,12 +295,102 @@
     if (!det) return out;
     if (det.sinDetalle) return [{ icono: '', tema: 'Sin detalle', accion: 'revisar su ficha', color: 'neutro', texto: (det.avisos || [])[0] }];
     (det.pendientes || []).map(temaDe).sort(function (a, b) { return a.urgencia - b.urgencia; }).forEach(function (x) { out.push(x); });
+    equipoDe(t).forEach(function (x) { out.push({ icono: '', tema: textoEquipo(x), accion: 'no se cobra', color: 'equipo', texto: TEXTO_EQUIPO }); });
     var ins = det.insignias || [];
     if (ins.some(function (x) { return x.tipo === 'primera'; })) out.push({ icono: '🌱', tema: 'Primera clase', accion: '', color: 'primera', texto: 'Es su primera clase en Hera: recibirla' });
     if (ins.some(function (x) { return x.tipo === 'cumple'; })) out.push({ icono: '🎂', tema: 'Cumple', accion: '', color: 'cumple', texto: 'Cumple años hoy: felicitarla' });
     if (det.market || t.market) out.push({ icono: '🎟️', tema: String(det.plan || t.nombre || 'Marketplace'), accion: 'validar su código', color: 'neutro', texto: (det.avisos || [])[0] });
     else if (det.sinFicha) out.push({ icono: '', tema: 'Sin ficha en Wix', accion: 'revisar', color: 'neutro', texto: (det.avisos || [])[0] });
     else (det.avisos || []).forEach(function (a) { out.push({ icono: '', tema: String(a), accion: '', color: 'aviso', texto: String(a) }); });
+    return out;
+  }
+  /** Liga de una pastilla a la vista donde se resuelve (v3), o null. Se arma AQUÍ con piezas validadas (lista blanca): el
+   *  sitio y el contacto salen de su ficha (RE_FICHA), las pestañas son fijas y el nombre va codificado; de fuera solo entra
+   *  el permalink de una nota de #recepcion (RE_SLACK) y la OTRA ficha (RE_FICHA).
+   *  - canjear / cobrar → la lista de reservas filtrada por ella (cada reserva dice «Estado del pago»; «⋯ → Gestionar
+   *    participantes» abre la sesión, donde está «Canjear sesión»);
+   *  - suscripciones → su ficha en la pestaña Suscripciones; otra-ficha → la otra ficha; nota → la nota en Slack. */
+  function ligaDe(x, t) {
+    if (!x || !tiene(DESTINOS, x.destino)) return null;
+    if (x.destino === 'nota') return RE_SLACK.test(String(x.liga || '')) ? String(x.liga) : null;
+    if (x.destino === 'otra-ficha') return x.ficha && RE_FICHA.test(String(x.ficha)) ? String(x.ficha) : null;
+    var ficha = String((t && t.detalle && t.detalle.ficha) || ''), m = RE_FICHA.exec(ficha);
+    if (!m) return null;
+    if (x.destino === 'suscripciones') return ficha + '?tab_name=' + TAB_SUSCRIPCIONES;
+    var tab = JSON.stringify([{ id: 'booking-list', name: 'Citas y clases' }]);
+    var quien = JSON.stringify([{ id: m[2].toLowerCase(), name: String((t && t.nombre) || 'Clienta').slice(0, 80) }]);
+    return 'https://manage.wix.com/dashboard/' + m[1].toLowerCase() + '/bookings/bookings/bookings-list?tab=' + encodeURIComponent(tab) + '&contact=' + encodeURIComponent(quien);
+  }
+  // v3.1: equipo y Lobas (alta_bloqueados o plan Lobas): no se les cobra, así que el 💵 se calla (y nunca va a Slack). En el
+  // Mostrador sale como pastilla gris informativa «equipo · 💵 sin canjear»: no ocupa «Por resolver» (va como chip en el
+  // subtítulo de su clase) ni lanza «trae pendiente» (decisión documentada en docs/MOSTRADOR.md, v3.1).
+  var TEXTO_EQUIPO = 'Del equipo o Lobas: no se le cobra (informativo)';
+  function equipoDe(t) { var d = t && t.detalle; return (d && Array.isArray(d.equipo) ? d.equipo : []).filter(function (x) { return x && x.tema; }); }
+  function minuscula(x) { var s = String(x || ''); return s ? s.charAt(0).toLocaleLowerCase('es-MX') + s.slice(1) : s; }
+  function textoEquipo(x) { return 'equipo · ' + (x.icono ? String(x.icono) + ' ' : '') + minuscula(x.tema); }
+  /** Las 1–2 primeras pastillas en texto corto («💵 Sin canjear · +1»), para el recuadro. */
+  function etiquetas(ps) { var xs = (ps || []).slice(0, 2).map(etiquetaAviso); if ((ps || []).length > 2) xs.push('+' + (ps.length - 2)); return xs.join(' · '); }
+  /** v3.1: el catálogo código → pastilla que manda el servidor (`catalogo`, una vez), validado: texto corto, color y destino
+   *  conocidos (la 📝 y «otra ficha» sin destino: su liga solo viene con el detalle). */
+  function leerCatalogo(c) {
+    if (!c || typeof c !== 'object' || Array.isArray(c)) return null;
+    var out = {}, n = 0;
+    for (var k in c) {
+      if (!Object.prototype.hasOwnProperty.call(c, k) || !RE_CODIGO.test(k) || n >= 80) continue;
+      var x = c[k];
+      if (!x || typeof x !== 'object' || typeof x.tema !== 'string' || !x.tema || x.tema.length > 60) continue;
+      out[k] = { icono: String(x.icono || '').slice(0, 8), tema: x.tema, accion: String(x.accion || '').slice(0, 80), urgencia: Number(x.urgencia) || 6,
+        color: tiene(COLORES, x.color) ? x.color : 'neutro' };
+      if (tiene(DESTINOS, x.destino) && x.destino !== 'nota' && x.destino !== 'otra-ficha') out[k].destino = x.destino;
+      n++;
+    }
+    return n ? out : null;
+  }
+  function codigosDe(xs) {
+    var out = [];
+    (Array.isArray(xs) ? xs : []).forEach(function (x) { if (typeof x === 'string' && RE_CODIGO.test(x) && out.indexOf(x) < 0 && out.length < 6) out.push(x); });
+    return out;
+  }
+  /** Códigos de la señal → pastillas (con el catálogo). Uno que no está usa el de su tipo («reserva:cobrar» → «reserva»); sin
+   *  catálogo (servidor viejo), nada: el recuadro dice «trae pendiente» a secas. */
+  function temasDeCodigos(cs, cat) {
+    if (!cat) return [];
+    return codigosDe(cs).map(function (k) {
+      var tipo = k.split(':')[0], x = (tiene(cat, k) && cat[k]) || (tiene(cat, tipo) && cat[tipo]) || (tipo === 'nota' && tiene(cat, 'nota:otra') && cat['nota:otra']) || null;
+      var o = x ? { tipo: tipo, icono: x.icono, tema: x.tema, accion: x.accion, urgencia: x.urgencia, color: x.color } : { tipo: tipo, icono: '', tema: 'Pendiente', accion: 'revisar su ficha', urgencia: 6, color: 'neutro' };
+      if (x && x.destino) o.destino = x.destino;
+      return o;
+    }).sort(function (a, b) { return a.urgencia - b.urgencia; });
+  }
+  /** La señal de una llegada para su recuadro: { p, e } y, si los trae (v3.1), sus temas y lo callado por ser del equipo. */
+  function senalDe(e, cat) {
+    var sn = { p: e.p ? 1 : 0, e: e.e }, ts = temasDeCodigos(e.t, cat), eq = temasDeCodigos(e.q, cat);
+    if (ts.length) sn.temas = ts;
+    if (eq.length) sn.eq = eq;
+    return sn;
+  }
+  /** Detalle PROVISIONAL (v3.1) de una llegada, con lo que dijo la señal: sus pendientes como pastillas, el color de su
+   *  elemento y su ficha (de «Faltan por llegar»). La lista completa lo confirma o lo reemplaza en segundos. */
+  function detalleProvisional(sn, ficha) {
+    var d = { elemento: sn && tiene(ELEMENTOS, sn.e) ? sn.e : null, plan: '', saldo: null, ficha: ficha && RE_FICHA.test(String(ficha)) ? String(ficha) : null,
+      insignias: [], pendientes: (sn && sn.temas) || [], avisos: [], provisional: true };
+    if (sn && sn.eq) d.equipo = sn.eq.map(function (x) { return { tipo: x.tipo, icono: x.icono, tema: x.tema, urgencia: x.urgencia, color: 'equipo' }; });
+    return d;
+  }
+  /** «Por resolver» con los renglones provisionales (v3.1): uno por llegada de la señal que trae pendiente (o lo callado del
+   *  equipo) mientras la lista no trae su detalle. Si la lista ya la trae SIN detalle (lectura ligera), su tarjeta toma el
+   *  detalle provisional; si la trae CON detalle, manda la lista (nunca dos renglones de la misma). */
+  function conProvisionales(ts, provs) {
+    var out = (ts || []).slice(), pos = {};
+    out.forEach(function (t, i) { pos[t.id] = i; });
+    (provs || []).forEach(function (p) {
+      if (!p || !p.id || !p.detalle) return;
+      var i = pos[p.id], base = i != null ? out[i] : p, o = {}, k;
+      if (i != null && base.detalle) return;
+      for (k in base) if (Object.prototype.hasOwnProperty.call(base, k)) o[k] = base[k];
+      o.detalle = p.detalle; o.provisional = true; o.prioridad = prioridadDe(p.detalle);
+      if (i != null) out[i] = o; else { pos[p.id] = out.length; out.push(o); }
+    });
     return out;
   }
   /** ¿Se sabe qué traía? No si su detalle no ha llegado (primera carga con más de 25, cálculo que falló) o vino vacío. */
@@ -300,15 +418,25 @@
    *  - `yendo`: su clase terminó hace ≤ 45 min (alcanzarla en la puerta), la que acaba de terminar arriba;
    *  - `fuera`: con tema pero su clase terminó hace más de 45 min (ya no sale; queda en el resumen de Slack);
    *  - `sinDetalle`: llegadas cuyo detalle no ha llegado (no se sabe si traen tema); `conTema` y `total` para el contador. */
+  /** 🌱 primera clase y 🎂 cumple de quien NO trae tema (Ideas v3): un chip en el subtítulo de su clase, sin renglón. */
+  function chipsDe(t) {
+    var ins = (t.detalle && t.detalle.insignias) || [], out = [];
+    if (ins.some(function (x) { return x && x.tipo === 'primera'; })) out.push('🌱');
+    if (ins.some(function (x) { return x && x.tipo === 'cumple'; })) out.push('🎂');
+    return out;
+  }
   function bloques(ts, ahoraMs) {
-    var ahora = ahoraMs || Date.now(), van = [], yendo = [], fuera = 0, sd = 0, ct = 0;
+    var ahora = ahoraMs || Date.now(), van = [], yendo = [], fuera = 0, sd = 0, ct = 0, chipsVan = [], chipsYendo = [];
     (ts || []).forEach(function (t) {
       if (!t.detalle) { sd++; return; }
-      if (!conTema(t)) return;
+      var f = finClase(t.clase), aVan = !Number.isFinite(f) || ahora < f, aYendo = !aVan && ahora - f <= YENDO_MS;
+      if (!conTema(t)) {
+        if (chipsDe(t).length || equipoDe(t).length) { if (aVan) chipsVan.push(t); else if (aYendo) chipsYendo.push(t); }
+        return;
+      }
       ct++;
-      var f = finClase(t.clase);
-      if (!Number.isFinite(f) || ahora < f) van.push(t);
-      else if (ahora - f <= YENDO_MS) yendo.push(t);
+      if (aVan) van.push(t);
+      else if (aYendo) yendo.push(t);
       else fuera++;
     });
     var porHora = function (a, b) { return String(b.hora || '').localeCompare(String(a.hora || '')); };
@@ -317,14 +445,85 @@
     // encabezado «Terminó…» sale una vez por clase.
     var claseDe = function (t) { return String((t.clase && (t.clase.id || t.clase.inicio)) || ''); };
     yendo.sort(function (a, b) { return finClase(b.clase) - finClase(a.clase) || claseDe(a).localeCompare(claseDe(b)) || porHora(a, b); });
-    return { van: van, yendo: yendo, fuera: fuera, sinDetalle: sd, conTema: ct, total: (ts || []).length };
+    return { van: van, yendo: yendo, fuera: fuera, sinDetalle: sd, conTema: ct, total: (ts || []).length, chipsVan: chipsVan, chipsYendo: chipsYendo };
+  }
+  var claveClase = function (c) { return String((c && (c.id || c.inicio)) || ''); };
+  /** Grupos por clase (Olmo 21-nov: «que el nombre de la clase sea una subcategoría, para ver todos juntos por tipo de
+   *  clase»): { clase, filas, chips }. En «Van llegando», por hora de la clase (la que empieza antes arriba); en «Se van
+   *  yendo», la que acaba de terminar arriba. Dentro, el orden de siempre (la llegada más nueva arriba). */
+  function agrupar(filas, chips, yendo) {
+    var g = {}, orden = [];
+    var de = function (t) { var k = claveClase(t.clase); if (!g[k]) { g[k] = { clase: t.clase || {}, filas: [], chips: [] }; orden.push(g[k]); } return g[k]; };
+    (filas || []).forEach(function (t) { de(t).filas.push(t); });
+    (chips || []).forEach(function (t) { de(t).chips.push(t); });
+    var ini = function (x) { var v = Date.parse(x.clase.inicio || ''); return Number.isFinite(v) ? v : 0; };
+    orden.sort(yendo ? function (a, b) { return finClase(b.clase) - finClase(a.clase) || claveClase(a.clase).localeCompare(claveClase(b.clase)); }
+      : function (a, b) { return ini(a) - ini(b) || claveClase(a.clase).localeCompare(claveClase(b.clase)); });
+    return orden;
+  }
+  /** «2 con tema · 5/7 llegaron» (llegaron / reservadas, con invitadas; el cupo no viene en las reservas de Wix). */
+  function cuentaGrupo(g, resumen) {
+    var r = null;
+    (resumen || []).forEach(function (x) { if (x && x.id === (g.clase && g.clase.id)) r = x; });
+    var partes = [];
+    if (g.filas.length) partes.push(g.filas.length + ' con tema');
+    if (r && Number(r.lugares) > 0) partes.push((Number(r.llegaron) || 0) + '/' + Number(r.lugares) + ' llegaron');
+    return partes.join(' · ');
+  }
+  /** Aviso de la tablet (Ideas v3): con clases en horario, si lleva más de 20 min sin pedir datos (apagada, sin internet o en
+   *  otra pantalla), nadie está haciendo check-in en ella. Sin latido (nunca se escribió) no se dice nada. */
+  function avisoTablet(tablet, ahoraMs, activo) {
+    var v = Date.parse((tablet && tablet.visto) || '');
+    if (!activo || !Number.isFinite(v) || ahoraMs - v <= LATIDO_VIEJO_MS) return '';
+    // De otro día lo dice (revisión 21-nov: «desde las 9:00 pm» podía ser de ayer).
+    var d = diaDe(v), hoy = diaDe(ahoraMs), ayer = diaDe(ahoraMs - 864e5), cuando = hora(new Date(v).toISOString());
+    var desde = d === hoy ? 'desde las ' + cuando : d === ayer ? 'desde ayer a las ' + cuando : 'desde el ' + fechaCorta(v) + ' a las ' + cuando;
+    return '⚠ La tablet no ha pedido datos ' + desde + ': revisa que esté prendida, con internet y en el kiosco.';
+  }
+  function diaDe(ms) { try { return new Date(ms).toLocaleDateString('en-CA', { timeZone: ZONA }); } catch (_) { return new Date(ms).toISOString().slice(0, 10); } }
+  function fechaCorta(ms) { try { return new Date(ms).toLocaleDateString('es-MX', { timeZone: ZONA, day: 'numeric', month: 'short' }).replace('.', ''); } catch (_) { return diaDe(ms); } }
+  /** Las entradas válidas de la señal (v3), o null si no trae lista (servidor o documento viejo). Las retiradas siempre; las
+   *  demás solo si son de los últimos 3 min (al volver la conexión no se anuncia lo de hace rato). */
+  function entradasSenal(ll, ahoraMs) {
+    if (!Array.isArray(ll)) return null;
+    var out = [];
+    ll.slice(-8).forEach(function (e) {
+      if (!e || !RE_ID_SENAL.test(String(e.id || ''))) return;
+      var ts = Date.parse(e.ts || '');
+      if (!Number.isFinite(ts)) return;
+      var o = { id: String(e.id), ts: new Date(ts).toISOString(), x: e.x === 1, f: e.x === 1 && e.f === 1, p: e.p === 1,
+        e: tiene(ELEMENTOS, e.e) ? e.e : '', c: typeof e.c === 'string' ? e.c : '', m: typeof e.m === 'string' && /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]{2,20}$/.test(e.m) ? e.m : '' };
+      var t = codigosDe(e.t), q = codigosDe(e.q);               // v3.1: códigos de sus pendientes y de lo callado (equipo)
+      if (t.length) o.t = t;
+      if (q.length) o.q = q;
+      if (o.x || ahoraMs - ts <= RECUADRO_RECIENTE_MS) out.push(o);
+    });
+    return out;
+  }
+  /** Una llegada de la señal como tarjeta para su recuadro: nombre, iniciales y clase salen de «Faltan por llegar» (la
+   *  señal no lleva nombres); el Fitpass, de su marca y su clase. null si no se encuentra (llegará por «llegadas»). */
+  function deSenal(e, est, cat) {
+    var ps = (est && est.proximas) || [], i, j;
+    for (i = 0; i < ps.length; i++) {
+      var p = ps[i], cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach };
+      if (e.m) { if (e.c && p.id === e.c) return { id: e.id, nombre: e.m, iniciales: '🎟️', market: true, origen: 'tablet', hora: e.ts, clase: cl, senal: { p: 0 } }; continue; }
+      var fs = Array.isArray(p.faltan) ? p.faltan : [];
+      for (j = 0; j < fs.length; j++) if (fs[j] && fs[j].id === e.id) {
+        var t = { id: e.id, nombre: String(fs[j].nombre || 'Alumna'), iniciales: String(fs[j].iniciales || '?'), origen: 'tablet', hora: e.ts, clase: cl,
+          lugares: fs[j].lugares, senal: senalDe(e, cat) };
+        if (fs[j].ficha && RE_FICHA.test(String(fs[j].ficha))) t.ficha = String(fs[j].ficha);   // para la liga de su renglón provisional
+        return t;
+      }
+    }
+    return null;
   }
   /** Ids que se le piden al servidor para revisar (¿ya se cerró su pendiente en Wix?): las que se VEN en la lista (12 por
    *  bloque, máx. 24): con 10 o más en «Van llegando», las de «Se van yendo» también se revisan. El marketplace no (Wix no
    *  sabe si ya se validó su código). */
   function idsRevisar(b) {
-    var ok = function (t) { return t.id && !(t.detalle && t.detalle.market); };
-    return b.van.filter(ok).slice(0, TOPE_BLOQUE).concat(b.yendo.filter(ok).slice(0, TOPE_BLOQUE)).map(function (t) { return t.id; });
+    var ok = function (t) { return t.id && !t.provisional && !(t.detalle && t.detalle.market); };
+    var vis = function (ts, yendo) { var v = visibles(ts, yendo); return ts.filter(function (t) { return v[t.id] && ok(t); }); };
+    return vis(b.van, false).concat(vis(b.yendo, true)).map(function (t) { return t.id; });
   }
   /** Contador discreto («12 llegadas hoy · 3 con tema») y lo que dice la franja cuando está vacía. */
   function textosLista(b, total) {
@@ -340,16 +539,22 @@
   /** Recuadro de una llegada de la tablet: «Clienta E.» grande, «hizo check-in · Reformer 7:30 am», su círculo y, si trae
    *  pendiente, una línea chica que manda a la franja (el detalle completo vive ahí). */
   function recuadroDe(t) {
-    var ps = String((t && t.nombre) || '').trim().split(/\s+/).filter(Boolean), det = t && t.detalle;
-    var extra = '', tipo = '';
-    if (det && det.pendientes && det.pendientes.length) { extra = 'trae pendiente → ver en Por resolver'; tipo = 'pendiente'; }
+    var ps = String((t && t.nombre) || '').trim().split(/\s+/).filter(Boolean), det = t && t.detalle, sn = (t && t.senal) || null;
+    var extra = '', tipo = '', eq = det ? equipoDe(t) : ((sn && sn.eq) || []);
+    // v3.1: dice CUÁL («trae pendiente: 💵 Sin canjear»), del detalle o de la señal (los mismos códigos que calculó el 🛎️).
+    var cual = function (ps) { return ps && ps.length ? 'trae pendiente: ' + etiquetas(ps.map(temaDe)) : 'trae pendiente → ver en Por resolver'; };
+    if (det && det.pendientes && det.pendientes.length) { extra = cual(det.pendientes); tipo = 'pendiente'; }
     else if (det && det.sinDetalle) { extra = 'sin detalle → ver en Por resolver'; tipo = 'pendiente'; }
+    else if (!det && sn && sn.p) { extra = cual(sn.temas); tipo = 'pendiente'; }   // v3: lo dijo la señal
+    else if (eq.length) { extra = textoEquipo(eq[0]); tipo = 'equipo'; }      // informativo: no se cobra
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) { extra = '🌱 primera clase'; tipo = 'primera'; }
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'cumple'; })) { extra = '🎂 cumple hoy'; tipo = 'cumple'; }
-    else if (det && det.market) extra = '🎟️ validar su código';
-    return { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1].charAt(0).toLocaleUpperCase('es-MX') + '.' : '',
+    else if ((det && det.market) || (!det && t && t.market)) extra = '🎟️ validar su código';
+    var o = { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1].charAt(0).toLocaleUpperCase('es-MX') + '.' : '',
       linea: 'hizo check-in · ' + claseCorta(t && t.clase), extra: extra, tipo: tipo, iniciales: (t && t.iniciales) || '?',
-      elemento: det && tiene(ELEMENTOS, det.elemento) ? det.elemento : '', market: !!(t && t.market) };
+      elemento: det ? (tiene(ELEMENTOS, det.elemento) ? det.elemento : '') : (sn && tiene(ELEMENTOS, sn.e) ? sn.e : ''), market: !!(t && t.market) };
+    if (sn) o.senal = sn;
+    return o;
   }
   /** ¿Sale recuadro? Solo check-ins de la TABLET (los del panel no: no hay nadie en la tablet) y recientes (al volver la
    *  conexión no se anuncia lo de hace rato). `ahoraServidor` = la hora del servidor en esa respuesta. */
@@ -395,19 +600,18 @@
     }
   }
   /** Pastilla en dos niveles: el tema arriba (en negritas) y la acción debajo, más chica (cabe en ~200 px a 1024). */
-  function pastilla(doc, x) {
-    var s = el(doc, 'span', 'pill ' + (tiene(COLORES, x.color) ? x.color : 'neutro'));
+  /** v3: con destino, la pastilla ENTERA es un botón-liga a la vista donde se resuelve (abre otra pestaña), con el paso en
+   *  chico («⋯ → Gestionar participantes → Canjear sesión»). Sin destino válido, como antes (sin liga). */
+  function pastilla(doc, x, t) {
+    var cls = 'pill ' + (tiene(COLORES, x.color) ? x.color : 'neutro'), liga = ligaDe(x, t), s;
+    if (liga) { s = el(doc, 'a', cls + ' pill-boton'); s.href = liga; s.target = '_blank'; s.rel = 'noopener noreferrer'; }
+    else s = el(doc, 'span', cls);
     s.appendChild(el(doc, 'span', 'pill-tema', (x.icono ? x.icono + ' ' : '') + x.tema));
-    if (x.accion || x.ficha) {
-      var a = el(doc, 'span', 'pill-accion', x.accion || '');
-      if (x.ficha && RE_FICHA.test(x.ficha)) {
-        a.appendChild(el(doc, 'span', null, x.accion ? ' · ' : ''));
-        var lk = el(doc, 'a', 'pill-liga', 'abrir esa ficha'); lk.href = x.ficha; lk.target = '_blank'; lk.rel = 'noopener noreferrer';
-        a.appendChild(lk);
-      }
-      s.appendChild(a);
-    }
-    if (x.texto) s.setAttribute('title', (x.color === 'aviso' || x.color === 'primera' || x.color === 'cumple' ? '' : 'Al llegar: ') + String(x.texto));
+    if (x.accion) s.appendChild(el(doc, 'span', 'pill-accion', x.accion));
+    if (liga) s.appendChild(el(doc, 'span', 'pill-paso', DESTINOS[x.destino] + ' ↗'));
+    var tt = x.texto ? (x.color === 'aviso' || x.color === 'primera' || x.color === 'cumple' ? '' : 'Al llegar: ') + String(x.texto) : '';
+    if (liga) tt = (tt ? tt + ' · ' : '') + 'Abre en Wix' + (x.destino === 'nota' ? ' (Slack)' : '') + ': ' + DESTINOS[x.destino];
+    if (tt) s.setAttribute('title', tt);
     return s;
   }
   /** Línea gris: plan y saldo primero (lo que se corta con «…» es lo de menos), luego ⭐ hito, 👋 regreso y años.
@@ -415,6 +619,7 @@
   function metaDe(t) {
     var det = t.detalle || null;
     if (!det) return 'Sin detalle todavía (llegó antes de abrir esta pantalla, o no se pudo leer)';
+    if (det.provisional) return 'confirmando con Wix…';            // v3.1: de la señal; la lista lo confirma o lo reemplaza
     if (det.sinDetalle) return '';
     var xs = [];
     if (!det.market && !det.sinFicha) xs.push(String(det.plan || 'sin plan') + (det.saldo ? ' · ' + String(det.saldo) : ''));
@@ -423,7 +628,7 @@
   }
 
   /** Un renglón: hora · círculo · nombre y clase (y la línea gris) · a la derecha el tema en pastilla (o ✓ discreto). */
-  function fila(doc, t, ahoraMs, animar) {
+  function fila(doc, t, ahoraMs, animar, agrupada) {
     var det = t.detalle || null, ps = pastillasDe(t);
     var li = el(doc, 'li', 'fila');
     if (t.prioridad === 1) li.className += ' con-pendiente c-' + (ps.length ? ps[0].color : 'neutro');   // ps[0] = su pendiente más urgente
@@ -431,6 +636,7 @@
     else if (det && det.market) li.className += ' c-neutro';      // 🎟️ validar su código
     else if (!ps.length && det) li.className += ' tenue';          // tenue = «se sabe que no trae nada»; sin detalle, no
     if (ahoraMs - (t.desde || 0) < MARCA_NUEVA_MS && t.nueva) li.className += ' nueva' + (animar ? ' entra' : '');
+    if (t.provisional) { li.className += ' provisional'; li.setAttribute('title', 'Lo dijo el check-in de la tablet; Wix todavía no lo muestra (se confirma solo)'); }
     var h = el(doc, 'div', 'f-hora', t.hora ? hora(t.hora) : '—');
     var origen = t.origen === 'panel' ? 'panel aprox.' : t.origen === 'panel-tarde' ? 'sin hora' : '';
     if (origen) { var sm = el(doc, 'small', null, origen);
@@ -446,15 +652,15 @@
     var l1 = el(doc, 'div', 'f-l1');
     var conDobles = !!(det && (det.pendientes || []).some(function (p) { return p.tipo === 'dobles'; }));   // «2 lugares» ya va en su 👥
     l1.appendChild(nombreNodo(doc, String(t.nombre || 'Alumna') + (t.lugares >= 2 && !conDobles ? ' (' + t.lugares + ' lugares)' : ''), det && det.ficha, 'nombre'));
-    var cl = el(doc, 'span', 'f-clase', ' · ' + claseCorta(t.clase) + (t.clase && t.clase.coach ? ' · ' + t.clase.coach : ''));
-    l1.appendChild(cl);
+    // Agrupada bajo el subtítulo de su clase (v3), el renglón ya no la repite.
+    if (!agrupada) l1.appendChild(el(doc, 'span', 'f-clase', ' · ' + claseCorta(t.clase) + (t.clase && t.clase.coach ? ' · ' + t.clase.coach : '')));
     info.appendChild(l1);
     var meta = metaDe(t);
     if (meta) { var m = el(doc, 'div', 'f-meta', meta); m.setAttribute('title', meta); info.appendChild(m); }   // se corta con «…»: completo al pasar el ratón
     li.appendChild(info);
     if (ps.length) {
       var temas = el(doc, 'div', 'f-temas');
-      ps.forEach(function (x) { temas.appendChild(pastilla(doc, x)); });
+      ps.forEach(function (x) { temas.appendChild(pastilla(doc, x, t)); });
       li.appendChild(temas);
     } else if (det && !det.sinDetalle) {
       var col = el(doc, 'div', 'f-temas'), ok = el(doc, 'span', 'f-ok', '✓');
@@ -466,40 +672,85 @@
 
   // La entrada animada sale UNA vez por llegada (cada sondeo repinta todo: sin esto, destellaba en cada sondeo, y doble).
   var animadas = {};
-  /** Un bloque de la lista: sus renglones (tope 12 + «+N más»). En «Se van yendo», arriba de cada grupo la hora a la que
-   *  terminó su clase. */
-  function pintarBloque(doc, ul, ts, ahora, conFin) {
-    vaciar(ul);
-    var ultimoFin = null;
-    ts.slice(0, TOPE_BLOQUE).forEach(function (t) {
-      if (conFin) {
-        var f = finClase(t.clase), k = String(f) + '|' + ((t.clase && t.clase.id) || '');
-        if (k !== ultimoFin) {
-          ultimoFin = k;
-          ul.appendChild(el(doc, 'li', 'sub-fin', 'Terminó ' + hora(new Date(f).toISOString()) + ' · ' + claseCorta(t.clase) +
-            ' · hace ' + Math.max(0, Math.round((ahora - f) / 60000)) + ' min'));
+  /** Subtítulo de una clase: «Reformer 7:30 am · Coach» (en «Se van yendo», «Terminó 8:20 pm · Reformer 7:30 pm · Coach ·
+   *  hace 5 min»), a la derecha «2 con tema · 5/7 llegaron», y abajo los chips 🌱/🎂 de quien no ocupa renglón. */
+  function subtitulo(doc, g, resumen, ahora, conFin) {
+    var c = g.clase || {}, li = el(doc, 'li', conFin ? 'sub-fin' : 'sub-clase'), f = finClase(c);
+    var tit = (conFin ? 'Terminó ' + hora(new Date(f).toISOString()) + ' · ' : '') + claseCorta(c) + (c.coach ? ' · ' + c.coach : '') +
+      (conFin ? ' · hace ' + Math.max(0, Math.round((ahora - f) / 60000)) + ' min' : '');
+    li.appendChild(el(doc, 'span', 'sub-titulo', tit));
+    var cta = cuentaGrupo(g, resumen);
+    if (cta) li.appendChild(el(doc, 'span', 'sub-cuenta', cta));
+    if (g.chips.length) {
+      var ch = el(doc, 'span', 'sub-chips');
+      g.chips.forEach(function (t) {
+        if (chipsDe(t).length) {
+          var x = el(doc, 'span', 'chip ' + (chipsDe(t)[0] === '🌱' ? 'chip-primera' : 'chip-cumple'));
+          x.appendChild(el(doc, 'span', null, chipsDe(t).join('') + ' '));
+          x.appendChild(nombreNodo(doc, nombreCorto(t.nombre), t.detalle && t.detalle.ficha, null));
+          x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
+          ch.appendChild(x);
         }
-      }
-      ul.appendChild(fila(doc, t, ahora, !animadas[t.id]));
-    });
-    if (ts.length > TOPE_BLOQUE) ul.appendChild(el(doc, 'li', 'sub-mas', 'y ' + (ts.length - TOPE_BLOQUE) + ' más'));
-    ul.hidden = !ts.length;
+        // v3.1: equipo o Lobas: «equipo · 💵 sin canjear · Clienta A.» en gris (informativo, sin renglón).
+        if (equipoDe(t).length) {
+          var q = el(doc, 'span', 'chip chip-equipo');
+          q.appendChild(el(doc, 'span', null, equipoDe(t).map(textoEquipo).join(' · ') + ' · '));
+          q.appendChild(nombreNodo(doc, nombreCorto(t.nombre), t.detalle && t.detalle.ficha, null));
+          q.setAttribute('title', TEXTO_EQUIPO);
+          ch.appendChild(q);
+        }
+      });
+      li.appendChild(ch);
+    }
+    return li;
   }
-  function pintar(doc, estado, ahoraMs) {
-    var ts = (estado && estado.tarjetas) || [], ahora = ahoraMs || Date.now();
+  /** Cuántos renglones le tocan a cada grupo (tope 12 por bloque), por turnos: ninguna clase se queda sin renglones porque
+   *  otra llenó el bloque (revisión 21-nov: la clase en curso tapaba a la que está llegando). */
+  function reparto(gs, tope) {
+    var n = gs.map(function () { return 0; }), quedan = tope, hubo = true;
+    while (quedan > 0 && hubo) {
+      hubo = false;
+      gs.forEach(function (g, i) { if (quedan > 0 && n[i] < g.filas.length) { n[i]++; quedan--; hubo = true; } });
+    }
+    return n;
+  }
+  /** Ids de los renglones que se ven en un bloque (los más nuevos de cada clase). */
+  function visibles(ts, yendo) {
+    var gs = agrupar(ts, [], yendo), n = reparto(gs, TOPE_BLOQUE), out = {};
+    gs.forEach(function (g, i) { g.filas.slice(0, n[i]).forEach(function (t) { out[t.id] = 1; }); });
+    return out;
+  }
+  /** Un bloque de la lista, agrupado por clase (v3): subtítulo y sus renglones (tope 12 por bloque, repartido entre clases;
+   *  cada clase dice «y N más de esta clase» si se le esconden). */
+  function pintarBloque(doc, ul, ts, chips, resumen, ahora, conFin) {
+    vaciar(ul);
+    var gs = agrupar(ts, chips, conFin), n = reparto(gs, TOPE_BLOQUE);
+    gs.forEach(function (g, i) {
+      ul.appendChild(subtitulo(doc, g, resumen, ahora, conFin));
+      g.filas.slice(0, n[i]).forEach(function (t) { ul.appendChild(fila(doc, t, ahora, !animadas[t.id], true)); });
+      var resto = g.filas.length - n[i];
+      if (resto > 0) ul.appendChild(el(doc, 'li', 'sub-mas', 'y ' + resto + ' más de esta clase'));
+    });
+    ul.hidden = !ts.length && !(chips || []).length;
+  }
+  function pintar(doc, estado, ahoraMs, provs) {
+    var ts = conProvisionales((estado && estado.tarjetas) || [], provs), ahora = ahoraMs || Date.now();
     var b = bloques(ts, ahora), tx = textosLista(b, estado && estado.total), hay = b.van.length + b.yendo.length;
-    pintarBloque(doc, doc.getElementById('van'), b.van, ahora, false);
-    pintarBloque(doc, doc.getElementById('yendo'), b.yendo, ahora, true);
+    var resumen = (estado && estado.clases) || [];
+    pintarBloque(doc, doc.getElementById('van'), b.van, b.chipsVan, resumen, ahora, false);
+    pintarBloque(doc, doc.getElementById('yendo'), b.yendo, b.chipsYendo, resumen, ahora, true);
     ts.forEach(function (t) { if (t.nueva) animadas[t.id] = 1; });
-    // Los dos bloques con su separador salen siempre que haya alguien en la lista (el vacío dice «nadie»).
-    doc.getElementById('bloqueVan').hidden = !hay;
-    doc.getElementById('bloqueYendo').hidden = !hay;
-    doc.getElementById('vacioVan').hidden = !!b.van.length;
-    doc.getElementById('vacioYendo').hidden = !!b.yendo.length;
+    // Los dos bloques con su separador salen siempre que haya alguien en la lista (el vacío dice «nadie»); un 🌱/🎂 solo
+    // (sin pendiente) también los abre: su chip va en el subtítulo de su clase.
+    var conChips = !!(b.chipsVan.length + b.chipsYendo.length);
+    doc.getElementById('bloqueVan').hidden = !hay && !conChips;
+    doc.getElementById('bloqueYendo').hidden = !hay && !conChips;
+    doc.getElementById('vacioVan').hidden = !!(b.van.length + b.chipsVan.length);
+    doc.getElementById('vacioYendo').hidden = !!(b.yendo.length + b.chipsYendo.length);
     doc.getElementById('cuentaVan').textContent = b.van.length ? '(' + b.van.length + ')' : '';
     doc.getElementById('cuentaYendo').textContent = b.yendo.length ? '(' + b.yendo.length + ')' : '';
     var sr = doc.getElementById('sinResolver');
-    sr.hidden = !!hay;
+    sr.hidden = !!hay || conChips;
     sr.textContent = tx.vacio;
     sr.className = 'vacio-mini' + (tx.ok ? '' : ' espera');
     doc.getElementById('conteoResolver').textContent = hay ? '(' + hay + ')' : '';
@@ -507,23 +758,38 @@
     var nota = doc.getElementById('notaHoras');
     if (nota) { nota.textContent = ts.length && estado && !estado.horas ? TEXTOS.sinHoras : ''; nota.hidden = !nota.textContent; }
     pintarProximas(doc, (estado && estado.proximas) || []);
+    var at = doc.getElementById('avisoTablet');
+    if (at) { at.textContent = avisoTablet(estado && estado.tablet, ahora, !!(estado && estado.activo)); at.hidden = !at.textContent; }
     return b;
   }
 
+  /** Lugares que faltan en una clase: cada persona su número de lugares (con invitada, 2) y el marketplace su «×N». */
+  function lugaresFaltan(fs) {
+    return (fs || []).reduce(function (s, f) {
+      var m = f && f.market ? /×\s*(\d+)\s*$/.exec(String(f.nombre || '')) : null;
+      return s + (m ? Number(m[1]) : Math.max(1, Number(f && f.lugares) || 1));
+    }, 0);
+  }
   function pintarProximas(doc, ps) {
     var cont = doc.getElementById('proximas');
     vaciar(cont);
     doc.getElementById('sinProximas').hidden = !!ps.length;
     ps.forEach(function (p) {
-      var s = el(doc, 'section', 'proxima');
+      var fs0 = Array.isArray(p.faltan) ? p.faltan : [];
+      // Ideas v3: ya empezó y falta gente → resaltado: llamarla, o a los 20 min Wix la deja en «No se presentó».
+      var s = el(doc, 'section', 'proxima' + (p.empezo && fs0.length ? ' empezo' : ''));
       var h = el(doc, 'h3'), cl = el(doc, 'span', 'px-clase', claseCorta(p));
       if (p.coach) cl.appendChild(el(doc, 'small', null, ' · ' + p.coach));
       h.appendChild(cl);
       h.appendChild(el(doc, 'span', 'px-cuenta', (p.llegaron || 0) + ' de ' + (p.lugares || 0) + (p.empezo ? ' · ya empezó' : '')));
       s.appendChild(h);
-      var fs = Array.isArray(p.faltan) ? p.faltan : [];
+      var fs = fs0;
       if (!fs.length) s.appendChild(el(doc, 'p', 'listo', 'Ya llegaron todas ✓'));
       else {
+        // Ya empezó: la línea va ARRIBA de los nombres (revisión 21-nov: los tapaba, justo cuando hay que llamarlas). Cuenta
+        // lugares, como «2 de 6»: una invitada y el «Fitpass ×2» cuentan lo que son.
+        var nf = lugaresFaltan(fs);
+        if (p.empezo) s.appendChild(el(doc, 'p', 'px-empezo', 'Ya empezó: ' + (nf === 1 ? 'falta 1' : 'faltan ' + nf) + ' · a los 20 min Wix las marca «No se presentó»'));
         var ul = el(doc, 'ul', 'faltan');
         fs.forEach(function (f) {
           var li = el(doc, 'li', 'falta');
@@ -638,13 +904,50 @@
     // Relojes de la ventana (en las pruebas, unos falsos que no dejan vivo al proceso).
     var setTimeout = function (f, ms) { return win.setTimeout(f, ms); }, clearTimeout = function (h) { return win.clearTimeout(h); };
     var setInterval = function (f, ms) { return win.setInterval(f, ms); };
-    var estado = null, timer = null, cargando = false, inicioCarga = 0, ultimaCarga = 0, tocaba = 0, tituloBase = doc.title;
+    var estado = null, timer = null, cargando = false, inicioLlegadas = 0, ultimaCarga = 0, tocaba = 0, tituloBase = doc.title;
+    // v3: la señal va por su lado (no se congela mientras corre un «llegadas» largo) y a ritmo fijo (de inicio a inicio).
+    var cargandoSenal = false, inicioSenal = 0;
+    var anunciadas = {}, notificadasSenal = {};             // llegadas que ya salieron por la señal (recuadro / notificación)
+    // Revisión 21-nov: `retiradas` = hora de la última retirada de cada id (lo anterior que otra instancia vuelva a escribir sin
+    // retirar no resucita a quien ya se quitó, A1); `silencio` = cuándo se vio su última falla pasajera de Wix (los reintentos
+    // de la cola no vuelven a sonar cada 20 s; el recuadro sale cuando la lista ya la trae); `esperadas` = llegadas de la
+    // señal que la lista todavía no trae (relecturas con espera creciente, M3).
+    // Todo por la hora del SERVIDOR de cada entrada (`ts`), no por el reloj de esta compu.
+    var retiradas = {}, anuncioTs = {}, silencio = {}, esperadas = {}, intento = 0, reintentosCambio = 0, vivas = [];
+    var consola = win.console && typeof win.console.info === 'function' ? win.console : null;
     var sinVer = [], alerta = '', avisoSesion = false, worker = null;
     // Señal (Olmo 21-nov, ≤ 5 s): `senalSeg` > 0 solo con un servidor que la tiene y mientras hay clases.
-    var senalSeg = 0, senalVista = null, proximoRepaso = 0, pideFresco = false, reintentos = 0, fallasSenal = 0, ahoraServidor = 0;
+    var senalSeg = 0, senalVista = null, proximoRepaso = 0, pideFresco = false, fallasSenal = 0, ahoraServidor = 0;
     // Desfase del reloj de la compu contra el del servidor: el cambio de bloque («Se van yendo») usa la hora del servidor.
     var desfase = 0, ahoraMs = function () { return Date.now() + desfase; };
     var recuadros = [], sonaron = {};
+    // v3.1: catálogo de temas (lo manda el servidor una vez), renglones provisionales (id → tarjeta con su detalle de la señal),
+    // lo que ya se notificó con sus temas (id → texto) y la tarjeta que salió por la señal (para su renglón provisional).
+    var catalogo = null, provisionales = {}, notificadasTemas = {}, deLaSenal = {};
+    // Revisión v3.1 (M1): `confirmadas` = hora del SERVIDOR de la última lectura de la lista que traía su tarjeta CON detalle.
+    // Si después se va de la lista (la quitaron en el panel de Wix: la señal no trae retirada), su entrada vieja de la señal
+    // (sigue ahí 3 min) no revive el provisional cuando otra llegada reescribe la señal. Un check-in nuevo trae hora nueva y sí sale.
+    var confirmadas = {};
+    function listaProv() { var out = [], id; for (id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) out.push(provisionales[id]); return out; }
+    function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv()); }
+    /** Renglón provisional de una llegada de la señal que ya trae sus pendientes (o lo callado del equipo). */
+    function ponerProvisional(e, sn) {
+      if (conDetalle(e.id) || (!sn.p && !sn.eq)) return false;
+      var ant = provisionales[e.id], b = deLaSenal[e.id] || ((estado && estado.tarjetas) || []).filter(function (x) { return x.id === e.id; })[0];
+      if (!b) return false;                                     // sin nombre (no estaba en «Faltan por llegar»): por la lista
+      var t = { id: e.id, nombre: b.nombre, iniciales: b.iniciales, origen: 'tablet', hora: e.ts, clase: b.clase, lugares: b.lugares,
+        desde: ant ? ant.desde : Date.now(), nueva: true, hasta: Date.parse(e.ts) + PROVISIONAL_MS, detalle: detalleProvisional(sn, b.ficha) };
+      provisionales[e.id] = t;
+      return true;
+    }
+    /** La lista ya trae su detalle (lo confirma o lo reemplaza): fuera el provisional. Si nunca la trae, a los 5 min. */
+    function limpiarProvisionales() {
+      var ya = ahoraMs();
+      for (var id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) {
+        var t = ((estado && estado.tarjetas) || []).filter(function (x) { return x.id === id; })[0];
+        if ((t && t.detalle) || (!t && ya > provisionales[id].hasta)) delete provisionales[id];
+      }
+    }
     var miId = Math.random().toString(36).slice(2) + Date.now().toString(36);
     var $ = function (id) { return doc.getElementById(id); };
     var Notif = win.Notification;
@@ -668,8 +971,8 @@
       alerta = ok ? '' : 'Sin conexión'; ponerTitulo();
     }
     function irClave(msg) {
-      clearTimeout(timer); if (worker) worker.postMessage(0); tocaba = 0; estado = null; senalSeg = 0; senalVista = null; pideFresco = false;
-      recuadros = []; pintarRecuadros(doc, recuadros, null);
+      clearTimeout(timer); if (worker) worker.postMessage(0); tocaba = 0; estado = null; senalSeg = 0; senalVista = null; pideFresco = false; inicioSenal = 0;
+      recuadros = []; pintarRecuadros(doc, recuadros, null); provisionales = {}; confirmadas = {};
       $('vistaLista').hidden = true; $('vistaClave').hidden = false;
       $('errorClave').textContent = msg || '';
       try { $('clave').focus(); } catch (_) {}
@@ -705,24 +1008,52 @@
       ls.set(LIDER_KEY, JSON.stringify({ id: miId, t: ahoraMs }));
       return true;
     }
-    function notificar(n) {
+    /** `callada`: rehacer el resumen sin sonar (se retiró una llegada). Se guardan las abiertas para poder cerrarlas. */
+    function notificar(n, callada) {
       if (!n || !Notif || Notif.permission !== 'granted') return;
       try {
         // Callada solo si el cuenco de verdad suena; si el audio no corre, que suene la del sistema.
-        var x = new Notif(n.titulo, { body: n.cuerpo, tag: n.tag || TAG_AVISO, renotify: true, requireInteraction: !!n.fija, silent: sonidoOn() && sonido.corriendo(),
+        var x = new Notif(n.titulo, { body: n.cuerpo, tag: n.tag || TAG_AVISO, renotify: !callada, requireInteraction: !!n.fija, silent: !!callada || (sonidoOn() && sonido.corriendo()),
           icon: 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_192,h_192/favicon.png' });
         x.onclick = function () { try { win.focus(); } catch (_) {} x.close(); };
+        vivas = vivas.filter(function (v) { return v.tag !== (n.tag || TAG_AVISO); }).concat({ tag: n.tag || TAG_AVISO, n: x });
       } catch (_) {}
+    }
+    function cerrarNotificaciones() { vivas.forEach(function (v) { try { v.n.close(); } catch (_) {} }); vivas = []; }
+    /** Se retiró una llegada (Wix no la marcó, o la quitaron): sale del título y de la notificación del sistema (revisión
+     *  21-nov M2). Si quedan otras sin ver, el resumen se rehace sin ella y sin sonar; si no, se cierra. */
+    function olvidarAviso(id) {
+      delete notificadasSenal[id];
+      var antes = sinVer.length;
+      sinVer = sinVer.filter(function (t) { return t.id !== id; });
+      if (sinVer.length === antes) return;
+      ponerTitulo();
+      cerrarNotificaciones();
+      if (sinVer.length && lider()) notificar(resumenNotificacion(sinVer, { detallado: detallado() }), true);
     }
     /** Notificación del sistema (solo en segundo plano) de lo que ya trae su detalle. El cuenco va aparte (`tanda`). */
     function avisarNuevas(nuevas) {
       if (!nuevas.length) return;
       nuevas.forEach(function (t) { t.nueva = true; });
       if (!enSegundoPlano(doc)) return;
+      // Ya avisadas por la señal (v3) y sin pendiente: se actualiza el resumen, pero no vuelve a sonar la notificación.
+      // v3.1: con pendiente también, si la señal ya dijo CUÁL (sus temas); si el detalle dice otra cosa, se rehace sin sonar.
+      var yaDichas = nuevas.every(function (t) { return notificadasSenal[t.id] && (t.prioridad !== 1 || notificadasTemas[t.id]); });
+      var otraCosa = yaDichas && nuevas.some(function (t) { return notificadasTemas[t.id] && notificadasTemas[t.id] !== resaltado(t, true); });
       sinVer = acumular(sinVer, nuevas);
       ponerTitulo();
-      if (!lider()) return;
+      if (otraCosa && lider()) notificar(resumenNotificacion(sinVer, { detallado: detallado() }), true);
+      if (yaDichas || !lider()) return;
       notificar(resumenNotificacion(sinVer, { detallado: detallado() }));
+    }
+    /** v3: la notificación sale YA con lo que trae la señal («Llegó Clienta E. · Reformer 7:30 am · hizo check-in»); si trae
+     *  pendiente, la de su detalle (con su propia etiqueta) llega unos segundos después. */
+    function avisarPorSenal(ts) {
+      if (!ts.length || !enSegundoPlano(doc)) return;
+      ts.forEach(function (t) { notificadasSenal[t.id] = 1; t.prioridad = t.senal && t.senal.p ? 1 : 3; if (t.senal && t.senal.temas) notificadasTemas[t.id] = resaltado(t, true); });
+      sinVer = acumular(sinVer, ts);
+      ponerTitulo();
+      if (lider()) notificar(resumenNotificacion(sinVer, { detallado: detallado() }));
     }
     /** Un solo golpe de cuenco por tanda: por las llegadas que salen en recuadro y, con la pestaña en segundo plano, por las
      *  que se notifican; nunca dos veces por la misma (la que esperaba su detalle ya sonó al verse). */
@@ -739,8 +1070,9 @@
     function ponerRecuadros(ts) {
       var ahora = Date.now();
       ts.slice().reverse().forEach(function (t) {                // vienen de la más nueva a la más vieja: la más nueva queda arriba
-        var r = recuadroDe(t); r.hasta = ahora + RECUADRO_MS; r.entra = true;
-        recuadros = recuadros.filter(function (x) { return x.id !== r.id; });
+        var r = recuadroDe(t), ya = recuadros.filter(function (x) { return x.id === r.id; })[0];
+        if (ya) { r.hasta = ya.hasta; r.entra = false; recuadros = recuadros.map(function (x) { return x === ya ? r : x; }); return; }   // sin repetir la entrada
+        r.hasta = ahora + RECUADRO_MS; r.entra = true;
         recuadros.unshift(r);                                   // la más nueva arriba
       });
       recuadros = recuadros.slice(0, RECUADROS_TOPE);
@@ -753,12 +1085,94 @@
       recuadros = recuadros.map(function (r) {
         var t = ts.filter(function (x) { return x.id === r.id; })[0];
         if (!t) return r;
-        var n = recuadroDe(t);
+        // Sin detalle todavía, lo que dijo la señal («trae pendiente», el color) se conserva.
+        var n = recuadroDe(!t.detalle && r.senal ? conSenal(t, r.senal) : t);
         if (n.extra === r.extra && n.elemento === r.elemento) return r;
         // El detalle llegó tarde («trae pendiente»): que se alcance a leer (≥ 4 s más).
         cambio = true; n.hasta = n.extra && n.extra !== r.extra ? Math.max(r.hasta, Date.now() + 4000) : r.hasta; return n;
       });
       if (cambio) pintarRecuadros(doc, recuadros, cerrarRecuadro);
+    }
+    function conSenal(t, sn) { var o = {}, k; for (k in t) if (Object.prototype.hasOwnProperty.call(t, k)) o[k] = t[k]; o.senal = sn; return o; }
+    function quitarRecuadro(id) {
+      var antes = recuadros.length;
+      recuadros = recuadros.filter(function (r) { return r.id !== id; });
+      if (recuadros.length !== antes) pintarRecuadros(doc, recuadros, cerrarRecuadro);
+    }
+    /** La señal ya sabe que trae pendiente y CUÁL (2.ª escritura del check-in, v3.1): el recuadro que sigue a la vista lo dice
+     *  (≥ 4 s más) y, con la pestaña detrás de Wix, la notificación sale otra vez con su detalle (su propia etiqueta). */
+    function pendientePorSenal(id, e) {
+      var cambio = false, sn = senalDe(e, catalogo);
+      if (!sn.e) sn.e = '';
+      recuadros = recuadros.map(function (r) {
+        if (r.id !== id) return r;
+        if (!sn.e && r.senal && r.senal.e) sn.e = r.senal.e;
+        var n = recuadroDe({ id: r.id, nombre: r.nombre + (r.inicial ? ' ' + r.inicial : ''), iniciales: r.iniciales, market: r.market, clase: null, senal: sn });
+        if (n.extra === r.extra && n.elemento === r.elemento) return r;
+        n.linea = r.linea; n.hasta = Math.max(r.hasta, Date.now() + 4000); cambio = true; return n;
+      });
+      if (cambio) pintarRecuadros(doc, recuadros, cerrarRecuadro);
+      if (deLaSenal[id]) deLaSenal[id].senal = sn;
+      // La notificación: la que salió con la señal decía «hizo check-in»; ahora, con su pendiente.
+      var t = sinVer.filter(function (x) { return x.id === id && !x.detalle; })[0];
+      if (sn.p && t && notificadasSenal[id] && !notificadasTemas[id] && enSegundoPlano(doc)) {
+        var o = conSenal(t, sn); o.prioridad = 1;
+        sinVer = acumular(sinVer, [o]);
+        notificadasTemas[id] = resaltado(o, true) || '⚠';
+        if (lider()) notificar(resumenNotificacion(sinVer, { detallado: detallado() }));
+      }
+    }
+    var tarjetaDe = function (id) { return ((estado && estado.tarjetas) || []).some(function (t) { return t.id === id; }); };
+    var conDetalle = function (id) { return ((estado && estado.tarjetas) || []).some(function (t) { return t.id === id && !!t.detalle; }); };
+    function medir(como, t, extra) {
+      var ms = ahoraMs() - Date.parse(t.hora || '');
+      if (consola && Number.isFinite(ms)) consola.info('[Mostrador] recuadro por ' + como + ': del check-in al recuadro ' + Math.round(ms) + ' ms' + (extra || ''));
+    }
+    /** v3: pinta YA el recuadro de cada llegada nueva que trae la señal (sin esperar a «llegadas», que depende de que Bookings
+     *  muestre el ATTENDED) y dice si hace falta pedir la lista: sí si alguna es nueva (su renglón y sus pendientes) o no se
+     *  pudo armar, o si retiraron una que está en la lista; no si solo trae lo que ya se ve. Sin lista (servidor o documento
+     *  viejo): sí, como antes. Una retirada (Wix rechazó el check-in, o lo quitaron) quita su recuadro. */
+    function procesarSenal(ll) {
+      var xs = entradasSenal(ll, ahoraMs());
+      if (!xs) { reintentosCambio = REINTENTOS_CAMBIO; return true; }
+      var falta = false, nuevos = [], ya = Date.now(), repinta = false;
+      xs.forEach(function (e) {
+        var enLista = tarjetaDe(e.id), ts = Date.parse(e.ts);
+        if (e.x) {
+          // Ya vista (la señal la trae 3 min), o de antes de su último check-in (otra instancia la reescribió): nada.
+          if (ts <= (retiradas[e.id] || 0) || ts < (anuncioTs[e.id] || 0)) return;
+          retiradas[e.id] = ts;
+          if (e.f) silencio[e.id] = ts;
+          quitarRecuadro(e.id); delete anunciadas[e.id]; delete esperadas[e.id]; olvidarAviso(e.id);
+          if (provisionales[e.id]) { delete provisionales[e.id]; repinta = true; }   // v3.1: su renglón provisional también se va
+          delete notificadasTemas[e.id];
+          if (enLista) { falta = true; reintentosCambio = REINTENTOS_CAMBIO; }
+          return;
+        }
+        if (ts <= (retiradas[e.id] || 0)) return;                    // de antes de su retirada (la reescribió otra instancia)
+        if (!enLista && ts <= (confirmadas[e.id] || 0)) return;      // M1: ya se confirmó y se fue de la lista (quitada en el panel)
+        anuncioTs[e.id] = Math.max(anuncioTs[e.id] || 0, ts);
+        if (enLista || anunciadas[e.id]) {
+          if ((e.p || e.q) && !conDetalle(e.id)) { pendientePorSenal(e.id, e); if (ponerProvisional(e, senalDe(e, catalogo))) repinta = true; }
+          if (!enLista) { falta = true; esperadas[e.id] = esperadas[e.id] || ya; }
+          return;
+        }
+        // Un reintento de la cola tras una falla pasajera: sin recuadro, cuenco ni notificación; UNA lectura de la lista (si ya
+        // entró, su recuadro sale por ahí). Sin `esperadas`: no se relee cada 2–8 s mientras Wix sigue caído.
+        if (silencio[e.id] && ts - silencio[e.id] < SILENCIO_MS) { falta = true; return; }
+        var t = deSenal(e, estado, catalogo);
+        if (t) { anunciadas[e.id] = ya; nuevos.unshift(t); deLaSenal[e.id] = t; if (ponerProvisional(e, t.senal)) repinta = true; }   // la lista viene de la más vieja a la más nueva
+        esperadas[e.id] = esperadas[e.id] || ya;
+        falta = true;
+      });
+      if (nuevos.length) {
+        ponerRecuadros(nuevos);
+        tanda(nuevos.map(function (t) { return t.id; }));
+        avisarPorSenal(nuevos);
+        nuevos.forEach(function (t) { medir('la señal', t, ' (la señal tardó ' + (Date.now() - inicioSenal) + ' ms)'); });
+      }
+      if (repinta) repintar();
+      return falta;
     }
     setInterval(function () {                                   // vencen a los ~8 s; un vistazo cada segundo
       if (!recuadros.length) return;
@@ -784,35 +1198,44 @@
     } catch (_) { worker = null; }
     var tocaRepaso = false;                                     // el tic que viene es el del repaso (no el de la señal)
     function programar(seg) {
-      var ms = Math.max(0.5, seg) * 1000;
+      var ms = Math.max(0.3, seg) * 1000;
       clearTimeout(timer); tocaba = Date.now() + ms; tocaRepaso = false;
       if (worker) { try { worker.postMessage(ms); return; } catch (_) { worker = null; } }
       timer = setTimeout(tic, ms);
     }
-    /** Qué toca: la relectura tras la señal, el repaso de `llegadas` (cada 30 s, o el que diga el servidor) o la señal.
+    /** Qué toca: la lectura de la lista tras la señal, el repaso de `llegadas` (cada 30 s, o el que diga el servidor) o la
+     *  señal. Mientras corre un «llegadas» (en vivo, 3–8 s con la revisión), la señal SIGUE (v3): el recuadro no espera.
      *  La señal solo la lee la pestaña que avisa: con dos pestañas en la misma compu (mismo token e IP) no chocan con el
-     *  tope de 1.5 s ni duplican lecturas; la otra solo pinta con el repaso. */
+     *  tope del servidor ni duplican lecturas; la otra solo pinta con el repaso. */
     function tic() {
-      if (pideFresco) return cargar({ fresco: senalVista || 1 });
-      if (!senalSeg || tocaRepaso || Date.now() >= proximoRepaso - 300) return cargar(null);
-      if (!lider()) return alRepaso();
-      consultarSenal();
+      var repaso = !senalSeg || tocaRepaso || Date.now() >= proximoRepaso - 300;
+      // Si a la señal ya le toca, va A LA PAR de la lista: las relecturas (hasta ~6 s) no la frenan.
+      var senalToca = !!senalSeg && !cargandoSenal && Date.now() - inicioSenal >= senalSeg * 1000 - 300;
+      if (!cargando && (pideFresco || repaso)) { cargar(pideFresco ? { fresco: senalVista || 1 } : null); if (senalToca && lider()) consultarSenal(); return; }
+      if (senalSeg && lider()) return consultarSenal();
+      if (!cargando) alRepaso();
     }
     function alRepaso() { programar(Math.max(0.5, (proximoRepaso - Date.now()) / 1000)); tocaRepaso = true; }
+    /** Ms hasta la siguiente señal, a ritmo fijo de inicio a inicio (antes: 3 s DESPUÉS de cada respuesta, ~3.5 s reales). */
+    function msHastaSenal() { return inicioSenal ? Math.max(500, inicioSenal + senalSeg * 1000 - Date.now()) : senalSeg * 1000; }
+    /** La primera lectura de la lista tras la señal, en cuanto el tope del servidor (1 «llegadas» cada 2 s) lo deja; las
+     *  relecturas (Bookings aún no muestra el ATTENDED), a los 2.1 s. */
+    function esperaFresco() { return !intento ? Math.max(0.3, (inicioLlegadas + 2050 - Date.now()) / 1000) : ESPERAS_FRESCO[Math.min(intento, ESPERAS_FRESCO.length) - 1]; }
     function siguiente() {
-      if (pideFresco) return programar(REINTENTO_SEG);
-      if (!senalSeg || proximoRepaso - Date.now() <= senalSeg * 1000) return alRepaso();
-      programar(senalSeg);
+      if (pideFresco && !cargando) return programar(esperaFresco());
+      var ms = msHastaSenal();
+      if (!senalSeg || (!cargando && proximoRepaso - Date.now() <= ms)) return alRepaso();
+      programar(ms / 1000);
     }
     function consultarSenal() {
-      if (cargando) return;
+      if (cargandoSenal) return;
       if (!ls.get(TOKEN_KEY)) { irClave(); return; }
-      cargando = true; inicioCarga = Date.now();
+      cargandoSenal = true; inicioSenal = Date.now();
       var yaMismo = false;
       api('senal', null, TIEMPO_SENAL_MS)
         .then(function (x) {
           if (x.s === 401 || x.s === 403) { sesionPerdida(); return; }
-          if (x.s === 429) { programar((x.j && x.j.espera) || 2); return; }
+          if (x.s === 429) { programar((x.j && x.j.espera) || 1); return; }
           if (x.s !== 200 || !x.j || !x.j.ok) throw new Error('senal');
           if (fallasSenal >= 3) red(true, 'Conectado de nuevo');
           fallasSenal = 0;
@@ -821,21 +1244,22 @@
             // La primera lectura solo fija la base, salvo que la señal sea de justo antes (o después) de la última lista.
             var nueva = senalVista != null || !(Date.parse(v.split('~')[0]) < ahoraServidor - 5000);
             senalVista = v;
-            if (nueva) { pideFresco = true; reintentos = REINTENTOS_SENAL; yaMismo = true; return; }   // «llegadas» YA, no en el siguiente tic
+            // v3: el recuadro sale AQUÍ, con lo que trae la señal; la lista se pide solo si hace falta.
+            if (nueva && procesarSenal(x.j.ll)) { pideFresco = true; intento = 0; yaMismo = true; }
           }
-          siguiente();
+          if (!yaMismo || cargando) siguiente();
         })
         .catch(function () {
           fallasSenal++;
           if (fallasSenal >= 3) red(false, 'Sin conexión con Wix · reintentando');
-          programar(Math.min(ESPERA_ERROR_SEG, 3 * fallasSenal));
+          programar(fallasSenal <= 2 ? 1 : Math.min(ESPERA_ERROR_SEG, 3 * fallasSenal));   // una falla suelta: otra vez en 1 s
         })
-        .then(function () { cargando = false; if (yaMismo) tic(); });
+        .then(function () { cargandoSenal = false; if (yaMismo && !cargando) tic(); });   // «llegadas» YA, no en el siguiente tic
     }
     function cargar(opc) {
       if (cargando) return;
       if (!ls.get(TOKEN_KEY)) { irClave(); return; }
-      cargando = true; inicioCarga = Date.now(); clearTimeout(timer);
+      cargando = true; inicioLlegadas = Date.now();
       // `fresco`: la versión de la señal que se vio (el servidor salta su caché solo si es de antes) o 1 («Actualizar»).
       var fresco = !!(opc && opc.fresco), datos = {};
       if (estado && estado.cursor) datos.desde = estado.cursor;
@@ -843,44 +1267,68 @@
       if (fresco) datos.fresco = typeof opc.fresco === 'string' ? opc.fresco : 1;
       // La revisión (¿ya se cerró en Wix?) no va en la lectura por la señal: esa es solo para el recuadro.
       if (estado && typeof datos.fresco !== 'string') { var rv = idsRevisar(bloques(estado.tarjetas, ahoraMs())); if (rv.length) datos.revisar = rv; }
+      // v3.1: las que tiene SIN detalle (si Bookings las mostró tarde, el cursor ya pasó y el servidor no las calculaba) y,
+      // una vez, el catálogo para traducir los temas de la señal.
+      if (estado && typeof datos.fresco !== 'string') {
+        var sd = estado.tarjetas.filter(function (t) { return t.id && !t.detalle; }).map(function (t) { return t.id; }).slice(0, 24);
+        if (sd.length) datos.detalle = sd;
+      }
+      if (!catalogo) datos.catalogo = 1;
       api('llegadas', datos)
         .then(function (x) {
           if (x.s === 401 || x.s === 403) { sesionPerdida(); return; }
-          if (x.s === 429) { programar((x.j && x.j.espera) || 2); return; }
-          if (x.s !== 200 || !x.j || !x.j.ok) { red(false, 'Sin conexión con Wix · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; programar(ESPERA_ERROR_SEG); return; }
+          if (x.s === 429) { cargando = false; programar((x.j && x.j.espera) || 2); return; }
+          if (x.s !== 200 || !x.j || !x.j.ok) { red(false, 'Sin conexión con Wix · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; cargando = false; programar(ESPERA_ERROR_SEG); return; }
           if (x.j.token) ls.set(TOKEN_KEY, x.j.token);
           var r = combinar(estado, x.j);
           estado = r.estado; ultimaCarga = Date.now(); ahoraServidor = Date.parse(x.j.ahora) || Date.now();
+          if (x.j.catalogo) catalogo = leerCatalogo(x.j.catalogo) || catalogo;
+          estado.tarjetas.forEach(function (t) { if (t.id && t.detalle) confirmadas[t.id] = Math.max(confirmadas[t.id] || 0, ahoraServidor); });
+          limpiarProvisionales();
           desfase = Math.abs(ahoraServidor - Date.now()) > 5000 ? ahoraServidor - Date.now() : 0;   // < 5 s: es la red, no el reloj
-          var conRecuadro = r.llegaron.filter(function (t) { return vaRecuadro(t, x.j.ahora); });
-          if (conRecuadro.length) ponerRecuadros(conRecuadro);
+          // Lo que ya salió por la señal no se anuncia otra vez (su recuadro se completa con el detalle, abajo).
+          var conRecuadro = r.llegaron.filter(function (t) { return vaRecuadro(t, x.j.ahora) && !anunciadas[t.id]; });
+          if (conRecuadro.length) { ponerRecuadros(conRecuadro); conRecuadro.forEach(function (t) { medir('«llegadas»', t); }); }
           refrescarRecuadros(estado.tarjetas);
           avisarNuevas(r.nuevas);
           tanda(conRecuadro.map(function (t) { return t.id; }).concat(enSegundoPlano(doc) ? r.nuevas.map(function (t) { return t.id; }) : []));
-          pintar(doc, estado, ahoraMs());
+          pintar(doc, estado, ahoraMs(), listaProv());
           // Tras la señal: si todavía no se ve a nadie nuevo (el ATTENDED de Wix va detrás de la señal), otra vez en 2.1 s.
-          if (fresco) { if (!r.cambio && reintentos > 0) { reintentos--; pideFresco = true; } else { pideFresco = false; reintentos = 0; } }
+          if (fresco) siguienteFresco(r.cambio);
           var s = x.j.sondeo || { activo: true, esperaSeg: 15 };
           senalSeg = s.activo && Number(s.senalSeg) > 0 ? Number(s.senalSeg) : 0;
           proximoRepaso = Date.now() + Math.max(2, Number(s.esperaSeg) || 15) * 1000;
           if (Object.keys(estado.esperan || {}).length) proximoRepaso = Math.min(proximoRepaso, Date.now() + DETALLE_PRONTO_SEG * 1000);
           red(true, 'Actualizado ' + hora(x.j.ahora) + (s.activo ? (senalSeg ? ' · al instante' : '') : ' · sin clases ahora, reviso cada ' + Math.round(s.esperaSeg / 60) + ' min'), !s.activo);
+          cargando = false;
           siguiente();
         })
-        .catch(function () { red(false, 'Sin internet · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; programar(ESPERA_ERROR_SEG); })
+        .catch(function () { red(false, 'Sin internet · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; cargando = false; programar(ESPERA_ERROR_SEG); })
         .then(function () { cargando = false; });
+    }
+    /** Tras una lectura «fresca» por la señal: ¿otra? Sí mientras falte en la lista una llegada que trajo la señal (2.1, 3, 5 y
+     *  8 s: ≈ 18 s tras la primera, M3) o, si no trajo ninguna nueva, hasta 3 veces mientras nada cambie. */
+    function siguienteFresco(cambio) {
+      var ya = Date.now(), quedan = 0;
+      for (var id in esperadas) if (Object.prototype.hasOwnProperty.call(esperadas, id)) {
+        if (tarjetaDe(id) || ya - esperadas[id] > ESPERADA_MS) delete esperadas[id]; else quedan++;
+      }
+      var otra = quedan ? intento < ESPERAS_FRESCO.length : !cambio && reintentosCambio > 0;
+      if (otra && !quedan) reintentosCambio--;
+      if (otra) { intento++; pideFresco = true; } else { pideFresco = false; intento = 0; reintentosCambio = 0; esperadas = {}; }
     }
     // Vigía (cada 30 s): si el sondeo se atrasó (consulta colgada, Worker muerto, compu dormida), se dice y se reintenta.
     setInterval(function () {
       if (!ls.get(TOKEN_KEY) || !tocaba) return;
-      if (cargando && Date.now() - inicioCarga > TIEMPO_FETCH_MS + 5000) cargando = false;    // red de seguridad
+      if (cargando && Date.now() - inicioLlegadas > TIEMPO_FETCH_MS + 5000) cargando = false;    // red de seguridad
+      if (cargandoSenal && Date.now() - inicioSenal > TIEMPO_SENAL_MS + 5000) cargandoSenal = false;
       if (atrasado(Date.now(), tocaba)) {
         red(false, TEXTOS.atrasada + ' ' + (ultimaCarga ? hora(new Date(ultimaCarga).toISOString()) : 'que se abrió') + ' · reintentando');
         cargar();
       }
     }, 30000);
     // Cuando una clase termina, sus pendientes pasan solos de «Van llegando» a «Se van yendo» (y a los 45 min salen).
-    setInterval(function () { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs()); }, 15000);
+    setInterval(function () { if (estado && !$('vistaLista').hidden) { limpiarProvisionales(); pintar(doc, estado, ahoraMs(), listaProv()); } }, 15000);
 
     $('formClave').addEventListener('submit', function (ev) {
       ev.preventDefault();
@@ -944,7 +1392,9 @@
 
   raiz.HeraMostrador = { combinar: combinar, resumenNotificacion: resumenNotificacion, acumular: acumular, nombreCorto: nombreCorto,
     soyLider: soyLider, atrasado: atrasado, tituloDe: tituloDe, conTiempo: conTiempo, pintar: pintar, enSegundoPlano: enSegundoPlano,
-    temaDe: temaDe, bloques: bloques, textosLista: textosLista, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
+    temaDe: temaDe, bloques: bloques, textosLista: textosLista, ligaDe: ligaDe, agrupar: agrupar, cuentaGrupo: cuentaGrupo, avisoTablet: avisoTablet,
+    entradasSenal: entradasSenal, deSenal: deSenal, conProvisionales: conProvisionales, temasDeCodigos: temasDeCodigos, leerCatalogo: leerCatalogo,
+    detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
