@@ -496,13 +496,17 @@
       var t = codigosDe(e.t), q = codigosDe(e.q);               // v3.1: códigos de sus pendientes y de lo callado (equipo)
       if (t.length) o.t = t;
       if (q.length) o.q = q;
+      if (!o.x && e.ok === 1) o.ok = true;                      // latencia: un reintento que Wix ya aceptó (no se calla)
+      var k = cronoDe(e.k);                                     // cronómetro (solo números)
+      if (k) o.k = k;
+      if (typeof e.i === 'string' && /^[0-9a-f]{4}$/.test(e.i)) o.i = e.i;
       if (o.x || ahoraMs - ts <= RECUADRO_RECIENTE_MS) out.push(o);
     });
     return out;
   }
   /** Una llegada de la señal como tarjeta para su recuadro: nombre, iniciales y clase salen de «Faltan por llegar» (la
    *  señal no lleva nombres); el Fitpass, de su marca y su clase. null si no se encuentra (llegará por «llegadas»). */
-  function deSenal(e, est, cat) {
+  function deSenal(e, est, cat, dir) {
     var ps = (est && est.proximas) || [], i, j;
     for (i = 0; i < ps.length; i++) {
       var p = ps[i], cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach };
@@ -515,7 +519,80 @@
         return t;
       }
     }
+    // Latencia (21-nov noche): ya no está en «Faltan por llegar» (Bookings ya la quitó, o la marcan otra vez tras quitarla),
+    // pero la pantalla la vio hoy: su nombre sale del directorio (lo que ya se vio en «Faltan por llegar» y en la lista).
+    var d = !e.m && dir && Object.prototype.hasOwnProperty.call(dir, e.id) ? dir[e.id] : null;
+    if (d) {
+      var u = { id: e.id, nombre: d.nombre, iniciales: d.iniciales, origen: 'tablet', hora: e.ts, clase: d.clase, lugares: d.lugares, senal: senalDe(e, cat) };
+      if (d.ficha) u.ficha = d.ficha;
+      return u;
+    }
     return null;
+  }
+  /** Directorio del día para `deSenal`: id → nombre, iniciales, clase (y ficha) de «Faltan por llegar» y de la lista. Lo
+   *  nuevo pisa lo viejo; cambia de día → empieza vacío. Solo vive en la memoria de la página (como `estado`). */
+  function alDirectorio(dir, est) {
+    var out = dir && dir.dia === (est && est.dia) ? dir : { dia: est && est.dia, ids: {} }, n = 0, k;
+    for (k in out.ids) if (Object.prototype.hasOwnProperty.call(out.ids, k)) n++;
+    if (n > 600) out = { dia: out.dia, ids: {} };                // tope (un día normal trae ≈ 200)
+    var pon = function (id, nombre, iniciales, clase, lugares, ficha) {
+      if (!id || !RE_ID_SENAL.test(String(id)) || !nombre) return;
+      var o = { nombre: String(nombre), iniciales: String(iniciales || '?'), clase: clase || null };
+      if (lugares) o.lugares = lugares;
+      if (ficha && RE_FICHA.test(String(ficha))) o.ficha = String(ficha);
+      out.ids[id] = o;
+    };
+    ((est && est.tarjetas) || []).forEach(function (t) { if (!t.provisional && !(t.detalle && t.detalle.market)) pon(t.id, t.nombre, t.iniciales, t.clase, t.lugares, t.detalle && t.detalle.ficha); });
+    ((est && est.proximas) || []).forEach(function (p) {
+      var cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach };
+      (Array.isArray(p.faltan) ? p.faltan : []).forEach(function (f) { if (f) pon(f.id, f.nombre, f.iniciales, cl, f.lugares, f.ficha); });
+    });
+    return out;
+  }
+
+  // ------------------------------------------------------------------ cronómetro (?medir=1; latencia, Olmo 21-nov noche)
+  /** [tq, te, tr, ts, n, fr, ca] de la señal (M.cronoSenal en el servidor), validado; null si no sirve. */
+  function cronoDe(k) {
+    if (!Array.isArray(k) || k.length < 7) return null;
+    var num = function (x) { return typeof x === 'number' && isFinite(x) ? x : null; };
+    var o = { tq: num(k[0]), te: num(k[1]), tr: num(k[2]), ts: num(k[3]), n: num(k[4]), fr: k[5] === 1, ca: k[6] === 1 };
+    return o.tr == null || o.ts == null ? null : o;
+  }
+  /** Una muestra del reloj del servidor como NTP: `srv` = [llegó, salió] (ms del servidor), envío y recibo con el reloj de esta
+   *  compu. off = cuánto hay que sumarle a Date.now() para tener la hora del servidor; rtt = ida y vuelta sin el proceso. */
+  function muestraReloj(envio, recibo, srv) {
+    if (!Array.isArray(srv) || srv.length !== 2 || typeof srv[0] !== 'number' || typeof srv[1] !== 'number' || !isFinite(srv[0]) || !isFinite(srv[1])) return null;
+    var rtt = (recibo - envio) - (srv[1] - srv[0]), off = ((srv[0] - envio) + (srv[1] - recibo)) / 2;
+    return rtt > -100 && isFinite(off) ? { off: off, rtt: Math.max(0, rtt) } : null;
+  }
+  /** Se queda con la muestra de menor ida y vuelta (la más exacta); la renueva si tiene más de 10 min. */
+  function mejorReloj(prev, m, ahoraLocal) {
+    if (!m) return prev;
+    if (!prev || m.rtt <= prev.rtt || ahoraLocal - prev.t > 10 * 60000) return { off: m.off, rtt: m.rtt, t: ahoraLocal };
+    return prev;
+  }
+  /** Tramos (ms) de una llegada: toque→servidor (cola de la tablet + red + arranque en frío), servidor→señal (secretos,
+   *  candado y lectura), señal→pantalla (escritura, espera del sondeo, lectura y pintado) y total. `tP` = hora del servidor
+   *  en que la pantalla pintó el recuadro. Sin cronómetro (llegó por la lista): solo desde su marca (`desde`). */
+  function tramosMedicion(k, tP, desde) {
+    if (!k) return { aServidor: null, aSenal: null, aPantalla: null, total: Number.isFinite(desde) ? tP - desde : null, sinCrono: true };
+    return { aServidor: k.tq != null ? k.tr - k.tq : null, enCola: k.tq != null && k.te != null ? k.te - k.tq : null, aSenal: k.ts - k.tr,
+      aPantalla: tP - k.ts, total: tP - (k.tq != null ? k.tq : k.tr), n: k.n, fria: k.fr, cache: k.ca };
+  }
+  function seg(ms) { return ms == null || !isFinite(ms) ? '—' : (ms / 1000).toFixed(1) + ' s'; }
+  /** La fila de la franja y del texto que se copia (solo números; sin nombres ni ids). */
+  function textoMedicion(m) {
+    var t = m.tramos, extra = [];
+    var base = 'toque→servidor ' + seg(t.aServidor) + ' · servidor→señal ' + seg(t.aSenal) + ' · señal→pantalla ' + seg(t.aPantalla) + ' · total ' + seg(t.total);
+    extra.push(m.via === 'senal' ? 'por la señal' : 'por la lista');
+    if (t.sinCrono) extra.push('sin cronómetro: total desde su marca');
+    if (m.vistaSenal != null) extra.push('la señal se vio a los ' + seg(m.vistaSenal));
+    if (t.enCola != null && t.enCola >= 500) extra.push('en cola ' + seg(t.enCola));
+    if (t.n > 1) extra.push('intento ' + t.n);
+    if (t.fria) extra.push('instancia fría');
+    if (!t.sinCrono) extra.push(t.cache ? 'con caché' : 'sin caché');
+    if (m.inst) extra.push('inst ' + m.inst);
+    return (m.hora ? m.hora + ' · ' : '') + base + ' (' + extra.join(' · ') + ')';
   }
   /** Ids que se le piden al servidor para revisar (¿ya se cerró su pendiente en Wix?): las que se VEN en la lista (12 por
    *  bloque, máx. 24): con 10 o más en «Van llegando», las de «Se van yendo» también se revisan. El marketplace no (Wix no
@@ -928,6 +1005,11 @@
     // Si después se va de la lista (la quitaron en el panel de Wix: la señal no trae retirada), su entrada vieja de la señal
     // (sigue ahí 3 min) no revive el provisional cuando otra llegada reescribe la señal. Un check-in nuevo trae hora nueva y sí sale.
     var confirmadas = {};
+    // Latencia (Olmo 21-nov noche): directorio de nombres del día (para `deSenal`) y el cronómetro: reloj del servidor como NTP
+    // (`srv` de cada respuesta), el de cada llegada que trae la señal (id → {k, i, visto}) y, con ?medir=1, sus filas.
+    var directorio = null, relojPag = null, cronos = {}, mediciones = [], medidas = {};
+    var MEDIR = /(^|[?&])medir=1(&|$)/.test(String((win.location && win.location.search) || ''));
+    var horaServidor = function () { return Date.now() + (relojPag ? relojPag.off : desfase); };
     function listaProv() { var out = [], id; for (id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) out.push(provisionales[id]); return out; }
     function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv()); }
     /** Renglón provisional de una llegada de la señal que ya trae sus pendientes (o lo callado del equipo). */
@@ -959,9 +1041,15 @@
       var ctl = null;
       try { ctl = typeof win.AbortController === 'function' ? new win.AbortController() : null; } catch (_) { ctl = null; }
       // text/plain: petición «simple» entre dominios, sin preflight (igual que el kiosco).
+      var envio = Date.now();
       var p = win.fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(cuerpo),
         cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
-        .then(function (r) { return r.json().catch(function () { return null; }).then(function (j) { return { s: r.status, j: j }; }); });
+        .then(function (r) { return r.json().catch(function () { return null; }).then(function (j) {
+          // Cronómetro: el reloj del servidor como NTP (sin el tiempo de proceso); un servidor viejo sin `srv`, con `ahora`.
+          var recibo = Date.now();
+          if (j && j.srv) relojPag = mejorReloj(relojPag, muestraReloj(envio, recibo, j.srv), recibo);
+          else if (j && typeof j.ahora === 'string' && Number.isFinite(Date.parse(j.ahora))) relojPag = mejorReloj(relojPag, { off: Date.parse(j.ahora) - (envio + recibo) / 2, rtt: recibo - envio }, recibo);
+          return { s: r.status, j: j }; }); });
       return conTiempo(p, ms || TIEMPO_FETCH_MS, function () { if (ctl) ctl.abort(); }, win);
     }
     function ponerTitulo() { doc.title = tituloDe(tituloBase, sinVer.length, alerta); }
@@ -977,7 +1065,7 @@
       $('errorClave').textContent = msg || '';
       try { $('clave').focus(); } catch (_) {}
     }
-    function irLista() { $('vistaClave').hidden = true; $('vistaLista').hidden = false; alerta = ''; avisoSesion = false; ponerTitulo(); permisoUi(); sonidoUi(); avisosUi(); }
+    function irLista() { $('vistaClave').hidden = true; $('vistaLista').hidden = false; alerta = ''; avisoSesion = false; ponerTitulo(); permisoUi(); sonidoUi(); avisosUi(); pintarMedicion(); }
 
     function permisoUi() {
       var b = $('permiso'), nota = $('notaPermiso'), probar = $('probar');
@@ -1127,6 +1215,59 @@
     function medir(como, t, extra) {
       var ms = ahoraMs() - Date.parse(t.hora || '');
       if (consola && Number.isFinite(ms)) consola.info('[Mostrador] recuadro por ' + como + ': del check-in al recuadro ' + Math.round(ms) + ' ms' + (extra || ''));
+      registrarMedicion(t, como === 'la señal' ? 'senal' : 'lista');
+    }
+    /** Cronómetro: una fila por recuadro que salió (por la señal o por la lista), con los tramos en hora del servidor. */
+    function registrarMedicion(t, via) {
+      var cr = cronos[t.id] || null, k = cr && cr.k, llave = t.id + '|' + (k ? k.tr : t.hora);
+      if (medidas[llave]) return;
+      medidas[llave] = 1;
+      var tP = horaServidor();
+      var m = { via: via, tramos: tramosMedicion(k, tP, Date.parse(t.hora || '')), inst: cr && cr.i, hora: hora(new Date(tP).toISOString()) };
+      // Por la lista con cronómetro: la señal SÍ llegó (pero sin nombre, callada o en otra pestaña); ¿a los cuántos s del toque?
+      if (via !== 'senal' && k && cr.visto) m.vistaSenal = cr.visto - (k.tq != null ? k.tq : k.tr);
+      mediciones.unshift(m);
+      mediciones = mediciones.slice(0, 50);
+      if (consola) consola.info('[Mostrador] cronómetro: ' + textoMedicion(m));
+      pintarMedicion();
+    }
+    /** Franja de ?medir=1 (arriba, dentro de la barra): las últimas 5 y «Copiar medición». Sin ?medir=1 no existe. */
+    var franja = null;
+    function pintarMedicion() {
+      if (!MEDIR) return;
+      var barra = $('barra');
+      if (!franja && barra && doc.createElement) {
+        franja = doc.createElement('div'); franja.className = 'medicion'; franja.setAttribute('aria-label', 'Medición de latencia');
+        barra.appendChild(franja);
+      }
+      if (!franja) return;
+      vaciar(franja);
+      var cab = el(doc, 'div', 'med-cab');
+      cab.appendChild(el(doc, 'span', 'med-tit', 'Medición · reloj ±' + (relojPag ? Math.round(relojPag.rtt / 2) : '?') + ' ms · ' + (soyLider(ls.get(LIDER_KEY), miId, Date.now()) ? 'pestaña que avisa' : 'otra pestaña avisa')));
+      var b = el(doc, 'button', 'chip-btn med-copiar', 'Copiar medición');
+      b.type = 'button';
+      if (b.addEventListener) b.addEventListener('click', copiarMedicion);
+      cab.appendChild(b);
+      franja.appendChild(cab);
+      if (!mediciones.length) franja.appendChild(el(doc, 'div', 'med-fila', 'Esperando un check-in de la tablet…'));
+      mediciones.slice(0, 5).forEach(function (m) { franja.appendChild(el(doc, 'div', 'med-fila', textoMedicion(m))); });
+    }
+    function textoParaCopiar() {
+      return ['Medición Mostrador · ' + mediciones.length + ' llegadas (la más nueva arriba) · reloj ±' + (relojPag ? Math.round(relojPag.rtt / 2) : '?') + ' ms']
+        .concat(mediciones.map(textoMedicion)).join('\n');
+    }
+    function copiarMedicion() {
+      var txt = textoParaCopiar(), ok = function () { var b = franja && franja.querySelector && franja.querySelector('.med-copiar'); if (b) b.textContent = 'Copiado ✓'; };
+      try {
+        if (win.navigator && win.navigator.clipboard && win.navigator.clipboard.writeText) { win.navigator.clipboard.writeText(txt).then(ok, function () { copiarViejo(txt); ok(); }); return; }
+      } catch (_) {}
+      copiarViejo(txt); ok();
+    }
+    function copiarViejo(txt) {
+      try {
+        var a = doc.createElement('textarea'); a.value = txt; a.setAttribute('readonly', ''); a.style.position = 'fixed'; a.style.opacity = '0';
+        doc.body.appendChild(a); a.select(); doc.execCommand('copy'); doc.body.removeChild(a);
+      } catch (_) {}
     }
     /** v3: pinta YA el recuadro de cada llegada nueva que trae la señal (sin esperar a «llegadas», que depende de que Bookings
      *  muestre el ATTENDED) y dice si hace falta pedir la lista: sí si alguna es nueva (su renglón y sus pendientes) o no se
@@ -1138,6 +1279,8 @@
       var falta = false, nuevos = [], ya = Date.now(), repinta = false;
       xs.forEach(function (e) {
         var enLista = tarjetaDe(e.id), ts = Date.parse(e.ts);
+        // Cronómetro: el de su llegada más nueva, y cuándo la vio esta pantalla (hora del servidor).
+        if (!e.x && e.k && (!cronos[e.id] || cronos[e.id].k.tr < e.k.tr)) cronos[e.id] = { k: e.k, i: e.i, visto: horaServidor() };
         if (e.x) {
           // Ya vista (la señal la trae 3 min), o de antes de su último check-in (otra instancia la reescribió): nada.
           if (ts <= (retiradas[e.id] || 0) || ts < (anuncioTs[e.id] || 0)) return;
@@ -1151,16 +1294,22 @@
         }
         if (ts <= (retiradas[e.id] || 0)) return;                    // de antes de su retirada (la reescribió otra instancia)
         if (!enLista && ts <= (confirmadas[e.id] || 0)) return;      // M1: ya se confirmó y se fue de la lista (quitada en el panel)
+        // Latencia (21-nov noche): la marcan OTRA VEZ tras quitarla (su retirada es más nueva que su último anuncio). Aunque
+        // siga en la lista (Bookings aún no refleja el «quitar»), es una llegada nueva: recuadro otra vez.
+        var otraVez = retiradas[e.id] && ts > retiradas[e.id] && (anuncioTs[e.id] || 0) <= retiradas[e.id];
         anuncioTs[e.id] = Math.max(anuncioTs[e.id] || 0, ts);
-        if (enLista || anunciadas[e.id]) {
+        if (otraVez) delete anunciadas[e.id];
+        if (!otraVez && (enLista || anunciadas[e.id])) {
           if ((e.p || e.q) && !conDetalle(e.id)) { pendientePorSenal(e.id, e); if (ponerProvisional(e, senalDe(e, catalogo))) repinta = true; }
           if (!enLista) { falta = true; esperadas[e.id] = esperadas[e.id] || ya; }
           return;
         }
         // Un reintento de la cola tras una falla pasajera: sin recuadro, cuenco ni notificación; UNA lectura de la lista (si ya
         // entró, su recuadro sale por ahí). Sin `esperadas`: no se relee cada 2–8 s mientras Wix sigue caído.
-        if (silencio[e.id] && ts - silencio[e.id] < SILENCIO_MS) { falta = true; return; }
-        var t = deSenal(e, estado, catalogo);
+        // Latencia (21-nov noche): con `ok` el servidor ya marcó en Wix (lo escribe DESPUÉS de marcar): sí sale su recuadro.
+        if (silencio[e.id] && ts - silencio[e.id] < SILENCIO_MS && !e.ok) { falta = true; return; }
+        delete silencio[e.id];
+        var t = deSenal(e, estado, catalogo, directorio && directorio.ids);
         if (t) { anunciadas[e.id] = ya; nuevos.unshift(t); deLaSenal[e.id] = t; if (ponerProvisional(e, t.senal)) repinta = true; }   // la lista viene de la más vieja a la más nueva
         esperadas[e.id] = esperadas[e.id] || ya;
         falta = true;
@@ -1211,10 +1360,14 @@
       var repaso = !senalSeg || tocaRepaso || Date.now() >= proximoRepaso - 300;
       // Si a la señal ya le toca, va A LA PAR de la lista: las relecturas (hasta ~6 s) no la frenan.
       var senalToca = !!senalSeg && !cargandoSenal && Date.now() - inicioSenal >= senalSeg * 1000 - 300;
-      if (!cargando && (pideFresco || repaso)) { cargar(pideFresco ? { fresco: senalVista || 1 } : null); if (senalToca && lider()) consultarSenal(); return; }
-      if (senalSeg && lider()) return consultarSenal();
+      if (!cargando && (pideFresco || repaso)) { cargar(pideFresco ? { fresco: senalVista || 1 } : null); if (senalToca && leeSenal()) consultarSenal(); return; }
+      if (senalSeg && leeSenal()) return consultarSenal();
       if (!cargando) alRepaso();
     }
+    /** ¿Esta pestaña lee la señal? La que avisa y, latencia (21-nov noche), también la que está A LA VISTA: con dos pestañas,
+     *  la que se ve ya no espera al repaso de 30 s para sacar sus recuadros (el tope del servidor es 1 cada 1 s; un 429
+     *  solo la recorre 1 s). La oculta que no avisa sigue sin leerla. */
+    function leeSenal() { return lider() || !enSegundoPlano(doc); }
     function alRepaso() { programar(Math.max(0.5, (proximoRepaso - Date.now()) / 1000)); tocaRepaso = true; }
     /** Ms hasta la siguiente señal, a ritmo fijo de inicio a inicio (antes: 3 s DESPUÉS de cada respuesta, ~3.5 s reales). */
     function msHastaSenal() { return inicioSenal ? Math.max(500, inicioSenal + senalSeg * 1000 - Date.now()) : senalSeg * 1000; }
@@ -1278,10 +1431,11 @@
         .then(function (x) {
           if (x.s === 401 || x.s === 403) { sesionPerdida(); return; }
           if (x.s === 429) { cargando = false; programar((x.j && x.j.espera) || 2); return; }
-          if (x.s !== 200 || !x.j || !x.j.ok) { red(false, 'Sin conexión con Wix · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; cargando = false; programar(ESPERA_ERROR_SEG); return; }
+          if (x.s !== 200 || !x.j || !x.j.ok) { red(false, 'Sin conexión con Wix · reintento en ' + ESPERA_ERROR_SEG + ' s'); errorLista(); return; }
           if (x.j.token) ls.set(TOKEN_KEY, x.j.token);
           var r = combinar(estado, x.j);
           estado = r.estado; ultimaCarga = Date.now(); ahoraServidor = Date.parse(x.j.ahora) || Date.now();
+          directorio = alDirectorio(directorio, estado);
           if (x.j.catalogo) catalogo = leerCatalogo(x.j.catalogo) || catalogo;
           estado.tarjetas.forEach(function (t) { if (t.id && t.detalle) confirmadas[t.id] = Math.max(confirmadas[t.id] || 0, ahoraServidor); });
           limpiarProvisionales();
@@ -1303,8 +1457,15 @@
           cargando = false;
           siguiente();
         })
-        .catch(function () { red(false, 'Sin internet · reintento en ' + ESPERA_ERROR_SEG + ' s'); pideFresco = false; cargando = false; programar(ESPERA_ERROR_SEG); })
+        .catch(function () { red(false, 'Sin internet · reintento en ' + ESPERA_ERROR_SEG + ' s'); errorLista(); })
         .then(function () { cargando = false; });
+    }
+    /** Falló «llegadas»: la lista se reintenta en 30 s, pero la SEÑAL sigue a su ritmo (latencia 21-nov noche: antes un
+     *  502 o un corte de 20 s de la lista también paraba la señal 30 s y los recuadros esperaban). */
+    function errorLista() {
+      pideFresco = false; cargando = false;
+      proximoRepaso = Date.now() + ESPERA_ERROR_SEG * 1000;
+      if (senalSeg) siguiente(); else programar(ESPERA_ERROR_SEG);
     }
     /** Tras una lectura «fresca» por la señal: ¿otra? Sí mientras falte en la lista una llegada que trajo la señal (2.1, 3, 5 y
      *  8 s: ≈ 18 s tras la primera, M3) o, si no trajo ninguna nueva, hasta 3 veces mientras nada cambie. */
@@ -1393,7 +1554,8 @@
   raiz.HeraMostrador = { combinar: combinar, resumenNotificacion: resumenNotificacion, acumular: acumular, nombreCorto: nombreCorto,
     soyLider: soyLider, atrasado: atrasado, tituloDe: tituloDe, conTiempo: conTiempo, pintar: pintar, enSegundoPlano: enSegundoPlano,
     temaDe: temaDe, bloques: bloques, textosLista: textosLista, ligaDe: ligaDe, agrupar: agrupar, cuentaGrupo: cuentaGrupo, avisoTablet: avisoTablet,
-    entradasSenal: entradasSenal, deSenal: deSenal, conProvisionales: conProvisionales, temasDeCodigos: temasDeCodigos, leerCatalogo: leerCatalogo,
+    entradasSenal: entradasSenal, deSenal: deSenal, alDirectorio: alDirectorio, cronoDe: cronoDe, muestraReloj: muestraReloj, mejorReloj: mejorReloj,
+    tramosMedicion: tramosMedicion, textoMedicion: textoMedicion, conProvisionales: conProvisionales, temasDeCodigos: temasDeCodigos, leerCatalogo: leerCatalogo,
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
