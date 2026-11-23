@@ -20,7 +20,7 @@
 (function (raiz) {
   'use strict';
   var ZONA = 'America/Mexico_City';
-  var TOKEN_KEY = 'hera_mostrador_token', SONIDO_KEY = 'hera_mostrador_sonido', AVISOS_KEY = 'hera_mostrador_avisos', LIDER_KEY = 'hera_mostrador_lider';
+  var TOKEN_KEY = 'hera_mostrador_token', SONIDO_KEY = 'hera_mostrador_sonido', AVISOS_KEY = 'hera_mostrador_avisos', LIDER_KEY = 'hera_mostrador_lider', LEYENDA_KEY = 'hera_mostrador_leyenda';
   var VOLUMEN_KEY = 'hera_mostrador_volumen';
   var RE_FICHA = /^https:\/\/manage\.wix\.com\/dashboard\/([0-9a-f-]{36})\/contacts\/view\/([0-9a-f-]{36})$/i;
   var SITIO_WIX = '21d18206-19d9-4b9f-9cc4-3c7a471ae6c4', RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -1600,6 +1600,20 @@
       avisosUi();
     });
     $('actualizar').addEventListener('click', function () { sonido.preparar(); cargar({ fresco: 1 }); });   // a mano: sin la caché de 10 s
+    // Leyenda de íconos (Olmo 23-nov): plegable; esta compu recuerda si la dejaron abierta.
+    var leyendaUi = function (abierta) {
+      var b = $('btnLeyenda'), c = $('leyenda');
+      if (!b || !c) return;
+      c.hidden = !abierta;
+      b.setAttribute('aria-expanded', abierta ? 'true' : 'false');
+      b.textContent = '¿Qué significa cada ícono? · ' + (abierta ? 'Ocultar' : 'Ver');
+    };
+    leyendaUi(ls.get(LEYENDA_KEY) === '1');
+    if ($('btnLeyenda')) $('btnLeyenda').addEventListener('click', function () {
+      var abrir = $('leyenda').hidden;
+      if (abrir) ls.set(LEYENDA_KEY, '1'); else ls.del(LEYENDA_KEY);
+      leyendaUi(abrir);
+    });
     $('salir').addEventListener('click', function () { ls.del(TOKEN_KEY); irClave(''); });
     var alVolver = function () {
       if (enSegundoPlano(doc)) return;

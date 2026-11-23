@@ -216,6 +216,33 @@ a.px-clase:hover{border-bottom-style:solid}
 /* ya empezó: la que falta SIN tema lleva solo el borde de alerta (el fondo naranja se confundía con 💵 y 💳) */
 .proxima.empezo .falta:not(.llego):not(.con-tema){border-color:var(--alerta);border-style:dashed}
 .px-empezo{font-size:12.5px;color:var(--alerta);line-height:1.3}
+/* ---- leyenda de íconos (Olmo 23-nov): plegable, debajo de las notas */
+.leyenda{max-width:1440px;margin:0 auto;padding:0 16px 28px}
+.ley-cuerpo{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
+.ley-bloque{background:#fff;border-radius:14px;box-shadow:var(--sombra);padding:12px 14px}
+.ley-bloque h3{font-size:14px;font-weight:600;font-family:Poppins,Helvetica,Arial,sans-serif;color:var(--carbon);margin-bottom:8px}
+.ley-bloque h3 small{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:400;font-size:12.5px;color:var(--gris)}
+.ley-lista{list-style:none}
+.ley-fila{display:grid;grid-template-columns:46px 14px minmax(0,1.2fr) minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid #F1EAE2;font-size:13.5px;line-height:1.3}
+.ley-fila:first-child{border-top:0}
+.ley-enc{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--gris);padding-top:0}
+.ley-ic{font-size:18px;text-align:center}
+.ley-fila .ley-ic:not(:empty){line-height:1}
+.ley-ic-txt{font-size:11px;font-weight:500;color:#4A4F4F;background:#F1F1EF;border:1px solid #DCDCD8;border-radius:999px;padding:1px 5px;justify-self:start}
+.ley-cuerpo[hidden]{display:none}
+.ley-muestra{width:14px;height:14px;border-radius:4px;border:1.5px solid transparent}
+.ley-enc .ley-muestra{border:0}
+.ley-que{color:var(--carbon);font-weight:500}
+.ley-hacer{color:var(--gris)}
+.m-pago{background:#FCE8E3;border-color:#D9826D} .m-canje{background:#FCF1DC;border-color:#D9A845} .m-offline{background:#EFEAF7;border-color:#9A86C4}
+.m-pausa{background:#E6EDF2;border-color:#8FA6B4} .m-nota{background:#E9ECF8;border-color:#8E9BC9} .m-neutro{background:#F3EEE8;border-color:#C9B8A6}
+.m-primera{background:#E5F0E8;border-color:#8DB89A} .m-cumple{background:#FBE9F1;border-color:#D99BB8} .m-equipo{background:#F1F1EF;border-color:#BDBDB8}
+.ley-pastillas{list-style:none;display:flex;flex-direction:column;gap:8px}
+.ley-pastillas li{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px;align-items:center;font-size:13.5px;color:var(--carbon);line-height:1.3}
+.ley-pastillas .falta{width:max-content;max-width:100%}
+.falta.ley-empezo{border-color:var(--alerta);border-style:dashed}
+.ley-nota{margin-top:10px;font-size:12.5px;color:var(--gris);line-height:1.4}
+@media (max-width:520px){.ley-fila{grid-template-columns:42px 12px minmax(0,1fr)} .ley-hacer{grid-column:3;font-size:12.5px} .ley-pastillas li{grid-template-columns:1fr}}
 .pie{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--gris);line-height:1.45}
 /* ---- cronómetro (solo con ?medir=1; latencia, Olmo 21-nov noche): franja discreta dentro de la barra */
 .medicion{max-width:1440px;margin:0 auto;padding:4px 16px 8px;font-size:12px;color:var(--gris);line-height:1.5;font-variant-numeric:tabular-nums}
@@ -284,6 +311,48 @@ a.px-clase:hover{border-bottom-style:solid}
     </aside>
   </main>
   <p class="pie">Solo lectura: esta pantalla no marca ni cobra nada. Cada check-in de la tablet sale unos segundos en un recuadro arriba a la derecha; en la lista solo se queda quien trae pendiente, hasta 45 min después de que termina su clase o hasta que se cierra en Wix (el resumen del día sigue en Slack). Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción) y cada pastilla con «↗» abre la vista donde se resuelve: 💵 la lista de sus reservas (ahí «⋯ → Gestionar participantes → Canjear sesión»), 💳 ⛔ ⏸️ 🗓️ 🧾 sus suscripciones, 📝 la nota en Slack. Los renglones van agrupados por clase, con cuántas llegaron de las que reservaron; 🌱 primera clase y 🎂 cumple van como chip en su clase. «panel aprox.» = check-in marcado en el panel de Wix; su hora es cuando lo vio esta pantalla («sin hora» si lo vio tarde). Pasa el ratón sobre una pastilla para ver el pendiente completo. En «Faltan por llegar», quien ya llegó se queda en verde con ✓ y quien trae pendiente sale con el color y los íconos de su tema (pasa el ratón para leerlo); el nombre de la clase abre sus reservas de hoy en Wix.</p>
+<section class="leyenda" aria-labelledby="btnLeyenda">
+  <button type="button" class="chip-btn" id="btnLeyenda" aria-expanded="false" aria-controls="leyenda">¿Qué significa cada ícono? · Ver</button>
+  <div class="ley-cuerpo" id="leyenda" hidden>
+    <div class="ley-bloque">
+      <h3>Pendientes <small>hay que hacer algo · el color es el de su pastilla</small></h3>
+      <ul class="ley-lista">
+        <li class="ley-fila ley-enc"><span class="ley-ic"></span><span class="ley-muestra"></span><span class="ley-que">Qué es</span><span class="ley-hacer">Qué hacer</span></li>
+        <li class="ley-fila"><span class="ley-ic">💳</span><span class="ley-muestra m-pago"></span><span class="ley-que">Cobro que no pasó</span><span class="ley-hacer">que pague en línea o con terminal</span></li>
+        <li class="ley-fila"><span class="ley-ic">⛔</span><span class="ley-muestra m-pago"></span><span class="ley-que">Membresía o paquete cancelado por cobro</span><span class="ley-hacer">ofrecer reactivar</span></li>
+        <li class="ley-fila"><span class="ley-ic">💵</span><span class="ley-muestra m-canje"></span><span class="ley-que">Reserva sin cobrar o sin canjear</span><span class="ley-hacer">usar su plan («Canjear sesión») o cobrar</span></li>
+        <li class="ley-fila"><span class="ley-ic">🛍️</span><span class="ley-muestra m-canje"></span><span class="ley-que">2ª clase sin plan</span><span class="ley-hacer">cobrar y ofrecer plan</span></li>
+        <li class="ley-fila"><span class="ley-ic">🧾</span><span class="ley-muestra m-offline"></span><span class="ley-que">Plan offline sin marcar pagado</span><span class="ley-hacer">si ya pagó, marcarlo pagado</span></li>
+        <li class="ley-fila"><span class="ley-ic">⏸️</span><span class="ley-muestra m-pausa"></span><span class="ley-que">Membresía pausada</span><span class="ley-hacer">reanudarla o cobrar la clase</span></li>
+        <li class="ley-fila"><span class="ley-ic">🗓️</span><span class="ley-muestra m-pausa"></span><span class="ley-que">Su plan empieza después</span><span class="ley-hacer">adelantarlo o cobrar la clase suelta</span></li>
+        <li class="ley-fila"><span class="ley-ic">📝</span><span class="ley-muestra m-nota"></span><span class="ley-que">Nota de recepción en Slack</span><span class="ley-hacer">abrir la nota</span></li>
+        <li class="ley-fila"><span class="ley-ic">👥</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Trae invitada (2+ lugares)</span><span class="ley-hacer">¿regalo o cobro?</span></li>
+      </ul>
+    </div>
+    <div class="ley-bloque">
+      <h3>Insignias <small>solo para saber · no cambian el color</small></h3>
+      <ul class="ley-lista">
+        <li class="ley-fila"><span class="ley-ic">🌱</span><span class="ley-muestra m-primera"></span><span class="ley-que">Primera clase en Hera</span><span class="ley-hacer">recibirla</span></li>
+        <li class="ley-fila"><span class="ley-ic">⭐</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Su clase número N (o N+ clases)</span><span class="ley-hacer">felicitarla</span></li>
+        <li class="ley-fila"><span class="ley-ic">👋</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Regresa tras varios días sin venir</span><span class="ley-hacer">darle la bienvenida</span></li>
+        <li class="ley-fila"><span class="ley-ic">🎂</span><span class="ley-muestra m-cumple"></span><span class="ley-que">Cumple años hoy</span><span class="ley-hacer">felicitarla</span></li>
+        <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">validar su código</span></li>
+        <li class="ley-fila"><span class="ley-ic ley-ic-txt">equipo</span><span class="ley-muestra m-equipo"></span><span class="ley-que">Del equipo o Lobas</span><span class="ley-hacer">no se cobra (gris, solo informativo)</span></li>
+      </ul>
+    </div>
+    <div class="ley-bloque">
+      <h3>En «Faltan por llegar»</h3>
+      <ul class="ley-pastillas">
+        <li><span class="falta"><span class="mini">CA</span><span>Clienta</span></span><span>Reservó y aún no llega, sin pendientes</span></li>
+        <li><span class="falta con-tema t-pago"><span class="mini">CA</span><span>Clienta</span><span class="px-iconos">💳</span></span><span>Aún no llega y trae un pendiente: el color es el de su tema</span></li>
+        <li><span class="falta llego"><span class="mini">✓</span><span>Clienta</span></span><span>Ya hizo check-in</span></li>
+        <li><span class="falta llego con-tema t-canje"><span class="mini">✓</span><span>Clienta</span><span class="px-iconos">💵</span></span><span>Ya llegó, pero su pendiente sigue abierto</span></li>
+        <li><span class="falta ley-empezo"><span class="mini">CA</span><span>Clienta</span></span><span>La clase ya empezó y no ha llegado: a los 20 min Wix la marca «No se presentó»</span></li>
+      </ul>
+      <p class="ley-nota">El nombre de la clase abre en Wix sus reservas de hoy. Cada nombre abre su ficha. Pasa el ratón sobre una pastilla para leer su tema completo.</p>
+    </div>
+  </div>
+</section>
 </div>
 <div class="recuadros" id="recuadros" role="status" aria-live="polite" aria-label="Llegadas de la tablet"></div>
 <script src="mostrador.js"></script>
