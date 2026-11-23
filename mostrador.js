@@ -191,7 +191,7 @@
     var siguenTodas = tarjetas.filter(function (t) { return previas[t.id]; }).length;
     var cambio = !!llegaron.length || siguenTodas !== antes || tarjetas.length !== antes;
     return { estado: { dia: resp.dia, cursor: resp.cursor || (cambioDia ? null : e.cursor), tarjetas: tarjetas, vistos: vistos, esperan: siguen, cargado: true,
-      proximas: Array.isArray(resp.proximas) ? resp.proximas : [], horas: resp.horas !== false,
+      proximas: conMarcasPrevias(Array.isArray(resp.proximas) ? resp.proximas : [], cambioDia ? [] : e.proximas), horas: resp.horas !== false,
       total: Number(resp.total) > tarjetas.length ? Number(resp.total) : tarjetas.length, rezago: Number(resp.rezagoPanel) > 0,
       ahora: resp.ahora || null,
       // v3: conteo por clase (subtítulos), latido de la tablet (la lectura por la señal no lo trae: se conserva) y si hay clases.
@@ -557,7 +557,7 @@
     ((est && est.tarjetas) || []).forEach(function (t) { if (!t.provisional && !(t.detalle && t.detalle.market)) pon(t.id, t.nombre, t.iniciales, t.clase, t.lugares, t.detalle && t.detalle.ficha); });
     ((est && est.proximas) || []).forEach(function (p) {
       var cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach, servicio: p.servicio, servicioNombre: p.servicioNombre };
-      (Array.isArray(p.faltan) ? p.faltan : []).forEach(function (f) { if (f) pon(f.id, f.nombre, f.iniciales, cl, f.lugares, f.ficha); });
+      [].concat(Array.isArray(p.faltan) ? p.faltan : [], Array.isArray(p.yaLlegaron) ? p.yaLlegaron : []).forEach(function (f) { if (f && !f.market) pon(f.id, f.nombre, f.iniciales, cl, f.lugares, f.ficha); });
     });
     return out;
   }
@@ -865,37 +865,88 @@
       return s + (m ? Number(m[1]) : Math.max(1, Number(f && f.lugares) || 1));
     }, 0);
   }
+  var COLOR_TEMA = { pago: 1, canje: 1, offline: 1, pausa: 1, nota: 1, neutro: 1 };
+  /** Temas compactos de una persona de «Faltan por llegar» (`m` del servidor, validado): { t: [{i, t, c}], i: [{i, t}], eq }. */
+  function marcasDe(f) {
+    var m = f && f.m && typeof f.m === 'object' ? f.m : null;
+    var arr = function (v) { return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : []; };
+    return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq) };
+  }
+  /** Las personas de una clase (Olmo 23-nov: «si ya hicieron check-in que no desaparezcan de la clase, que se ponga en
+   *  verde»): las que faltan y las que ya llegaron juntas, por nombre (no saltan de lugar al llegar); marketplace al final. */
+  function personasProxima(p) {
+    var xs = [];
+    (Array.isArray(p.faltan) ? p.faltan : []).forEach(function (f) { if (f) xs.push({ f: f, llego: false }); });
+    (Array.isArray(p.yaLlegaron) ? p.yaLlegaron : []).forEach(function (f) { if (f) xs.push({ f: f, llego: true }); });
+    return xs.sort(function (a, b) {
+      if (!!a.f.market !== !!b.f.market) return a.f.market ? 1 : -1;
+      if (a.f.market && a.llego !== b.llego) return a.llego ? 1 : -1;
+      return String(a.f.nombre || '').localeCompare(String(b.f.nombre || ''), 'es');
+    });
+  }
+  /** La pastilla de una persona: verde con ✓ si ya llegó; con tema, el color de su tema más urgente y sus íconos. */
+  function pastillaProxima(doc, x) {
+    var f = x.f, m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
+    var li = el(doc, 'li', 'falta' + (x.llego ? ' llego' : '') + (m.t.length ? ' con-tema t-' + color : ''));
+    li.appendChild(el(doc, 'span', 'mini', x.llego ? '✓' : String(f.iniciales || '?')));
+    li.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ')' : ''), f.ficha, null));
+    var iconos = m.t.map(function (y) { return String(y.i || '•'); }).concat(m.i.map(function (y) { return String(y.i || ''); })).join('');
+    if (iconos) li.appendChild(el(doc, 'span', 'px-iconos', iconos));
+    var globo = m.t.map(function (y) { return String(y.i || '') + ' ' + String(y.t || ''); }).concat(m.i.map(function (y) { return String(y.t || y.i || ''); }));
+    if (m.eq) globo.push('equipo o Lobas: no se cobra');
+    globo.push(x.llego ? 'Ya llegó ✓' : 'Falta por llegar');
+    li.setAttribute('title', globo.join(' · '));
+    return li;
+  }
   function pintarProximas(doc, ps) {
     var cont = doc.getElementById('proximas');
     vaciar(cont);
     doc.getElementById('sinProximas').hidden = !!ps.length;
     ps.forEach(function (p) {
-      var fs0 = Array.isArray(p.faltan) ? p.faltan : [];
+      var fs = Array.isArray(p.faltan) ? p.faltan : [];
       // Ideas v3: ya empezó y falta gente → resaltado: llamarla, o a los 20 min Wix la deja en «No se presentó».
-      var s = el(doc, 'section', 'proxima' + (p.empezo && fs0.length ? ' empezo' : ''));
-      var h = el(doc, 'h3'), cl = el(doc, 'span', 'px-clase', claseCorta(p));
+      var s = el(doc, 'section', 'proxima' + (p.empezo && fs.length ? ' empezo' : ''));
+      var h = el(doc, 'h3'), lc = ligaClase(p), cl;
+      // Olmo 23-nov: la clase abre en Wix sus reservas de hoy, como el subtítulo de «Por resolver».
+      if (lc) {
+        cl = el(doc, 'a', 'px-clase sub-liga', claseCorta(p));
+        cl.href = lc; cl.target = '_blank'; cl.rel = 'noopener noreferrer';
+        cl.setAttribute('title', 'Abrir en Wix las reservas de hoy de ' + (p.servicioNombre || p.disciplina || 'esta clase') + ' (ahí está «Canjear sesión»)');
+      } else cl = el(doc, 'span', 'px-clase', claseCorta(p));
       if (p.coach) cl.appendChild(el(doc, 'small', null, ' · ' + p.coach));
       h.appendChild(cl);
       h.appendChild(el(doc, 'span', 'px-cuenta', (p.llegaron || 0) + ' de ' + (p.lugares || 0) + (p.empezo ? ' · ya empezó' : '')));
       s.appendChild(h);
-      var fs = fs0;
+      // Ya empezó: la línea va ARRIBA de los nombres (revisión 21-nov: los tapaba, justo cuando hay que llamarlas). Cuenta
+      // lugares, como «2 de 6»: una invitada y el «Fitpass ×2» cuentan lo que son.
+      var nf = lugaresFaltan(fs);
       if (!fs.length) s.appendChild(el(doc, 'p', 'listo', 'Ya llegaron todas ✓'));
-      else {
-        // Ya empezó: la línea va ARRIBA de los nombres (revisión 21-nov: los tapaba, justo cuando hay que llamarlas). Cuenta
-        // lugares, como «2 de 6»: una invitada y el «Fitpass ×2» cuentan lo que son.
-        var nf = lugaresFaltan(fs);
-        if (p.empezo) s.appendChild(el(doc, 'p', 'px-empezo', 'Ya empezó: ' + (nf === 1 ? 'falta 1' : 'faltan ' + nf) + ' · a los 20 min Wix las marca «No se presentó»'));
+      else if (p.empezo) s.appendChild(el(doc, 'p', 'px-empezo', 'Ya empezó: ' + (nf === 1 ? 'falta 1' : 'faltan ' + nf) + ' · a los 20 min Wix las marca «No se presentó»'));
+      var xs = personasProxima(p);
+      if (xs.length) {
         var ul = el(doc, 'ul', 'faltan');
-        fs.forEach(function (f) {
-          var li = el(doc, 'li', 'falta');
-          li.appendChild(el(doc, 'span', 'mini', f.iniciales || '?'));
-          li.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ')' : ''), f.ficha, null));
-          ul.appendChild(li);
-        });
+        xs.forEach(function (x) { ul.appendChild(pastillaProxima(doc, x)); });
         s.appendChild(ul);
       }
       cont.appendChild(s);
     });
+  }
+  /** Los temas (`m`) que esta respuesta no trae (otra instancia, o la lectura por la señal) se conservan de la anterior del
+   *  mismo día; si las dos traen, gana la de sello `s` más nuevo (revisión 23-nov: con dos instancias, una pastilla ya
+   *  resuelta no salta de color cada 30 s). Así una pastilla no pierde su color entre sondeos. */
+  function conMarcasPrevias(ps, previas) {
+    var vistas = {};
+    var sello = function (m) { var t = m && typeof m.s === 'string' ? Date.parse(m.s) : NaN; return isFinite(t) ? t : 0; };
+    (previas || []).forEach(function (p) {
+      [].concat(p.faltan || [], p.yaLlegaron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; });
+    });
+    (ps || []).forEach(function (p) {
+      [].concat(p.faltan || [], p.yaLlegaron || []).forEach(function (f) {
+        if (!f || !f.id || !tiene(vistas, f.id)) return;
+        if (f.m === undefined || sello(vistas[f.id]) > sello(f.m)) f.m = vistas[f.id];
+      });
+    });
+    return ps;
   }
 
   // ------------------------------------------------------------------ almacenamiento (solo las llaves de esta pantalla)

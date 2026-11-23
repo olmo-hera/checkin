@@ -197,9 +197,24 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .falta a{color:var(--terracota);text-decoration:none}
 .mini{width:20px;height:20px;border-radius:50%;background:var(--pizarra);color:#fff;font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
 .listo{font-size:13px;color:var(--ok)}
+/* Olmo 23-nov: quien ya llegó se queda en verde; quien trae tema, con el color de su tema más urgente y sus íconos */
+.falta .px-iconos{flex:none;font-size:13px;letter-spacing:1px;white-space:nowrap}
+.falta.llego{background:#E5F0E8;border-color:#C5DCCB;color:#2B5435}
+.falta.llego .mini{background:var(--ok);font-size:11px}
+.falta.llego a{color:#2B5435}
+.falta.con-tema{border-width:2px;padding:1px 9px 1px 1px}
+.falta.t-pago{border-color:#D9826D} .falta.t-canje{border-color:#D9A845} .falta.t-offline{border-color:#9A86C4}
+.falta.t-pausa{border-color:#8FA6B4} .falta.t-nota{border-color:#8E9BC9} .falta.t-neutro{border-color:#C9B8A6}
+.falta.t-pago:not(.llego){background:#FCE8E3;color:#7F2410} .falta.t-canje:not(.llego){background:#FCF1DC;color:#674405}
+.falta.t-offline:not(.llego){background:#EFEAF7;color:#46336F} .falta.t-pausa:not(.llego){background:#E6EDF2;color:#2A4554}
+.falta.t-nota:not(.llego){background:#E9ECF8;color:#2C3A6B} .falta.t-neutro:not(.llego){background:#F3EEE8;color:#3D4343}
+.falta.con-tema:not(.llego) a{color:inherit;font-weight:500}
+a.px-clase{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+a.px-clase:hover{border-bottom-style:solid}
 /* Ideas v3: la clase ya empezó y falta gente: llamarla, o a los 20 min Wix la deja en «No se presentó» */
 .proxima.empezo{box-shadow:var(--sombra),inset 4px 0 0 var(--alerta)}
-.proxima.empezo .falta{background:var(--alerta-fondo);border-color:var(--alerta-borde)}
+/* ya empezó: la que falta SIN tema lleva solo el borde de alerta (el fondo naranja se confundía con 💵 y 💳) */
+.proxima.empezo .falta:not(.llego):not(.con-tema){border-color:var(--alerta);border-style:dashed}
 .px-empezo{font-size:12.5px;color:var(--alerta);line-height:1.3}
 .pie{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--gris);line-height:1.45}
 /* ---- cronómetro (solo con ?medir=1; latencia, Olmo 21-nov noche): franja discreta dentro de la barra */
@@ -268,7 +283,7 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
       <div id="proximas"></div>
     </aside>
   </main>
-  <p class="pie">Solo lectura: esta pantalla no marca ni cobra nada. Cada check-in de la tablet sale unos segundos en un recuadro arriba a la derecha; en la lista solo se queda quien trae pendiente, hasta 45 min después de que termina su clase o hasta que se cierra en Wix (el resumen del día sigue en Slack). Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción) y cada pastilla con «↗» abre la vista donde se resuelve: 💵 la lista de sus reservas (ahí «⋯ → Gestionar participantes → Canjear sesión»), 💳 ⛔ ⏸️ 🗓️ 🧾 sus suscripciones, 📝 la nota en Slack. Los renglones van agrupados por clase, con cuántas llegaron de las que reservaron; 🌱 primera clase y 🎂 cumple van como chip en su clase. «panel aprox.» = check-in marcado en el panel de Wix; su hora es cuando lo vio esta pantalla («sin hora» si lo vio tarde). Pasa el ratón sobre una pastilla para ver el pendiente completo.</p>
+  <p class="pie">Solo lectura: esta pantalla no marca ni cobra nada. Cada check-in de la tablet sale unos segundos en un recuadro arriba a la derecha; en la lista solo se queda quien trae pendiente, hasta 45 min después de que termina su clase o hasta que se cierra en Wix (el resumen del día sigue en Slack). Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción) y cada pastilla con «↗» abre la vista donde se resuelve: 💵 la lista de sus reservas (ahí «⋯ → Gestionar participantes → Canjear sesión»), 💳 ⛔ ⏸️ 🗓️ 🧾 sus suscripciones, 📝 la nota en Slack. Los renglones van agrupados por clase, con cuántas llegaron de las que reservaron; 🌱 primera clase y 🎂 cumple van como chip en su clase. «panel aprox.» = check-in marcado en el panel de Wix; su hora es cuando lo vio esta pantalla («sin hora» si lo vio tarde). Pasa el ratón sobre una pastilla para ver el pendiente completo. En «Faltan por llegar», quien ya llegó se queda en verde con ✓ y quien trae pendiente sale con el color y los íconos de su tema (pasa el ratón para leerlo); el nombre de la clase abre sus reservas de hoy en Wix.</p>
 </div>
 <div class="recuadros" id="recuadros" role="status" aria-live="polite" aria-label="Llegadas de la tablet"></div>
 <script src="mostrador.js"></script>
