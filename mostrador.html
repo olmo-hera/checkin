@@ -179,6 +179,29 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .r-inicial{font-weight:500;color:var(--gris)}
 .r-linea{font-size:16px;color:var(--carbon)}
 .r-extra{font-size:13.5px;color:var(--gris)}
+.r-hora{font-size:12.5px;color:var(--gris);font-variant-numeric:tabular-nums}
+.recuadro.r-market{border-left-color:#E2007A}
+.r-boton{pointer-events:auto;align-self:flex-start;margin-top:5px;font-size:14px;font-weight:600;color:#fff;background:#E2007A;border-radius:10px;padding:6px 12px;text-decoration:none}
+.r-boton:hover{filter:brightness(1.08)}
+div.recuadro{cursor:pointer}
+/* Olmo 23-nov: «Por resolver», abajo y en gris, quien aún no llega y trae pendiente (al llegar sube) */
+.sub-porllegar{list-style:none;padding:5px 14px 4px 16px;font-size:12px;font-weight:500;letter-spacing:.02em;color:var(--gris);background:repeating-linear-gradient(90deg,#F7F2EC 0 8px,#FBF8F4 8px 16px);border-top:1px dashed var(--crema);border-left:4px solid var(--crema)}
+.fila.por-llegar{background:#FBF9F6;min-height:44px}
+.fila.por-llegar > *{opacity:.62}
+.fila.por-llegar:hover > *{opacity:1}
+.fila.por-llegar .f-hora{font-size:11.5px;font-weight:400;color:var(--gris)}
+.fila.por-llegar .circulo{width:26px;height:26px;font-size:11px}
+.fila.por-llegar .nombre{font-weight:400}
+.fila.por-llegar .pill{font-size:12.5px;padding:2px 8px}
+/* Olmo 23-nov: punto de la última llegada (verde, parpadea 1 min) y de la anterior (naranja), a la derecha de su círculo */
+.circulo,.mini{position:relative}
+.punto-llegada{position:absolute;right:-4px;top:-3px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(66,73,73,.15)}
+.mini .punto-llegada{width:9px;height:9px;right:-4px;top:-3px}
+.punto-llegada.p-ultima{background:#2FA24F}
+.punto-llegada.p-segunda{background:#E8902E}
+.punto-llegada.parpadea{animation:latido 1s ease-in-out infinite}
+@keyframes latido{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(47,162,79,.55)}50%{transform:scale(1.25);box-shadow:0 0 0 5px rgba(47,162,79,0)}}
+@media (prefers-reduced-motion:reduce){.punto-llegada.parpadea{animation:none}}
 .r-pendiente .r-extra{color:#7F2410;font-weight:600;font-size:17px;line-height:1.25;background:var(--alerta-fondo);border-radius:8px;padding:3px 8px;margin-top:3px;align-self:flex-start}
 .recuadro-mas{pointer-events:auto;background:var(--carbon);color:#fff;border-radius:999px;padding:6px 14px;font-size:13px}
 .recuadro:focus-visible,.recuadro-mas:focus-visible{outline:2px solid var(--terracota);outline-offset:2px}
@@ -222,6 +245,15 @@ a.px-clase:hover{border-bottom-style:solid}
 /* ya empezó: la que falta SIN tema lleva solo el borde de alerta (el fondo naranja se confundía con 💵 y 💳) */
 .proxima.empezo .falta:not(.llego):not(.con-tema){border-color:var(--alerta);border-style:dashed}
 .px-empezo{font-size:12.5px;color:var(--alerta);line-height:1.3}
+/* Olmo 23-nov: clase que ya pasó, abajo y en gris; quien no vino, con ✕ y «Contactar» (su chat en GHL) */
+.proxima.pasada{background:#F4F0EA;box-shadow:none;border:1px solid var(--crema)}
+.proxima.pasada h3,.proxima.pasada .falta:not(.no-vino){opacity:.6}
+.falta.no-vino{background:#fff;border-color:#D9B9B0;color:#7F2410}
+.falta.no-vino .mini{background:#B9877A}
+.falta.no-vino a.nombre,.falta.no-vino > a:not(.px-contactar){color:#7F2410}
+.px-contactar{flex:none;margin-left:2px;font-size:11.5px;font-weight:600;color:#fff!important;background:var(--terracota);border-radius:999px;padding:2px 8px;text-decoration:none!important}
+.px-contactar:hover{filter:brightness(1.08)}
+.px-novino{font-size:12.5px;color:#7F2410;line-height:1.3}
 /* ---- leyenda de íconos (Olmo 23-nov): plegable, debajo de las notas */
 .leyenda{max-width:1440px;margin:0 auto;padding:0 16px 28px}
 .ley-cuerpo{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
@@ -318,16 +350,16 @@ a.px-clase:hover{border-bottom-style:solid}
     </div>
     <aside class="seccion" aria-labelledby="tFaltan">
       <h2 id="tFaltan">Faltan por llegar</h2>
-      <p class="vacio" id="sinProximas">Ninguna clase está por empezar.</p>
+      <p class="vacio" id="sinProximas">No hay clases en este turno.</p>
       <div id="proximas"></div>
     </aside>
   </main>
   <div class="pie">
     <p class="pie-tit">Cómo leer esta pantalla</p>
     <ul class="pie-lista">
-      <li><b>Por resolver:</b> quien ya hizo check-in y trae algo pendiente. Sale al cerrarse en Wix o 45 min después de su clase.</li>
-      <li><b>Faltan por llegar:</b> quien reservó una clase de la próxima hora y media. En verde, las que ya llegaron.</li>
-      <li><b>Recuadro arriba a la derecha:</b> cada check-in de la tablet, unos segundos.</li>
+      <li><b>Por resolver:</b> arriba, quien ya hizo check-in y trae algo pendiente (sale al cerrarse en Wix o 45 min después de su clase); abajo y en gris, quien aún no llega y trae pendiente.</li>
+      <li><b>Faltan por llegar:</b> todas las clases del turno (mañana o tarde). En verde, las que ya llegaron; con ✕, las que no vinieron («Contactar» abre su chat en GHL). Las clases que ya pasaron bajan y quedan en gris.</li>
+      <li><b>Recuadros arriba a la derecha:</b> cada check-in de la tablet por 45 s, del más nuevo arriba, con su hora. Punto verde = la última en llegar; naranja = la anterior.</li>
       <li><b>Ligas:</b> cada nombre abre su ficha en Wix, cada pastilla con «↗» abre dónde se resuelve y el nombre de la clase abre sus reservas de hoy.</li>
       <li><b>«panel aprox.»:</b> check-in marcado en el panel de Wix; la hora es cuando lo vio esta pantalla.</li>
       <li>Esta pantalla no marca asistencia ni cobra: eso se hace en Wix. El resumen del día sigue en Slack.</li>
@@ -358,10 +390,12 @@ a.px-clase:hover{border-bottom-style:solid}
         <li class="ley-fila"><span class="ley-ic">⭐</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Su clase número N (o N+ clases)</span><span class="ley-hacer">felicitarla</span></li>
         <li class="ley-fila"><span class="ley-ic">👋</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Regresa tras varios días sin venir</span><span class="ley-hacer">darle la bienvenida</span></li>
         <li class="ley-fila"><span class="ley-ic">🎂</span><span class="ley-muestra m-cumple"></span><span class="ley-que">Cumple años hoy</span><span class="ley-hacer">felicitarla</span></li>
+        <li class="ley-fila"><span class="ley-ic"><span class="mini ley-mini">CA<span class="punto-llegada p-ultima"></span></span></span><span class="ley-muestra m-primera"></span><span class="ley-que">Punto verde: la última que hizo check-in</span><span class="ley-hacer">parpadea su primer minuto</span></li>
+        <li class="ley-fila"><span class="ley-ic"><span class="mini ley-mini">CA<span class="punto-llegada p-segunda"></span></span></span><span class="ley-muestra m-canje"></span><span class="ley-que">Punto naranja: la anterior</span><span class="ley-hacer">para hacer match si llegan juntas</span></li>
         <li class="ley-fila"><span class="ley-ic"><span class="ico-laurel"></span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Miembro (membresía)</span><span class="ley-hacer">el laurel de la tablet</span></li>
         <li class="ley-fila"><span class="ley-ic"><span class="px-saldo">4</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Clases que le quedan en su plan</span><span class="ley-hacer">«∞» = ilimitado · borde punteado = paquete</span></li>
         <li class="ley-fila"><span class="ley-ic"><span class="mini FUEGO ley-mini">CA</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Color del círculo = su elemento</span><span class="ley-hacer">Fuego, Agua, Aire o Tierra (gris: sin plan)</span></li>
-        <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">validar su código</span></li>
+        <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">Fitpass: su check-in en admin2.fitpass.com (botón en el recuadro)</span></li>
         <li class="ley-fila"><span class="ley-ic ley-ic-txt">equipo</span><span class="ley-muestra m-equipo"></span><span class="ley-que">Del equipo o Lobas</span><span class="ley-hacer">no se cobra (gris, solo informativo)</span></li>
       </ul>
     </div>
@@ -372,6 +406,7 @@ a.px-clase:hover{border-bottom-style:solid}
         <li><span class="falta con-tema t-pago"><span class="mini">CA</span><span>Clienta</span><span class="px-iconos">💳</span></span><span>Aún no llega y trae un pendiente: el color es el de su tema</span></li>
         <li><span class="falta llego"><span class="mini">✓</span><span>Clienta</span></span><span>Ya hizo check-in</span></li>
         <li><span class="falta llego con-tema t-canje"><span class="mini">✓</span><span>Clienta</span><span class="px-iconos">💵</span></span><span>Ya llegó, pero su pendiente sigue abierto</span></li>
+        <li><span class="falta no-vino"><span class="mini">✕</span><span>Clienta</span><span class="px-contactar">Contactar</span></span><span>No vino: «Contactar» abre su chat en GHL para escribirle</span></li>
         <li><span class="falta ley-empezo"><span class="mini">CA</span><span>Clienta</span></span><span>La clase ya empezó y no ha llegado: a los 20 min Wix la marca «No se presentó»</span></li>
       </ul>
       <p class="ley-nota">El nombre de la clase abre en Wix sus reservas de hoy. Cada nombre abre su ficha. Pasa el ratón sobre una pastilla para ver su plan, cuántas clases le quedan, cuándo se renueva o vence, sus años en Hera y sus temas.</p>

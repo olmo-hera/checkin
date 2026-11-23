@@ -35,6 +35,17 @@
       '&bookingStatus=' + encodeURIComponent(JSON.stringify([{ id: 'CONFIRMED', name: 'Confirmada' }])) + '&sort=' + encodeURIComponent('startDate asc');
     return 'https://manage.wix.com/dashboard/' + SITIO_WIX + '/bookings/bookings/bookings-list?' + q;
   }
+  /** Fitpass (Olmo 23-nov): no se valida código; su check-in se hace en el admin de Fitpass, lista de asistencias. */
+  var FITPASS_ASISTENCIAS = 'https://admin2.fitpass.com/attendance_lists';
+  function esFitpass(n) { return /^\s*fitpass\b/i.test(String(n || '')); }
+  /** «Contactar» (Olmo 23-nov): la bandeja de GHL de Hera (dominio Fityx) ya buscando su celular, como el tablero de
+   *  Seguimiento. Solo 10 dígitos; la liga se arma aquí (base fija), el teléfono nunca se pinta en la pantalla. */
+  var GHL_BANDEJA = 'https://app.fityxcrm.com/v2/location/Y8bfAmIsmyYKECFTyBwj/conversations/conversations?category=team-inbox&tab=all&query=';
+  function ligaGHL(tel) {
+    var d = String(tel || '');
+    if (!/^\d{10}$/.test(d)) return null;
+    return GHL_BANDEJA + d.slice(0, 3) + '+' + d.slice(3, 6) + '+' + d.slice(6);
+  }
   // v3 (Olmo 21-nov): cada pastilla lleva a la vista de Wix donde se resuelve. Lista blanca: solo manage.wix.com (armada aquí
   // con la ficha ya validada) y el permalink de una nota de #recepcion. Pestaña «Suscripciones» de la ficha (verificado en
   // Chrome el 21-nov). La sesión de la clase no tiene liga estable: la lista de reservas filtrada por ella es lo más cerca.
@@ -49,9 +60,10 @@
   var MARCA_NUEVA_MS = 90000;                  // cuánto dura el resaltado de una llegada nueva
   var YENDO_MS = 45 * 60000;                   // «Se van yendo»: su clase terminó hace ≤ 45 min; después sale de la lista
   var TOPE_BLOQUE = 12;                        // renglones por bloque («+N más» abajo)
-  var RECUADRO_MS = 8000;                      // cuánto dura el recuadro de una llegada de la tablet
-  var RECUADROS_VISIBLES = 3;                  // máx. a la vista; las demás «+N» (esperan su turno: su reloj corre al verse)
-  var RECUADROS_TOPE = 8;                      // en la cola, como mucho 8 (una clase de Fitpass que llega junta no se eterniza)
+  var RECUADRO_MS = 45000;                     // cuánto dura el recuadro de una llegada de la tablet (Olmo 23-nov: 45 s, antes 8)
+  var RECUADROS_VISIBLES = 5;                  // máx. a la vista, del check-in más nuevo arriba; las demás «+N» (su reloj corre al verse)
+  var PUNTO_PARPADEA_MS = 60000;               // el punto verde de la última llegada parpadea 1 min (Olmo 23-nov)
+  var RECUADROS_TOPE = 10;                     // en la cola, como mucho 8 (una clase de Fitpass que llega junta no se eterniza)
   var RECUADRO_RECIENTE_MS = 3 * 60000;        // al volver la conexión no se anuncia como «hizo check-in» lo de hace rato
   // El recuadro sale de la señal; la LISTA espera a que Bookings muestre el ATTENDED (revisión 21-nov M3): si la señal trajo
   // una llegada que la lista todavía no tiene, relecturas con espera creciente hasta verla (≈ 18 s tras la primera lectura);
@@ -300,7 +312,7 @@
     return { icono: '', tema: partes[0], accion: partes[1] || '', urgencia: 6, color: 'neutro', texto: p && p.texto };
   }
   /** Pastillas de una llegada, en orden: sus pendientes (más urgente primero), luego 🌱 primera clase, 🎂 cumple, el
-   *  marketplace (validar su código) y los avisos de renovar (🔚 ⏳, pastilla gris chica: son oportunidad de venta y en la
+   *  marketplace (su check-in en Fitpass) y los avisos de renovar (🔚 ⏳, pastilla gris chica: son oportunidad de venta y en la
    *  línea gris se cortaban). Lo demás (⭐, años, plan, saldo) va en la línea gris. */
   function pastillasDe(t) {
     var det = t.detalle || null, out = [];
@@ -311,7 +323,7 @@
     var ins = det.insignias || [];
     if (ins.some(function (x) { return x.tipo === 'primera'; })) out.push({ icono: '🌱', tema: 'Primera clase', accion: '', color: 'primera', texto: 'Es su primera clase en Hera: recibirla' });
     if (ins.some(function (x) { return x.tipo === 'cumple'; })) out.push({ icono: '🎂', tema: 'Cumple', accion: '', color: 'cumple', texto: 'Cumple años hoy: felicitarla' });
-    if (det.market || t.market) out.push({ icono: '🎟️', tema: String(det.plan || t.nombre || 'Marketplace'), accion: 'validar su código', color: 'neutro', texto: (det.avisos || [])[0] });
+    if (det.market || t.market) out.push({ icono: '🎟️', tema: String(det.plan || t.nombre || 'Marketplace'), accion: esFitpass(det.plan || t.nombre) ? 'check-in en admin de Fitpass' : 'registrar su visita', color: 'neutro', texto: (det.avisos || [])[0] });
     else if (det.sinFicha) out.push({ icono: '', tema: 'Sin ficha en Wix', accion: 'revisar', color: 'neutro', texto: (det.avisos || [])[0] });
     else (det.avisos || []).forEach(function (a) { out.push({ icono: '', tema: String(a), accion: '', color: 'aviso', texto: String(a) }); });
     return out;
@@ -421,9 +433,10 @@
     return Number.isFinite(i) ? i + 60 * 60000 : NaN;
   }
   /** ¿Trae tema para la lista? Un pendiente accionable, un detalle que no se pudo armar («Sin detalle / revisar su ficha») o
-   *  un marketplace (🎟️ validar su código: si nadie lo valida, se pierde el pago de esa visita). 🌱 primera clase y los
+   *  un marketplace (desde 23-nov ya no: su check-in de Fitpass va en el recuadro). 🌱 primera clase y los
    *  avisos de renovar (🔚 ⏳) NO: solo van en su recuadro y en Slack (decisión pendiente de Olmo, docs/MOSTRADOR.md P3). */
-  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle || !!t.detalle.market); }
+  // Olmo 23-nov: el marketplace con check-in en Wix ya no se queda en «Por resolver» (su check-in de Fitpass sale en el recuadro).
+  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle); }
   /** La lista de «Por resolver» (Olmo 21-nov: «si no tienen pendientes no es necesario que se queden en el listado, y que
    *  haya un separador…»): SOLO quien trae tema, en dos bloques.
    *  - `van`: su clase no ha terminado (por empezar o en curso), la más nueva arriba;
@@ -463,11 +476,12 @@
   /** Grupos por clase (Olmo 21-nov: «que el nombre de la clase sea una subcategoría, para ver todos juntos por tipo de
    *  clase»): { clase, filas, chips }. En «Van llegando», por hora de la clase (la que empieza antes arriba); en «Se van
    *  yendo», la que acaba de terminar arriba. Dentro, el orden de siempre (la llegada más nueva arriba). */
-  function agrupar(filas, chips, yendo) {
+  function agrupar(filas, chips, yendo, porLlegar) {
     var g = {}, orden = [];
-    var de = function (t) { var k = claveClase(t.clase); if (!g[k]) { g[k] = { clase: t.clase || {}, filas: [], chips: [] }; orden.push(g[k]); } return g[k]; };
+    var de = function (t) { var k = claveClase(t.clase); if (!g[k]) { g[k] = { clase: t.clase || {}, filas: [], chips: [], faltan: [] }; orden.push(g[k]); } return g[k]; };
     (filas || []).forEach(function (t) { de(t).filas.push(t); });
     (chips || []).forEach(function (t) { de(t).chips.push(t); });
+    (porLlegar || []).forEach(function (x) { de(x).faltan = x.faltan; });
     var ini = function (x) { var v = Date.parse(x.clase.inicio || ''); return Number.isFinite(v) ? v : 0; };
     orden.sort(yendo ? function (a, b) { return finClase(b.clase) - finClase(a.clase) || claveClase(a.clase).localeCompare(claveClase(b.clase)); }
       : function (a, b) { return ini(a) - ini(b) || claveClase(a.clase).localeCompare(claveClase(b.clase)); });
@@ -479,6 +493,7 @@
     (resumen || []).forEach(function (x) { if (x && x.id === (g.clase && g.clase.id)) r = x; });
     var partes = [];
     if (g.filas.length) partes.push(g.filas.length + ' con tema');
+    if (g.faltan && g.faltan.length) partes.push(g.faltan.length + ' por llegar con tema');
     if (r && Number(r.lugares) > 0) partes.push((Number(r.llegaron) || 0) + '/' + Number(r.lugares) + ' llegaron');
     return partes.join(' · ');
   }
@@ -638,7 +653,7 @@
     else if (eq.length) { extra = textoEquipo(eq[0]); tipo = 'equipo'; }      // informativo: no se cobra
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) { extra = '🌱 primera clase'; tipo = 'primera'; }
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'cumple'; })) { extra = '🎂 cumple hoy'; tipo = 'cumple'; }
-    else if ((det && det.market) || (!det && t && t.market)) extra = '🎟️ validar su código';
+    else if ((det && det.market) || (!det && t && t.market)) { extra = esFitpass(t && t.nombre) ? '🎟️ hacer su check-in en Fitpass' : '🎟️ registrar su visita en ' + String((t && t.nombre) || 'su app'); tipo = 'market'; }
     var o = { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1].charAt(0).toLocaleUpperCase('es-MX') + '.' : '',
       linea: 'hizo check-in · ' + claseCorta(t && t.clase), extra: extra, tipo: tipo, iniciales: (t && t.iniciales) || '?',
       elemento: det ? (tiene(ELEMENTOS, det.elemento) ? det.elemento : '') : (sn && tiene(ELEMENTOS, sn.e) ? sn.e : ''), market: !!(t && t.market) };
@@ -653,10 +668,22 @@
     return !Number.isFinite(h) || !Number.isFinite(a) || a - h <= RECUADRO_RECIENTE_MS;
   }
   /** Pinta la pila de recuadros (los primeros 3; las demás «+N»). Cada uno se cierra al tocarlo (`alCerrar(id)`). */
+  function haceCuanto(ms) { var s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? 'hace ' + s + ' s' : 'hace ' + Math.floor(s / 60) + ' min'; }
+  /** Del check-in más nuevo arriba (Olmo 23-nov: «que se apilen por hora de check-in»); sin hora, como llegaron. */
+  function ordenRecuadros(xs) {
+    return xs.map(function (r, i) { var h = Date.parse(r.hora || ''); return { r: r, i: i, h: isFinite(h) ? h : -Infinity }; })   // sin hora, al final
+      .sort(function (a, b) { return (b.h === a.h ? 0 : b.h > a.h ? 1 : -1) || a.i - b.i; }).map(function (x) { return x.r; });
+  }
+  // «hace N s» con el reloj del servidor (la página lo estima; la compu puede ir adelantada): `relojRecuadros` lo fija la página.
+  var relojRecuadros = function () { return Date.now(); }, horasRecuadro = [];
+  function textoHoraRecuadro(ms) { return hora(new Date(ms).toISOString()) + ' · ' + haceCuanto(relojRecuadros() - ms); }
+  /** Cada 5 s solo el texto «hace N s» (sin rehacer los recuadros: no se pierde un clic ni el foco). */
+  function horasAlDia() { horasRecuadro.forEach(function (x) { x.span.textContent = textoHoraRecuadro(x.ms); }); }
   function pintarRecuadros(doc, lista, alCerrar) {
     var cont = doc.getElementById('recuadros');
     if (!cont) return;
     vaciar(cont);
+    horasRecuadro = [];
     // Debajo de la barra (su altura cambia si los botones bajan a otra línea); a 900 px o menos el CSS lo manda abajo.
     var barra = doc.getElementById('barra');
     if (barra && typeof barra.getBoundingClientRect === 'function' && cont.style) {
@@ -664,8 +691,11 @@
       if (abajo > 0) cont.style.top = Math.round(abajo + 10) + 'px';
     }
     (lista || []).slice(0, RECUADROS_VISIBLES).forEach(function (r) {
-      var b = el(doc, 'button', 'recuadro' + (r.tipo ? ' r-' + r.tipo : '') + (r.entra ? ' entra' : ''));
-      b.type = 'button';
+      // Fitpass (Olmo 23-nov): el recuadro lleva un botón a admin2.fitpass.com (asistencias); un <a> no va dentro de un
+      // <button>, así que ese recuadro es un <div> que se cierra al tocarlo (el botón abre la liga sin cerrarlo).
+      var fit = r.market && esFitpass(r.nombre);
+      var b = el(doc, fit ? 'div' : 'button', 'recuadro' + (r.tipo ? ' r-' + r.tipo : '') + (r.entra ? ' entra' : ''));
+      if (fit) { b.setAttribute('role', 'button'); b.setAttribute('tabindex', '0'); } else b.type = 'button';
       b.setAttribute('title', 'Tocar para cerrar');
       var c = el(doc, 'span', 'circulo grande' + (r.market ? ' market' : r.elemento ? ' ' + r.elemento : ''), r.iniciales);
       c.setAttribute('aria-hidden', 'true');
@@ -675,7 +705,15 @@
       if (r.inicial) n.appendChild(el(doc, 'span', 'r-inicial', ' ' + r.inicial));
       tx.appendChild(n);
       tx.appendChild(el(doc, 'span', 'r-linea', r.linea));
+      var hr = Date.parse(r.hora || '');                         // Olmo 23-nov: su hora y hace cuánto, para hacer match con quien está en la tablet
+      if (isFinite(hr)) { var sh = el(doc, 'span', 'r-hora', textoHoraRecuadro(hr)); tx.appendChild(sh); horasRecuadro.push({ span: sh, ms: hr }); }
       if (r.extra) tx.appendChild(el(doc, 'span', 'r-extra', r.extra));
+      if (fit) {
+        var fl = el(doc, 'a', 'r-boton', 'Check-in en Fitpass ↗');
+        fl.href = FITPASS_ASISTENCIAS; fl.target = '_blank'; fl.rel = 'noopener noreferrer';
+        if (fl.addEventListener) fl.addEventListener('click', function (ev) { if (ev && ev.stopPropagation) ev.stopPropagation(); });
+        tx.appendChild(fl);
+      }
       b.appendChild(tx);
       if (alCerrar && b.addEventListener) b.addEventListener('click', function () { alCerrar(r.id); });
       cont.appendChild(b);
@@ -717,12 +755,70 @@
   }
 
   /** Un renglón: hora · círculo · nombre y clase (y la línea gris) · a la derecha el tema en pastilla (o ✓ discreto). */
+  /** Olmo 23-nov: «un punto verde al lado del globo de la última que hizo check-in, parpadeando 1 min, y la anterior con un
+   *  punto naranja»: de las llegadas de la lista y las que ya trajo la señal (`recientes`, con su hora), la más nueva y la
+   *  anterior. → { ultima: id, segunda: id, parpadea }. */
+  function puntosLlegada(ts, recientes, ahoraMs) {
+    var porId = {};
+    [].concat(ts || [], recientes || []).forEach(function (t) {
+      var h = t && Date.parse(t.hora || '');
+      if (!t || !t.id || !isFinite(h)) return;
+      if (!tiene(porId, t.id) || porId[t.id] < h) porId[t.id] = h;
+    });
+    var xs = Object.keys(porId).sort(function (a, b) { return porId[b] - porId[a]; });
+    return { ultima: xs[0] || null, segunda: xs[1] || null, parpadea: !!xs[0] && ahoraMs - porId[xs[0]] < PUNTO_PARPADEA_MS };
+  }
+  var PUNTOS = { ultima: null, segunda: null, parpadea: false };
+  /** El punto de una persona (dentro de su círculo, a la derecha), si es la última o la penúltima en llegar. */
+  function ponerPunto(doc, circ, id) {
+    if (!id || (id !== PUNTOS.ultima && id !== PUNTOS.segunda)) return;
+    var u = id === PUNTOS.ultima, d = el(doc, 'span', 'punto-llegada ' + (u ? 'p-ultima' + (PUNTOS.parpadea ? ' parpadea' : '') : 'p-segunda'));
+    d.setAttribute('title', u ? 'La última que hizo check-in' : 'La anterior en hacer check-in');
+    circ.appendChild(d);
+  }
+  /** «Por resolver» (Olmo 23-nov: «los que van a estar pendientes en el bloque, parte baja, un poco más gris»): por clase,
+   *  quien reservó, aún no llega y TRAE pendiente (de «Faltan por llegar»). Sin quien ya tiene renglón (llegó o la señal ya
+   *  la trajo). → [{ clase, faltan }] */
+  function porLlegarConTema(ps, ts) {
+    var ya = {};
+    (ts || []).forEach(function (t) { if (t && t.id) ya[t.id] = 1; });
+    var out = [];
+    (ps || []).forEach(function (p) {
+      var fs = (Array.isArray(p.faltan) ? p.faltan : []).filter(function (f) { return f && !f.market && f.id && !ya[f.id] && marcasDe(f).t.length; });
+      if (fs.length) out.push({ clase: p, faltan: fs });
+    });
+    return out;
+  }
+  /** Renglón gris de quien aún no llega y trae pendiente: círculo de su elemento, nombre, su plan y sus temas. */
+  function filaPorLlegar(doc, f, ahora) {
+    var m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
+    var li = el(doc, 'li', 'fila por-llegar c-' + color);
+    li.appendChild(el(doc, 'div', 'f-hora', 'por llegar'));
+    var circ = el(doc, 'div', 'circulo' + (m.p.el ? ' ' + m.p.el : ''), String(f.iniciales || '?'));
+    circ.setAttribute('aria-hidden', 'true');
+    li.appendChild(circ);
+    var info = el(doc, 'div', 'f-info'), l1 = el(doc, 'div', 'f-l1');
+    l1.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ' lugares)' : ''), f.ficha, 'nombre'));
+    info.appendChild(l1);
+    var meta = [m.p.n, m.p.q, m.p.v ? textoVigencia(m.p.v, ahora) : ''].filter(Boolean).join(' · ');
+    if (meta) { var mm = el(doc, 'div', 'f-meta', meta); mm.setAttribute('title', meta); info.appendChild(mm); }
+    li.appendChild(info);
+    var temas = el(doc, 'div', 'f-temas');
+    m.t.forEach(function (y) {
+      var c = tiene(COLOR_TEMA, y.c) ? y.c : 'neutro', pl = el(doc, 'span', 'pill ' + c);
+      pl.appendChild(el(doc, 'span', 'pill-tema', String(y.i || '•') + ' ' + String(y.t || '')));
+      temas.appendChild(pl);
+    });
+    li.appendChild(temas);
+    li.setAttribute('title', 'Aún no llega · trae pendiente');
+    return li;
+  }
   function fila(doc, t, ahoraMs, animar, agrupada) {
     var det = t.detalle || null, ps = pastillasDe(t);
     var li = el(doc, 'li', 'fila');
     if (t.prioridad === 1) li.className += ' con-pendiente c-' + (ps.length ? ps[0].color : 'neutro');   // ps[0] = su pendiente más urgente
     else if (ps.length && ps[0].color === 'primera') li.className += ' c-primera';
-    else if (det && det.market) li.className += ' c-neutro';      // 🎟️ validar su código
+    else if (det && det.market) li.className += ' c-neutro';      // 🎟️ marketplace
     else if (!ps.length && det) li.className += ' tenue';          // tenue = «se sabe que no trae nada»; sin detalle, no
     if (ahoraMs - (t.desde || 0) < MARCA_NUEVA_MS && t.nueva) li.className += ' nueva' + (animar ? ' entra' : '');
     if (t.provisional) { li.className += ' provisional'; li.setAttribute('title', 'Lo dijo el check-in de la tablet; Wix todavía no lo muestra (se confirma solo)'); }
@@ -736,6 +832,7 @@
     if (t.market) circ.className += ' market';
     else if (det && tiene(ELEMENTOS, det.elemento)) circ.className += ' ' + det.elemento;
     circ.setAttribute('aria-hidden', 'true');
+    ponerPunto(doc, circ, t.id);
     li.appendChild(circ);
     var info = el(doc, 'div', 'f-info');
     var l1 = el(doc, 'div', 'f-l1');
@@ -817,30 +914,37 @@
   }
   /** Un bloque de la lista, agrupado por clase (v3): subtítulo y sus renglones (tope 12 por bloque, repartido entre clases;
    *  cada clase dice «y N más de esta clase» si se le esconden). */
-  function pintarBloque(doc, ul, ts, chips, resumen, ahora, conFin) {
+  function pintarBloque(doc, ul, ts, chips, resumen, ahora, conFin, porLlegar) {
     vaciar(ul);
-    var gs = agrupar(ts, chips, conFin), n = reparto(gs, TOPE_BLOQUE);
+    var gs = agrupar(ts, chips, conFin, porLlegar), n = reparto(gs, TOPE_BLOQUE);
     gs.forEach(function (g, i) {
       ul.appendChild(subtitulo(doc, g, resumen, ahora, conFin));
       g.filas.slice(0, n[i]).forEach(function (t) { ul.appendChild(fila(doc, t, ahora, !animadas[t.id], true)); });
       var resto = g.filas.length - n[i];
       if (resto > 0) ul.appendChild(el(doc, 'li', 'sub-mas', 'y ' + resto + ' más de esta clase'));
+      // Abajo y en gris: las que aún no llegan y traen pendiente (al hacer check-in suben arriba como renglón normal).
+      if (g.faltan.length) {
+        ul.appendChild(el(doc, 'li', 'sub-porllegar', 'Aún no llegan · traen pendiente (' + g.faltan.length + ')'));
+        g.faltan.forEach(function (f) { ul.appendChild(filaPorLlegar(doc, f, ahora)); });
+      }
     });
-    ul.hidden = !ts.length && !(chips || []).length;
+    ul.hidden = !ts.length && !(chips || []).length && !(porLlegar || []).length;
   }
-  function pintar(doc, estado, ahoraMs, provs) {
+  function pintar(doc, estado, ahoraMs, provs, recientes) {
     var ts = conProvisionales((estado && estado.tarjetas) || [], provs), ahora = ahoraMs || Date.now();
     var b = bloques(ts, ahora), tx = textosLista(b, estado && estado.total), hay = b.van.length + b.yendo.length;
     var resumen = (estado && estado.clases) || [];
-    pintarBloque(doc, doc.getElementById('van'), b.van, b.chipsVan, resumen, ahora, false);
+    PUNTOS = puntosLlegada(ts, recientes, ahora);
+    var pl = porLlegarConTema((estado && estado.proximas) || [], [].concat(ts, recientes || [])), npl = pl.length;
+    pintarBloque(doc, doc.getElementById('van'), b.van, b.chipsVan, resumen, ahora, false, pl);
     pintarBloque(doc, doc.getElementById('yendo'), b.yendo, b.chipsYendo, resumen, ahora, true);
     ts.forEach(function (t) { if (t.nueva) animadas[t.id] = 1; });
     // Los dos bloques con su separador salen siempre que haya alguien en la lista (el vacío dice «nadie»); un 🌱/🎂 solo
     // (sin pendiente) también los abre: su chip va en el subtítulo de su clase.
-    var conChips = !!(b.chipsVan.length + b.chipsYendo.length);
+    var conChips = !!(b.chipsVan.length + b.chipsYendo.length + npl);
     doc.getElementById('bloqueVan').hidden = !hay && !conChips;
     doc.getElementById('bloqueYendo').hidden = !hay && !conChips;
-    doc.getElementById('vacioVan').hidden = !!(b.van.length + b.chipsVan.length);
+    doc.getElementById('vacioVan').hidden = !!(b.van.length + b.chipsVan.length + npl);
     doc.getElementById('vacioYendo').hidden = !!(b.yendo.length + b.chipsYendo.length);
     doc.getElementById('cuentaVan').textContent = b.van.length ? '(' + b.van.length + ')' : '';
     doc.getElementById('cuentaYendo').textContent = b.yendo.length ? '(' + b.yendo.length + ')' : '';
@@ -904,18 +1008,21 @@
     var xs = [];
     (Array.isArray(p.faltan) ? p.faltan : []).forEach(function (f) { if (f) xs.push({ f: f, llego: false }); });
     (Array.isArray(p.yaLlegaron) ? p.yaLlegaron : []).forEach(function (f) { if (f) xs.push({ f: f, llego: true }); });
+    (Array.isArray(p.noVinieron) ? p.noVinieron : []).forEach(function (f) { if (f) xs.push({ f: f, llego: false, no: true }); });
     return xs.sort(function (a, b) {
       if (!!a.f.market !== !!b.f.market) return a.f.market ? 1 : -1;
-      if (a.f.market && a.llego !== b.llego) return a.llego ? 1 : -1;
+      if (a.f.market && (a.llego !== b.llego || !!a.no !== !!b.no)) return (a.llego ? 1 : a.no ? 2 : 0) - (b.llego ? 1 : b.no ? 2 : 0);
       return String(a.f.nombre || '').localeCompare(String(b.f.nombre || ''), 'es');
     });
   }
   /** La pastilla de una persona: verde con ✓ si ya llegó; con tema, el color de su tema más urgente y sus íconos. */
   function pastillaProxima(doc, x, ahora) {
     var f = x.f, m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
-    var li = el(doc, 'li', 'falta' + (x.llego ? ' llego' : '') + (m.t.length ? ' con-tema t-' + color : ''));
-    // Círculo con el color de su elemento (como en la tablet y en «Por resolver»); al llegar, verde con ✓.
-    li.appendChild(el(doc, 'span', 'mini' + (!x.llego && m.p.el ? ' ' + m.p.el : ''), x.llego ? '✓' : String(f.iniciales || '?')));
+    var li = el(doc, 'li', 'falta' + (x.llego ? ' llego' : x.no ? ' no-vino' : '') + (m.t.length ? ' con-tema t-' + color : ''));
+    // Círculo con el color de su elemento (como en la tablet y en «Por resolver»); al llegar, verde con ✓; si no vino, ✕.
+    var mini = el(doc, 'span', 'mini' + (!x.llego && !x.no && m.p.el ? ' ' + m.p.el : ''), x.llego ? '✓' : x.no ? '✕' : String(f.iniciales || '?'));
+    if (x.llego) ponerPunto(doc, mini, f.id);
+    li.appendChild(mini);
     li.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ')' : ''), f.ficha, null));
     // Olmo 23-nov: miembro (laurel, como en la tablet) o paquete, y cuántas clases le quedan.
     var n = numSaldo(m.p.q);
@@ -927,6 +1034,14 @@
     }
     var iconos = m.t.map(function (y) { return String(y.i || '•'); }).concat(m.i.map(function (y) { return String(y.i || ''); })).join('');
     if (iconos) li.appendChild(el(doc, 'span', 'px-iconos', iconos));
+    // Olmo 23-nov: si no vino, «Contactar» abre su chat en GHL (la bandeja ya buscando su celular).
+    var lg = x.no ? ligaGHL(f.tel) : null;
+    if (lg) {
+      var a = el(doc, 'a', 'px-contactar', 'Contactar');
+      a.href = lg; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.setAttribute('title', 'Abrir su chat en GHL para escribirle');
+      li.appendChild(a);
+    }
     // Globo al pasar el ratón: nombre, plan, lo que le queda, miembro/paquete, elemento, años, temas e insignias.
     var globo = [String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' · ' + f.lugares + ' lugares' : '')];
     if (m.p.n || m.p.q) globo.push([m.p.n, m.p.q].filter(Boolean).join(' · '));
@@ -936,18 +1051,26 @@
     m.t.forEach(function (y) { globo.push(String(y.i || '') + ' ' + String(y.t || '')); });
     m.i.forEach(function (y) { globo.push(String(y.t || y.i || '')); });
     if (m.eq) globo.push('equipo o Lobas: no se cobra');
-    globo.push(x.llego ? 'Ya llegó ✓' : 'Falta por llegar');
+    globo.push(x.llego ? 'Ya llegó ✓' : x.no ? 'No vino' : 'Falta por llegar');
     li.setAttribute('title', globo.join('\n'));
     return li;
+  }
+  /** Olmo 23-nov: todo el turno; las que ya pasaron, abajo (la que acaba de terminar primero) y en gris. */
+  function ordenProximas(ps) {
+    var ini = function (p) { var v = Date.parse(p.inicio || ''); return isFinite(v) ? v : 0; };
+    var vivas = ps.filter(function (p) { return p.estado !== 'pasada'; }).sort(function (a, b) { return ini(a) - ini(b); });
+    var pasadas = ps.filter(function (p) { return p.estado === 'pasada'; }).sort(function (a, b) { return ini(b) - ini(a); });
+    return vivas.concat(pasadas);
   }
   function pintarProximas(doc, ps, ahora) {
     var cont = doc.getElementById('proximas');
     vaciar(cont);
     doc.getElementById('sinProximas').hidden = !!ps.length;
-    ps.forEach(function (p) {
-      var fs = Array.isArray(p.faltan) ? p.faltan : [];
+    ordenProximas(ps).forEach(function (p) {
+      var fs = Array.isArray(p.faltan) ? p.faltan : [], pasada = p.estado === 'pasada';
+      var nv = (Array.isArray(p.noVinieron) ? p.noVinieron : []).length;
       // Ideas v3: ya empezó y falta gente → resaltado: llamarla, o a los 20 min Wix la deja en «No se presentó».
-      var s = el(doc, 'section', 'proxima' + (p.empezo && fs.length ? ' empezo' : ''));
+      var s = el(doc, 'section', 'proxima' + (pasada ? ' pasada' : p.empezo && fs.length ? ' empezo' : ''));
       var h = el(doc, 'h3'), lc = ligaClase(p), cl;
       // Olmo 23-nov: la clase abre en Wix sus reservas de hoy, como el subtítulo de «Por resolver».
       if (lc) {
@@ -957,12 +1080,16 @@
       } else cl = el(doc, 'span', 'px-clase', claseCorta(p));
       if (p.coach) cl.appendChild(el(doc, 'small', null, ' · ' + p.coach));
       h.appendChild(cl);
-      h.appendChild(el(doc, 'span', 'px-cuenta', (p.llegaron || 0) + ' de ' + (p.lugares || 0) + (p.empezo ? ' · ya empezó' : '')));
+      h.appendChild(el(doc, 'span', 'px-cuenta', (p.llegaron || 0) + ' de ' + (p.lugares || 0) + (pasada ? ' · terminó' : p.empezo ? ' · ya empezó' : '')));
       s.appendChild(h);
       // Ya empezó: la línea va ARRIBA de los nombres (revisión 21-nov: los tapaba, justo cuando hay que llamarlas). Cuenta
       // lugares, como «2 de 6»: una invitada y el «Fitpass ×2» cuentan lo que son.
       var nf = lugaresFaltan(fs);
-      if (!fs.length) s.appendChild(el(doc, 'p', 'listo', 'Ya llegaron todas ✓'));
+      var nvs = Array.isArray(p.noVinieron) ? p.noVinieron : [], nl = lugaresFaltan(nvs);
+      var conLiga = nvs.some(function (f) { return f && ligaGHL(f.tel); }) ? ' · «Contactar» abre su chat en GHL' : '';
+      if (pasada) s.appendChild(el(doc, 'p', nv ? 'px-novino' : 'listo', nv ? (nl === 1 ? 'No vino 1' : 'No vinieron ' + nl) + conLiga : 'Vinieron todas ✓'));
+      else if (!fs.length && !nv) s.appendChild(el(doc, 'p', 'listo', 'Ya llegaron todas ✓'));
+      else if (!fs.length) s.appendChild(el(doc, 'p', 'px-novino', (nl === 1 ? 'No se presentó 1' : 'No se presentaron ' + nl) + conLiga));
       else if (p.empezo) s.appendChild(el(doc, 'p', 'px-empezo', 'Ya empezó: ' + (nf === 1 ? 'falta 1' : 'faltan ' + nf) + ' · a los 20 min Wix las marca «No se presentó»'));
       var xs = personasProxima(p);
       if (xs.length) {
@@ -980,10 +1107,10 @@
     var vistas = {};
     var sello = function (m) { var t = m && typeof m.s === 'string' ? Date.parse(m.s) : NaN; return isFinite(t) ? t : 0; };
     (previas || []).forEach(function (p) {
-      [].concat(p.faltan || [], p.yaLlegaron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; });
+      [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; });
     });
     (ps || []).forEach(function (p) {
-      [].concat(p.faltan || [], p.yaLlegaron || []).forEach(function (f) {
+      [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) {
         if (!f || !f.id || !tiene(vistas, f.id)) return;
         if (f.m === undefined || sello(vistas[f.id]) > sello(f.m)) f.m = vistas[f.id];
       });
@@ -1121,8 +1248,10 @@
     var directorio = null, relojPag = null, cronos = {}, mediciones = [], medidas = {};
     var MEDIR = /(^|[?&])medir=1(&|$)/.test(String((win.location && win.location.search) || ''));
     var horaServidor = function () { return Date.now() + (relojPag ? relojPag.off : desfase); };
+    relojRecuadros = horaServidor;
     function listaProv() { var out = [], id; for (id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) out.push(provisionales[id]); return out; }
-    function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv()); }
+    function listaRecientes() { var out = [], id; for (id in deLaSenal) if (Object.prototype.hasOwnProperty.call(deLaSenal, id)) out.push({ id: id, hora: deLaSenal[id].hora }); return out; }
+    function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv(), listaRecientes()); }
     /** Renglón provisional de una llegada de la señal que ya trae sus pendientes (o lo callado del equipo). */
     function ponerProvisional(e, sn) {
       if (conDetalle(e.id) || (!sn.p && !sn.eq)) return false;
@@ -1270,11 +1399,11 @@
       var ahora = Date.now();
       ts.slice().reverse().forEach(function (t) {                // vienen de la más nueva a la más vieja: la más nueva queda arriba
         var r = recuadroDe(t), ya = recuadros.filter(function (x) { return x.id === r.id; })[0];
-        if (ya) { r.hasta = ya.hasta; r.entra = false; recuadros = recuadros.map(function (x) { return x === ya ? r : x; }); return; }   // sin repetir la entrada
-        r.hasta = ahora + RECUADRO_MS; r.entra = true;
+        if (ya) { r.hasta = ya.hasta; r.entra = false; r.hora = ya.hora; recuadros = recuadros.map(function (x) { return x === ya ? r : x; }); return; }   // sin repetir la entrada
+        r.hasta = ahora + RECUADRO_MS; r.entra = true; r.hora = t.hora || null;
         recuadros.unshift(r);                                   // la más nueva arriba
       });
-      recuadros = recuadros.slice(0, RECUADROS_TOPE);
+      recuadros = ordenRecuadros(recuadros).slice(0, RECUADROS_TOPE);
       pintarRecuadros(doc, recuadros, cerrarRecuadro);
       recuadros.forEach(function (r) { r.entra = false; });
     }
@@ -1288,7 +1417,7 @@
         var n = recuadroDe(!t.detalle && r.senal ? conSenal(t, r.senal) : t);
         if (n.extra === r.extra && n.elemento === r.elemento) return r;
         // El detalle llegó tarde («trae pendiente»): que se alcance a leer (≥ 4 s más).
-        cambio = true; n.hasta = n.extra && n.extra !== r.extra ? Math.max(r.hasta, Date.now() + 4000) : r.hasta; return n;
+        cambio = true; n.hora = r.hora; n.hasta = n.extra && n.extra !== r.extra ? Math.max(r.hasta, Date.now() + 4000) : r.hasta; return n;
       });
       if (cambio) pintarRecuadros(doc, recuadros, cerrarRecuadro);
     }
@@ -1308,7 +1437,7 @@
         if (!sn.e && r.senal && r.senal.e) sn.e = r.senal.e;
         var n = recuadroDe({ id: r.id, nombre: r.nombre + (r.inicial ? ' ' + r.inicial : ''), iniciales: r.iniciales, market: r.market, clase: null, senal: sn });
         if (n.extra === r.extra && n.elemento === r.elemento) return r;
-        n.linea = r.linea; n.hasta = Math.max(r.hasta, Date.now() + 4000); cambio = true; return n;
+        n.linea = r.linea; n.hora = r.hora; n.hasta = Math.max(r.hasta, Date.now() + 4000); cambio = true; return n;
       });
       if (cambio) pintarRecuadros(doc, recuadros, cerrarRecuadro);
       if (deLaSenal[id]) deLaSenal[id].senal = sn;
@@ -1398,6 +1527,7 @@
           retiradas[e.id] = ts;
           if (e.f) silencio[e.id] = ts;
           quitarRecuadro(e.id); delete anunciadas[e.id]; delete esperadas[e.id]; olvidarAviso(e.id);
+          if (deLaSenal[e.id]) { delete deLaSenal[e.id]; repinta = true; }   // revisión 23-nov: ni punto verde ni fuera del gris «aún no llegan»
           if (provisionales[e.id]) { delete provisionales[e.id]; repinta = true; }   // v3.1: su renglón provisional también se va
           delete notificadasTemas[e.id];
           if (enLista) { falta = true; reintentosCambio = REINTENTOS_CAMBIO; }
@@ -1421,7 +1551,7 @@
         if (silencio[e.id] && ts - silencio[e.id] < SILENCIO_MS && !e.ok) { falta = true; return; }
         delete silencio[e.id];
         var t = deSenal(e, estado, catalogo, directorio && directorio.ids);
-        if (t) { anunciadas[e.id] = ya; nuevos.unshift(t); deLaSenal[e.id] = t; if (ponerProvisional(e, t.senal)) repinta = true; }   // la lista viene de la más vieja a la más nueva
+        if (t) { anunciadas[e.id] = ya; nuevos.unshift(t); deLaSenal[e.id] = t; ponerProvisional(e, t.senal); repinta = true; }   // repinta: el punto verde pasa a ella   // la lista viene de la más vieja a la más nueva
         esperadas[e.id] = esperadas[e.id] || ya;
         falta = true;
       });
@@ -1440,8 +1570,11 @@
       // Los que esperan detrás del «+N» no vencen sin haberse visto: su reloj empieza cuando suben a la vista.
       recuadros.forEach(function (r, i) { if (i >= RECUADROS_VISIBLES) r.hasta = Math.max(r.hasta, ahora + RECUADRO_MS); });
       recuadros = recuadros.filter(function (r) { return r.hasta > ahora; });
+      tics++;
       if (recuadros.length !== antes) pintarRecuadros(doc, recuadros, cerrarRecuadro);
+      else if (tics % 5 === 0) horasAlDia();                    // «hace N s» al día cada 5 s
     }, 1000);
+    var tics = 0;
     function sesionPerdida() {
       ls.del(TOKEN_KEY); alerta = 'Contraseña'; ponerTitulo();
       if (!avisoSesion && enSegundoPlano(doc)) { avisoSesion = true; notificar({ titulo: 'Mostrador: pide la contraseña otra vez', cuerpo: 'Ya no se están viendo las llegadas.', tag: TAG_AVISO }); }
@@ -1538,6 +1671,7 @@
         if (sd.length) datos.detalle = sd;
       }
       if (!catalogo) datos.catalogo = 1;
+      datos.turno = 1;                                          // Olmo 23-nov: «Faltan por llegar» con todo el turno
       api('llegadas', datos)
         .then(function (x) {
           if (x.s === 401 || x.s === 403) { sesionPerdida(); return; }
@@ -1557,7 +1691,7 @@
           refrescarRecuadros(estado.tarjetas);
           avisarNuevas(r.nuevas);
           tanda(conRecuadro.map(function (t) { return t.id; }).concat(enSegundoPlano(doc) ? r.nuevas.map(function (t) { return t.id; }) : []));
-          pintar(doc, estado, ahoraMs(), listaProv());
+          pintar(doc, estado, ahoraMs(), listaProv(), listaRecientes());
           // Tras la señal: si todavía no se ve a nadie nuevo (el ATTENDED de Wix va detrás de la señal), otra vez en 2.1 s.
           if (fresco) siguienteFresco(r.cambio);
           var s = x.j.sondeo || { activo: true, esperaSeg: 15 };
@@ -1600,7 +1734,7 @@
       }
     }, 30000);
     // Cuando una clase termina, sus pendientes pasan solos de «Van llegando» a «Se van yendo» (y a los 45 min salen).
-    setInterval(function () { if (estado && !$('vistaLista').hidden) { limpiarProvisionales(); pintar(doc, estado, ahoraMs(), listaProv()); } }, 15000);
+    setInterval(function () { if (estado && !$('vistaLista').hidden) { limpiarProvisionales(); pintar(doc, estado, ahoraMs(), listaProv(), listaRecientes()); } }, 15000);
 
     $('formClave').addEventListener('submit', function (ev) {
       ev.preventDefault();
@@ -1684,6 +1818,7 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
+    puntosLlegada: puntosLlegada, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
