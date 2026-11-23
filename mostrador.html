@@ -180,6 +180,37 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .r-linea{font-size:16px;color:var(--carbon)}
 .r-extra{font-size:13.5px;color:var(--gris)}
 .r-hora{font-size:12.5px;color:var(--gris);font-variant-numeric:tabular-nums}
+/* Olmo 23-nov: el globo de cada alumna, como tarjeta (antes, el título nativo del navegador amontonado) */
+.globo{position:fixed;z-index:60;width:300px;max-width:calc(100vw - 16px);background:#fff;border:1px solid var(--crema);border-radius:14px;box-shadow:0 2px 6px rgba(66,73,73,.10),0 16px 40px rgba(66,73,73,.20);padding:12px 14px 12px;pointer-events:none;font-size:13px;color:var(--texto);line-height:1.35}
+.gl-cab{display:flex;align-items:center;gap:8px}
+.gl-el{width:12px;height:12px;border-radius:50%;background:var(--pizarra);flex:none}
+.gl-el.FUEGO{background:var(--fuego)} .gl-el.AGUA{background:var(--agua)} .gl-el.AIRE{background:var(--aire)} .gl-el.TIERRA{background:var(--tierra-el)}
+.gl-nombre{font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;font-size:14.5px;color:var(--carbon);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gl-estado{flex:none;font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;background:var(--arena-suave);color:var(--gris)}
+.gl-estado.e-llego{background:#E5F0E8;color:#2B5435} .gl-estado.e-no{background:#FCE8E3;color:#7F2410}
+.gl-sub{display:flex;align-items:center;gap:5px;margin:4px 0 0 20px;font-size:12px;color:var(--gris)}
+.gl-sub .ico-laurel{width:14px;height:14px}
+.gl-sep{color:var(--crema)}
+.gl-sec{margin-top:10px;padding-top:8px;border-top:1px solid #F1EAE2}
+.gl-tit{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin-bottom:4px}
+.gl-plan{font-weight:500;color:var(--carbon)}
+.gl-nums{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.gl-num{background:var(--arena-suave);border:1px solid var(--crema);border-radius:8px;padding:3px 8px;font-size:12px;color:var(--gris)}
+.gl-num b{font-size:14px;color:var(--carbon);font-variant-numeric:tabular-nums}
+.gl-linea{margin-top:4px;color:var(--gris);font-size:12.5px}
+.gl-clase{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px}
+.gl-clase + .gl-clase{border-top:1px dashed #F1EAE2}
+.gl-cuando{color:var(--carbon);font-weight:500;font-variant-numeric:tabular-nums}
+.gl-disc{color:var(--gris);text-align:right}
+.gl-vacio{color:var(--gris);font-size:12.5px}
+.gl-tema{border-radius:8px;padding:3px 8px;margin-top:4px;font-size:12.5px;font-weight:500;border:1px solid}
+.gl-tema.t-pago{background:#FCE8E3;border-color:#F2C4B8;color:#7F2410} .gl-tema.t-canje{background:#FCF1DC;border-color:#EED7A6;color:#674405}
+.gl-tema.t-offline{background:#EFEAF7;border-color:#D6CBEA;color:#46336F} .gl-tema.t-pausa{background:#E6EDF2;border-color:#C9D7E0;color:#2A4554}
+.gl-tema.t-nota{background:#E9ECF8;border-color:#C9D0EC;color:#2C3A6B} .gl-tema.t-neutro{background:#F3EEE8;border-color:#E3D8CC;color:#3D4343}
+.gl-ins{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.gl-chip{font-size:11.5px;background:#F7F2EC;border:1px solid var(--crema);border-radius:999px;padding:2px 8px;color:var(--carbon)}
+.falta[tabindex],.fila.por-llegar[tabindex]{cursor:default}
+.falta:focus-visible,.fila.por-llegar:focus-visible{outline:2px solid var(--terracota);outline-offset:2px}
 /* Olmo 23-nov: primera clase, «¿Compró?» con tres botones (va a OS.hera) */
 .f-muestra{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:2px}
 .f-muestra-q{font-size:12px;color:#2B5435;font-weight:600}
@@ -425,6 +456,7 @@ a.px-clase:hover{border-bottom-style:solid}
   </div>
 </section>
 </div>
+<div class="globo" id="globo" role="tooltip" hidden></div>
 <div class="recuadros" id="recuadros" role="status" aria-live="polite" aria-label="Llegadas de la tablet"></div>
 <script src="mostrador.js"></script>
 </body>

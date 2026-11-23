@@ -831,7 +831,9 @@
     });
     if (m.i.some(function (x) { return x.i === '🌱'; })) { var pp = el(doc, 'span', 'pill primera'); pp.appendChild(el(doc, 'span', 'pill-tema', '🌱 Primera clase')); temas.appendChild(pp); }
     li.appendChild(temas);
-    li.setAttribute('title', 'Aún no llega · trae pendiente');
+    var dg = datosGlobo(f, m, 'falta', ahora);
+    li.setAttribute('aria-label', textoGlobo(dg));
+    conGlobo(doc, li, dg);
     return li;
   }
   /** «¿Compró?»: tres botones (Olmo 23-nov); lo que se marca va a OS.hera (bandeja KioscoMuestras). */
@@ -1021,7 +1023,7 @@
     return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq),
       p: { el: tiene(ELEMENTOS, pl.el) ? pl.el : '', tipo: pl.tipo === 'membresia' || pl.tipo === 'paquete' ? pl.tipo : '',
         n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30), v: vigenciaDe(pl.v),
-        l: entero(pl.l), r: entero(pl.r) } };
+        l: entero(pl.l), r: entero(pl.r), s: siguientesDe(pl.s) } };
   }
   /** { t: renueva|termina|vence, f: ISO } validado → { t, ms } o null. */
   function vigenciaDe(v) {
@@ -1038,6 +1040,20 @@
     try { f = new Date(v.ms).toLocaleDateString('es-MX', { timeZone: ZONA, day: 'numeric', month: 'short' }).replace('.', ''); } catch (_) { f = dia(v.ms); }
     var cuando = d === 0 ? 'hoy' : d === 1 ? 'mañana' : d > 1 ? 'en ' + d + ' días' : (v.t === 'renueva' ? 'hace ' + (-d) + ' días' : 'ya pasó');
     return VIGENCIA[v.t] + ' el ' + f + ' · ' + cuando;
+  }
+  /** Sus próximas clases reservadas ([{ i: ISO, d: disciplina }], máx. 3), validadas; null si el servidor no las dice. */
+  function siguientesDe(xs) {
+    if (!Array.isArray(xs)) return null;
+    return xs.filter(function (x) { return x && typeof x.i === 'string' && isFinite(Date.parse(x.i)); }).slice(0, 3)
+      .map(function (x) { return { ms: Date.parse(x.i), d: typeof x.d === 'string' ? x.d.slice(0, 40) : 'Clase' }; });
+  }
+  /** «hoy 7:00 pm», «mañana 8:00 am», «jue 27 nov · 7:00 am» (día de calendario en Guadalajara). */
+  function cuandoClase(ms, ahora) {
+    var d = Math.round((Date.parse(diaDe(ms) + 'T12:00:00Z') - Date.parse(diaDe(ahora) + 'T12:00:00Z')) / 864e5), h = hora(new Date(ms).toISOString()), f;
+    if (d === 0) return 'hoy ' + h;
+    if (d === 1) return 'mañana ' + h;
+    try { f = new Date(ms).toLocaleDateString('es-MX', { timeZone: ZONA, weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '').replace(',', '').replace(/ de /g, ' '); } catch (_) { f = diaDe(ms); }
+    return f + ' · ' + h;
   }
   function entero(v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v < 1000 ? Math.floor(v) : null; }
   /** «5 por usar: 3 sin programar · 2 ya reservadas» (Olmo 23-nov); sin el desglose, «quedan 5». */
@@ -1067,6 +1083,95 @@
       return String(a.f.nombre || '').localeCompare(String(b.f.nombre || ''), 'es');
     });
   }
+  /** Lo que dice el globo de una persona (estructura, sin HTML). */
+  function datosGlobo(f, m, estado, ahora) {
+    return { nombre: String(f.nombre || 'Alumna'), lugares: f.lugares >= 2 ? f.lugares : 0, estado: estado,
+      tipo: m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', el: m.p.el, anios: m.p.a,
+      plan: m.p.n, saldo: textoSaldo(m.p.q, m.p.l, m.p.r), l: m.p.l, r: m.p.r, vig: m.p.v ? textoVigencia(m.p.v, ahora) : '',
+      sigs: m.p.s ? m.p.s.map(function (y) { return { cuando: cuandoClase(y.ms, ahora), clase: y.d }; }) : null,
+      temas: m.t, ins: m.i, eq: m.eq };
+  }
+  var ESTADO_GLOBO = { falta: 'Falta por llegar', llego: 'Ya llegó ✓', no: 'No vino' };
+  /** El mismo contenido en una línea por dato (aria-label y pruebas). */
+  function textoGlobo(g) {
+    var xs = [g.nombre + (g.lugares ? ' · ' + g.lugares + ' lugares' : '')];
+    if (g.plan || g.saldo) xs.push([g.plan, g.saldo].filter(Boolean).join(' · '));
+    var quien = [g.tipo, g.el ? NOMBRE_EL[g.el] : '', g.anios].filter(Boolean);
+    if (quien.length) xs.push(quien.join(' · '));
+    if (g.vig) xs.push(g.vig);
+    if (g.sigs) xs.push(g.sigs.length ? 'Próximas: ' + g.sigs.map(function (y) { return y.cuando + ' ' + y.clase; }).join('; ') : 'Sin otras clases reservadas');
+    g.temas.forEach(function (y) { xs.push(String(y.i || '') + ' ' + String(y.t || '')); });
+    g.ins.forEach(function (y) { xs.push(String(y.t || y.i || '')); });
+    if (g.eq) xs.push('equipo o Lobas: no se cobra');
+    xs.push(ESTADO_GLOBO[g.estado] || '');
+    return xs.join('\n');
+  }
+  /** Engancha el globo a un elemento (ratón y teclado). La página tiene un solo globo (#globo) que se mueve. */
+  function conGlobo(doc, nodo, g) {
+    if (!nodo.addEventListener) return;
+    nodo.setAttribute('tabindex', '0');
+    var ver = function () { pintarGlobo(doc, g, nodo); }, ocultar = function () { var b = doc.getElementById('globo'); if (b) b.hidden = true; };
+    nodo.addEventListener('mouseenter', ver); nodo.addEventListener('focus', ver);
+    nodo.addEventListener('mouseleave', ocultar); nodo.addEventListener('blur', ocultar);
+  }
+  /** Pinta la tarjeta del globo (solo textContent) y la pone junto al elemento, sin salirse de la ventana. */
+  function pintarGlobo(doc, g, ancla) {
+    var b = doc.getElementById('globo');
+    if (!b) return null;
+    vaciar(b);
+    var cab = el(doc, 'div', 'gl-cab');
+    var circ = el(doc, 'span', 'gl-el' + (g.el ? ' ' + g.el : ''));
+    cab.appendChild(circ);
+    var nm = el(doc, 'div', 'gl-nombre', g.nombre + (g.lugares ? ' (' + g.lugares + ')' : ''));
+    cab.appendChild(nm);
+    var est = el(doc, 'span', 'gl-estado e-' + g.estado, ESTADO_GLOBO[g.estado] || '');
+    cab.appendChild(est);
+    b.appendChild(cab);
+    var sub = [g.tipo === 'Miembro' ? '' : g.tipo, g.el ? NOMBRE_EL[g.el] : '', g.anios].filter(Boolean);
+    if (g.tipo === 'Miembro' || sub.length) {
+      var s1 = el(doc, 'div', 'gl-sub');
+      if (g.tipo === 'Miembro') { s1.appendChild(el(doc, 'span', 'ico-laurel')); s1.appendChild(el(doc, 'span', null, 'Miembro')); if (sub.length) s1.appendChild(el(doc, 'span', 'gl-sep', '·')); }
+      if (sub.length) s1.appendChild(el(doc, 'span', null, sub.join(' · ')));
+      b.appendChild(s1);
+    }
+    var seccion = function (titulo) { var sc = el(doc, 'div', 'gl-sec'); sc.appendChild(el(doc, 'div', 'gl-tit', titulo)); b.appendChild(sc); return sc; };
+    if (g.plan || g.saldo || g.vig) {
+      var sp = seccion('Plan');
+      if (g.plan) sp.appendChild(el(doc, 'div', 'gl-plan', g.plan));
+      if (g.l != null) {
+        var nums = el(doc, 'div', 'gl-nums');
+        var n1 = el(doc, 'span', 'gl-num'); n1.appendChild(el(doc, 'b', null, String(g.l))); n1.appendChild(el(doc, 'span', null, ' sin programar')); nums.appendChild(n1);
+        if (g.r) { var n2 = el(doc, 'span', 'gl-num'); n2.appendChild(el(doc, 'b', null, String(g.r))); n2.appendChild(el(doc, 'span', null, g.r === 1 ? ' reservada' : ' reservadas')); nums.appendChild(n2); }
+        sp.appendChild(nums);
+      } else if (g.saldo) sp.appendChild(el(doc, 'div', 'gl-linea', g.saldo));
+      if (g.vig) sp.appendChild(el(doc, 'div', 'gl-linea', g.vig));
+    }
+    if (g.sigs) {
+      var sg = seccion('Próximas clases');
+      if (!g.sigs.length) sg.appendChild(el(doc, 'div', 'gl-vacio', 'Sin otras clases reservadas'));
+      g.sigs.forEach(function (y) { var r = el(doc, 'div', 'gl-clase'); r.appendChild(el(doc, 'span', 'gl-cuando', y.cuando)); r.appendChild(el(doc, 'span', 'gl-disc', y.clase)); sg.appendChild(r); });
+    }
+    if (g.temas.length || g.eq) {
+      var st = seccion('Pendiente');
+      g.temas.forEach(function (y) { var c = tiene(COLOR_TEMA, y.c) ? y.c : 'neutro'; st.appendChild(el(doc, 'div', 'gl-tema t-' + c, String(y.i || '•') + ' ' + String(y.t || ''))); });
+      if (g.eq) st.appendChild(el(doc, 'div', 'gl-linea', 'Equipo o Lobas: no se cobra'));
+    }
+    if (g.ins.length) {
+      var si = el(doc, 'div', 'gl-ins');
+      g.ins.forEach(function (y) { si.appendChild(el(doc, 'span', 'gl-chip', String(y.t || y.i || ''))); });
+      b.appendChild(si);
+    }
+    b.hidden = false;
+    // Al lado del elemento (abajo, o arriba si no cabe), sin salirse de la ventana.
+    if (ancla && typeof ancla.getBoundingClientRect === 'function' && b.style) {
+      var r0 = ancla.getBoundingClientRect(), w = (doc.defaultView && doc.defaultView.innerWidth) || 1280, hgt = (doc.defaultView && doc.defaultView.innerHeight) || 800;
+      var bw = b.offsetWidth || 300, bh = b.offsetHeight || 200;
+      var left = Math.max(8, Math.min(r0.left, w - bw - 8)), top = r0.bottom + 8;
+      if (top + bh > hgt - 8) top = Math.max(8, r0.top - bh - 8);
+      b.style.left = Math.round(left) + 'px'; b.style.top = Math.round(top) + 'px';
+    }
+    return b;
+  }
   /** La pastilla de una persona: verde con ✓ si ya llegó; con tema, el color de su tema más urgente y sus íconos. */
   function pastillaProxima(doc, x, ahora) {
     var f = x.f, m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
@@ -1094,17 +1199,10 @@
       a.setAttribute('title', 'Abrir su chat en GHL para escribirle');
       li.appendChild(a);
     }
-    // Globo al pasar el ratón: nombre, plan, lo que le queda, miembro/paquete, elemento, años, temas e insignias.
-    var globo = [String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' · ' + f.lugares + ' lugares' : '')];
-    if (m.p.n || m.p.q) globo.push([m.p.n, textoSaldo(m.p.q, m.p.l, m.p.r)].filter(Boolean).join(' · '));
-    var quien = [m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', m.p.el ? NOMBRE_EL[m.p.el] : '', m.p.a].filter(Boolean);
-    if (quien.length) globo.push(quien.join(' · '));
-    if (m.p.v) globo.push(textoVigencia(m.p.v, ahora));
-    m.t.forEach(function (y) { globo.push(String(y.i || '') + ' ' + String(y.t || '')); });
-    m.i.forEach(function (y) { globo.push(String(y.t || y.i || '')); });
-    if (m.eq) globo.push('equipo o Lobas: no se cobra');
-    globo.push(x.llego ? 'Ya llegó ✓' : x.no ? 'No vino' : 'Falta por llegar');
-    li.setAttribute('title', globo.join('\n'));
+    // Globo al pasar el ratón (Olmo 23-nov: «rediseña para que no se vea tan feo y amontonado»): una tarjeta propia, por secciones.
+    var dg = datosGlobo(f, m, x.llego ? 'llego' : x.no ? 'no' : 'falta', ahora);
+    li.setAttribute('aria-label', textoGlobo(dg));
+    conGlobo(doc, li, dg);
     return li;
   }
   /** Olmo 23-nov: todo el turno; las que ya pasaron, abajo (la que acaba de terminar primero) y en gris. */
@@ -1881,7 +1979,7 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
-    puntosLlegada: puntosLlegada, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
+    puntosLlegada: puntosLlegada, datosGlobo: datosGlobo, textoGlobo: textoGlobo, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
