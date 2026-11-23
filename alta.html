@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-w2dJA2QaYgCziZNHooW/Ik27qd3c8tNJdDlRP/xv7Gs=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-leP6l5e9WwMhDEQo+OXSa0FL3JyLUfzNwRezYa7qBiM=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -815,6 +815,12 @@ body.sin-scroll{overflow:hidden}
   </div></div>
 
   <!-- FIN -->
+  <!-- F2: «Actualizar mi tarjeta» (caso B). Wix no deja ver si la cambió: se le pregunta. -->
+  <section class="vista" id="vTarjeta">
+    <h1 id="tarjetaTitulo"></h1>
+    <button class="btn pri" id="tarjetaSi"></button>
+    <button class="btn sec" id="tarjetaNo"></button>
+  </section>
   <section class="vista" id="vFin">
     <h1 id="finTitulo"></h1>
     <p id="finTexto"></p>
@@ -1406,8 +1412,23 @@ const TEXTOS_ALTA = {
       interrumpido: ['Se interrumpió', 'Cerramos la sesión que estaba abierta. Vuelve a tocar «Reservar mi clase».'],
       sesion: ['No pudimos abrir tu cuenta', 'Vuelve a intentarlo o pasa a recepción.'],
       'sin-sesion': ['Tu sesión ya se había cerrado', 'Vuelve a tocar «Reservar mi clase» en el check-in.'],
+      ruta: ['Cerramos tu sesión', 'Por seguridad, en esta tablet solo se puede reservar. Si te faltó algo, pasa a recepción 🌿'],
       error: ['Algo falló', 'Si no viste la confirmación de Wix, tu clase no quedó reservada. Vuelve a intentarlo o pasa a recepción.']
     }
+  },
+  // F2, pago en la tablet (docs/CONTROL_RECEPCION.md, «Textos de la tablet»): regreso de «Mis suscripciones». [título, texto]
+  // Nunca se da por pagado por el hash: alta.html pregunta al servidor (pagoFin) y solo con la orden pagada dice «al día».
+  pagoTablet: {
+    revisando: 'Revisando tu pago…',
+    pagado: ['¡Listo! Tu membresía quedó al día ✓', 'Gracias 🌿'],
+    noTermino: ['No pasa nada', 'Recepción te ayuda al salir de tu clase.'],
+    // El pase venció, ya se usó o no se pudo abrir su sesión: nunca llegó a «Mis suscripciones».
+    noAbrio: ['No pudimos abrir tu cuenta', 'No se cobró nada. Recepción te ayuda al salir de tu clase 🌿'],
+    // Caso B («Actualizar mi tarjeta»): Wix no deja ver si la cambió, así que se le pregunta. Textos nuevos (no venían en la spec).
+    tarjetaPregunta: '¿Pudiste actualizar tu tarjeta?',
+    tarjetaSi: 'Sí, ya la cambié',
+    tarjetaNo: 'No pude',
+    tarjetaGracias: ['¡Gracias! 🌿', 'El cambio cuenta desde tu siguiente cobro.']
   },
   motivos: {
     cancelado: ['Pago cancelado', 'No se cobró nada.'],
@@ -1486,7 +1507,7 @@ function sugerirCorreo(email) {
    Textos: textos-alta.js (TEXTOS_ALTA y CONFIG_ALTA) y reglas del correo: correo-alta.js (sugerirCorreo). empaquetar.mjs
    mete los dos dentro de este mismo <script>.
    El pago y la reserva de respaldo pasan en www.herazenter.com (masterPage.js); al volver llega un #hash:
-   #pagado=<recibo> · #cancelado=<motivo> · #fin · #reservada
+   #pagado=<recibo> · #cancelado=<motivo> · #fin · #reservada · #pagado=membresia (F2, pago en la tablet: se confirma con el servidor)
    ===================================================================== */
 const DEMO = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const LOCAL = /\.localhost$/.test(location.hostname);
@@ -1498,6 +1519,9 @@ const TOKEN_KEY = 'hera_checkin_token', SESION_KEY = 'hera_alta_sesion', VENTA_K
 // Reserva directa del kiosco (Olmo, 9-nov): el kiosco la pone al mandar a la clienta a reservar sola; al volver, los textos
 // son para ella (no hubo venta). Se consume al leerla.
 const DIRECTA_KEY = 'hera_reserva_directa';
+// F2, pago en la tablet: el kiosco la pone al mandar a la clienta a «Mis suscripciones» ({ ref, caso, t }; el ref es opaco y
+// firmado, sin datos de ella). Al volver, alta.html confirma con el servidor (pagoFin). Se consume al leerla.
+const PAGO_KEY = 'hera_pago_tablet', HASH_PAGADO = '#pagado=membresia';
 // Olmo 9-nov: venta y reserva se abren en su propia pestaña (el check-in se queda en la suya). Al terminar, esta pestaña se
 // cierra sola; si el navegador no deja, vuelve al check-in como siempre.
 const PESTANA_APARTE = ['heraCliente', 'heraReserva'].includes(window.name) || !!window.opener;
@@ -1560,7 +1584,7 @@ const venta = { get(){ return ls.get(VENTA_KEY); }, poner(v){ if (typeof v === '
 
 /* --------------------------------------------------------------- red */
 function errorAuth(){ const e = new Error('sin-acceso'); e.auth = true; return e; }
-const SIN_VENTA = ['entrar', 'altaPin'];
+const SIN_VENTA = ['entrar', 'altaPin', 'pagoFin'];
 async function llamar(accion, datos) {
   if (DEMO) return demoApi(accion, datos);
   if (accion !== 'entrar' && !ls.get(TOKEN_KEY)) throw errorAuth();
@@ -2497,7 +2521,7 @@ async function pagar(){
     const j = await api('altaPase', datos);
     $('cargandoTxt').textContent = Tt('cargando.pago'); ir('vCargando', { apilar: false });
     marca.poner(j.base);                             // desde aquí puede quedar una sesión de la clienta en ESE sitio
-    ls.del(DIRECTA_KEY);                             // es una venta: su regreso (#pagado) nunca usa los textos de reserva
+    ls.del(DIRECTA_KEY); ls.del(PAGO_KEY);           // es una venta: su regreso nunca usa los textos de reserva ni los del pago
     pruebaRec.poner(!!(p.prueba && p.recurrente));
     if (DEMO) { demoUltimoCorreo = A.email; demoPruebaRec = !!(p.prueba && p.recurrente); }
     navegar(j.url);
@@ -2745,7 +2769,7 @@ $('finVolver').onclick = () => volverKiosco();
 // No se pudo cerrar su sesión: la tablet NO vuelve sola; se queda en rojo hasta que recepción lo resuelva.
 function irBloqueo(){ nuevaAlta(); limpiarCampos(); pila = []; clearTimeout(finTimer); ir('vBloqueo', { apilar: false }); }
 $('bloqueoReintentar').onclick = () => salirSitio();
-$('bloqueoListo').onclick = () => { if (window.confirm(Tt('bloqueo.confirmar'))) { marca.quitar(); ls.del(DIRECTA_KEY); volverKiosco(); } };
+$('bloqueoListo').onclick = () => { if (window.confirm(Tt('bloqueo.confirmar'))) { marca.quitar(); ls.del(DIRECTA_KEY); ls.del(PAGO_KEY); volverKiosco(); } };
 
 /* --------------------------------------------------------------- regreso del sitio (#hash) */
 function alRegresar(){
@@ -2759,6 +2783,14 @@ function alRegresar(){
     if (PESTANA_APARTE) { try { window.close(); } catch (_) {} }
     setTimeout(() => { location.href = KIOSCO; }, 400); return true;
   }
+  // F2: regreso del pago en la tablet. NUNCA se da por bueno solo por el hash (B2): se pregunta al servidor con el ref.
+  const PG = leerPago();
+  if (PG && (h === HASH_PAGADO || h === '#fin' || (/^#cancelado=/.test(h) && h !== '#cancelado=sesion-abierta'))) {
+    ls.del(PAGO_KEY); ls.del(DIRECTA_KEY); marca.quitar();
+    terminarPago(PG, h);
+    return true;
+  }
+  if (h === HASH_PAGADO) { marca.quitar(); const [t, x] = TX.pagoTablet.noTermino; fin(t, x); return true; }   // sin ref: no se puede confirmar
   // Revisión 9-nov: solo los regresos de una reserva (nunca #pagado de una venta) y nunca el bloqueo (la marca se queda).
   if (RD && ls.get(DIRECTA_KEY) && (h === '#reservada' || h === '#fin' || (/^#cancelado=/.test(h) && h !== '#cancelado=sesion-abierta'))) {
     // 'ventana' = el kiosco abrió esta pestaña aparte (Olmo 9-nov): tras el mensaje se cierra sola. Solo si de verdad es esa
@@ -2779,6 +2811,51 @@ function alRegresar(){
     const [t, x] = (TX.motivos || {})[m[1]] || TX.motivos.error; fin(t, x); return true;
   }
   return false;
+}
+
+/* --------------------------------------------------------------- F2: regreso del pago en la tablet */
+function leerPago(){
+  try {
+    const p = JSON.parse(ls.get(PAGO_KEY) || 'null');
+    return p && typeof p.ref === 'string' && p.ref.length < 400 && ['A', 'B'].includes(p.caso) && Date.now() - Number(p.t || 0) < 40 * 60000 ? p : null;
+  } catch (_) { return null; }
+}
+const cerrarAparte = ms => { if (PESTANA_APARTE) { clearTimeout(finTimer); finTimer = setTimeout(volverKiosco, ms); } };
+// Regresos que implican que llegó a «Mis suscripciones» (con pase, usado, cambio, apagado, sesion, interrumpido, error…
+// nunca vio Wix: se dice el motivo, sin pagoFin, ni ⏳ ni 🔄 a recepción). listo/salio = botón «Ya terminé» del sitio.
+const LLEGO_PAGO = ['tiempo', 'ruta', 'cancelada', 'ajena', 'listo', 'salio'];
+async function terminarPago(PG, h){
+  const TP = TX.pagoTablet;
+  const mot = (/^#cancelado=([a-z-]{1,30})$/.exec(h) || [])[1];
+  if (!(h === HASH_PAGADO || h === '#fin' || LLEGO_PAGO.includes(mot))) { const [t, x] = TP.noAbrio; fin(t, x); cerrarAparte(6000); return; }
+  if (PG.caso === 'B') {
+    // Solo «Ya terminé» pregunta por la tarjeta: por tope, ruta o pestaña cerrada ella ya no está (un «Sí» de otra = 🔄 falso).
+    if (mot === 'listo') { preguntarTarjeta(PG); return; }
+    try { await llamar('pagoFin', { ref: PG.ref, tarjeta: 'no' }); } catch (_) {}   // el servidor relee la orden: CANCELED → ⚠️
+    const [t, x] = TP.noTermino; fin(t, x); cerrarAparte(6000); return;
+  }
+  $('cargandoTxt').textContent = Tt('pagoTablet.revisando'); ir('vCargando', { apilar: false });
+  let j = null;
+  try { j = await llamar('pagoFin', { ref: PG.ref, fin: h === HASH_PAGADO ? 'pagado' : 'salio' }); } catch (_) {}
+  const [t, x] = j && j.pagada === true ? TP.pagado : TP.noTermino;
+  fin(t, x); cerrarAparte(6000);
+}
+let tarjetaTimer = null;
+function preguntarTarjeta(PG){
+  $('tarjetaTitulo').textContent = Tt('pagoTablet.tarjetaPregunta');
+  $('tarjetaSi').textContent = Tt('pagoTablet.tarjetaSi'); $('tarjetaNo').textContent = Tt('pagoTablet.tarjetaNo');
+  ir('vTarjeta', { apilar: false });
+  const responder = async si => {
+    clearTimeout(tarjetaTimer); $('tarjetaSi').onclick = $('tarjetaNo').onclick = null;
+    try { await llamar('pagoFin', { ref: PG.ref, tarjeta: si ? 'si' : 'no' }); } catch (_) {}
+    const [t, x] = si ? TX.pagoTablet.tarjetaGracias : TX.pagoTablet.noTermino;
+    fin(t, x); cerrarAparte(5000);
+  };
+  $('tarjetaSi').onclick = () => responder(true);
+  $('tarjetaNo').onclick = () => responder(false);
+  // Sin respuesta: igual se le dice al servidor que volvió (CANCELED → ⚠️; mismo candado que estadoPago, sale una vez).
+  clearTimeout(tarjetaTimer); tarjetaTimer = setTimeout(async () => { $('tarjetaSi').onclick = $('tarjetaNo').onclick = null;
+    try { await llamar('pagoFin', { ref: PG.ref, tarjeta: 'no' }); } catch (_) {} volverKiosco(); }, 60000);
 }
 
 /* --------------------------------------------------------------- navegación (en demo se simula el sitio) */

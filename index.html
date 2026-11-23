@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-TIB6DbJU6NkCvQYCWZoo7HfMe3ApSQWzXsfPLZuSLmY=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-podOPf/UeSwKed7TwmUGLd1tf+GAbh8MqG+rjPEom/s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -207,6 +207,10 @@ button.fila-r:active{background:var(--arena-suave)}
 .exito .dato{padding:10px 16px;min-width:0}
 .exito .dato .num{font-size:22px}
 .exito .aviso{font-size:17px;padding:12px 18px}
+/* F2: línea sutil de «¡Listo!» (casos A, A0 y D, texto genérico D14-A) y bloque de pago de «Mi cuenta». */
+.exito .aviso.pago-listo{font-size:16px;padding:10px 16px;background:#fff}
+.aviso.pago .pago-botones{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}
+.aviso.pago small{display:block;color:var(--gris);font-size:15px;margin-top:8px}
 .datos{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:860px;min-height:10px}
 .dato{background:#fff;border-radius:16px;padding:14px 22px;box-shadow:var(--sombra);min-width:170px;display:flex;align-items:center;gap:14px;text-align:left}
 .dato .num{font-size:28px;line-height:1.1}
@@ -564,6 +568,15 @@ button.fila-r:active{background:var(--arena-suave)}
   </div>
 </div>
 
+<!-- F2: «Reservar mi clase» con un cobro pendiente (caso A): primero la pregunta. Cada botón abre su ventana en SU toque. -->
+<div class="velo" id="veloPago">
+  <div class="hoja">
+    <p id="pgTexto"></p>
+    <button class="btn pri" id="pgSi">Sí, ahora</button>
+    <button class="btn sec" id="pgDespues">Después</button>
+  </div>
+</div>
+
 <div class="velo" id="veloNoreg">
   <div class="hoja">
     <h2>Check-ins sin registrar</h2>
@@ -641,6 +654,7 @@ button.fila-r:active{background:var(--arena-suave)}
   <div id="ePlan"></div>
   <div class="datos" id="eDatos"></div>
   <div id="eAviso"></div>
+  <div id="ePago"></div>
   <div id="eQR"></div>
   <div class="cuenta-atras"><i id="eBarra"></i></div>
   <small style="color:#6F6F6F" id="eAyuda">Toca para cerrar · deja el dedo para leer con calma</small>
@@ -791,7 +805,7 @@ function red(ok, txt){
 /* --------------------------------------------------------------- contraseña */
 function irClave(msg){
   $('velo').classList.remove('abierto'); cerrarExito(); claseAbierta = null;
-  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
+  $('veloVerif').classList.remove('abierto'); verif = null; cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; olvidarPago(); if ($('uCuerpo')) $('uCuerpo').innerHTML = '';
   const ya = $('vClave').classList.contains('activa');
   if (!ya) { $('clave').value = ''; ir('vClave'); setTimeout(()=>$('clave').focus(), 60); }
   if (msg) $('claveError').textContent = msg;
@@ -975,7 +989,8 @@ function mostrarExito(r, c, vistazo = false){
   exitoIns = RE_MARKET.test(r.nombre) ? null : r.ins;
   $('eMedallas').innerHTML = exitoIns ? medallas(exitoIns) : '';
   $('eSub').textContent = `${c.disciplina} · ${hhmm(c.inicio)}${c.coach ? ' con ' + c.coach : ''}`;
-  $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
+  $('eDatos').innerHTML = '<span class="cargando">…</span>'; $('eAviso').innerHTML = ''; $('ePago').innerHTML = ''; $('eQR').innerHTML = ''; $('ePlan').innerHTML = '';
+  exitoId = vistazo ? null : r.id;                     // F2: la línea de pago solo se pinta en el «¡Listo!» de ESTA reserva
   $('exito').classList.add('abierto');
   if (!vistazo) arrancarCuenta(6000);
   Promise.resolve(pedirPerfil(r.id)).then(p => { if (mio === turno && $('exito').classList.contains('abierto')) pintarPerfil(p); });
@@ -1339,6 +1354,7 @@ function vigilarPestana(w){
 function irAReservar(url, base, w){
   const aparte = !!w && !w.closed;
   ponerMarca(base, aparte);
+  ls.del(PAGO_KEY);                                 // un pago viejo nunca se queda con el regreso de esta reserva
   if (!aparte) { ls.set('hera_reserva_directa', '1'); location.href = url; return; }
   ls.set('hera_reserva_directa', 'ventana');
   try { if (w.location.href !== url) w.location.href = url; } catch (_) { try { w.location.href = url; } catch (__) {} }
@@ -1387,6 +1403,86 @@ async function reservarDesdeCuenta(btn){
       : 'No se pudo abrir el calendario. Revisa el internet.');
   }
 }
+/* --------------------------------------------------------------- F2: pago en la tablet (docs/CONTROL_RECEPCION.md)
+   Del servidor solo llega el CÓDIGO del caso (A, A0, B, D): sin montos, sin «rechazado». Los textos viven aquí.
+   - «¡Listo!»: una línea genérica (D14-A) solo para A, A0 y D, nunca en el vistazo; B nunca (seguridad M1).
+   - «Mi cuenta» (después de los 4 dígitos): el bloque de su caso. «Poner al día mi pago» y «Actualizar mi tarjeta» abren su
+     sesión en la pestaña de clienta ('heraCliente', con el vigía y el cierre de sesión de siempre) y van a «Mis suscripciones».
+     Cobra Wix; la tablet nunca toca la tarjeta. */
+const CASOS_PAGO = ['A', 'A0', 'B', 'D'], CASOS_LISTO = ['A', 'A0', 'D'];
+const PAGO_KEY = 'hera_pago_tablet';
+const TX_PAGO = {
+  listo: 'Tienes un aviso en «Ver mis clases» 🌿 Lo ves ahí en un minuto, o pasa a recepción y te ayudamos.',
+  A: 'Tu último cobro no pasó, pero tu membresía sigue activa por ahora.',
+  A0: 'Tu primer cobro no pasó. Pasa a recepción y lo resolvemos contigo 🌿',
+  B: '¿Cambiaste de tarjeta?', Bchico: 'El cambio cuenta desde tu siguiente cobro.', Bnota: 'Recepción nos pidió recordarte actualizar tu tarjeta 🌿',
+  D: 'Tu membresía se pausó por un cobro que no pasó. Pide a recepción tu reactivación y la haces aquí mismo 🌿',
+  pregunta: 'Antes de reservar, ¿quieres poner al día tu membresía? (1 min)'
+};
+let cuentaPago = null, cuentaPasePago = null, pagoOculto = false, exitoId = null;
+// #pgSi es fijo (no se vuelve a pintar): abrirPago lo deja disabled en el éxito; aquí se rehabilita para la siguiente clienta.
+function olvidarPago(){ cuentaPago = null; cuentaPasePago = null; pagoOculto = false; $('pgSi').disabled = false; $('veloPago').classList.remove('abierto'); }
+/** La línea sutil de «¡Listo!» con la respuesta del check-in (llega por la cola, después de pintar la tarjeta). */
+function avisoPagoListo(id, caso){
+  if (!CASOS_LISTO.includes(caso) || exitoVistazo || exitoId !== id || !$('exito').classList.contains('abierto')) return;
+  $('ePago').innerHTML = `<div class="aviso pago-listo" style="--c:#9A4215">${esc(TX_PAGO.listo)}</div>`;
+}
+function bloquePago(){
+  const p = cuentaPago;
+  if (!p || pagoOculto) return '';
+  const caja = (cuerpo, botones, chico) => `<div class="aviso pago" id="uPago" style="--c:#9A4215;max-width:none">${cuerpo}${botones ? `<div class="pago-botones">${botones}</div>` : ''}${chico ? `<small>${chico}</small>` : ''}</div>`;
+  if (p.caso === 'A') return caja(esc(TX_PAGO.A), (cuentaPasePago ? `<button class="btn pri" id="uPagar">Poner al día mi pago</button>` : '')
+    + `<button class="btn sec" id="uPagoRecepcion">Lo veo en recepción</button>`);
+  if (p.caso === 'A0') return caja(esc(TX_PAGO.A0));
+  if (p.caso === 'D') return caja(esc(TX_PAGO.D));
+  if (p.caso === 'B' && cuentaPasePago) return caja((p.nota ? `<b>${esc(TX_PAGO.Bnota)}</b><br>` : '') + esc(TX_PAGO.B),
+    `<button class="btn pri" id="uPagar">Actualizar mi tarjeta</button>`, esc(TX_PAGO.Bchico));
+  return '';
+}
+/** Caso A con pase para pagar y para reservar: antes de reservar se pregunta (sin abrir nada: cada botón abre en su toque). */
+const preguntaPago = () => !!(cuentaPaseReserva && cuentaPago && cuentaPago.caso === 'A' && cuentaPasePago && !pagoOculto);
+/** «Reservar mi clase» (o un lugar libre) en «Mi cuenta»: con el caso A, primero la pregunta; si no, reserva como siempre. */
+function antesDeReservar(btn){ if (preguntaPago()) preguntarPago(btn); else reservarDesdeCuenta(btn); }
+function preguntarPago(btn){
+  $('pgTexto').textContent = TX_PAGO.pregunta;
+  $('veloPago').classList.add('abierto');
+  $('pgSi').onclick = () => { $('veloPago').classList.remove('abierto'); abrirPago($('pgSi')); };
+  $('pgDespues').onclick = () => { $('veloPago').classList.remove('abierto'); reservarDesdeCuenta(btn); };
+}
+/** «Poner al día mi pago» / «Actualizar mi tarjeta»: la pestaña se abre en el MISMO toque (Safari bloquea la que se abre
+ *  después de esperar al servidor); el ref para confirmar al volver va en localStorage (mismo origen que alta.html). */
+async function abrirPago(btn){
+  if (!cuentaPasePago || !btn || btn.disabled || enfocarPestanaCliente()) return;
+  const w = abrirPestana('', 'Abriendo tus suscripciones…');
+  const txt = btn.innerHTML; btn.disabled = true;
+  try {
+    const j = await api('pagoPase', { pase: cuentaPasePago });
+    if (!j || !j.url || !j.ref) throw new Error('sin-url');
+    ls.set(PAGO_KEY, JSON.stringify({ ref: j.ref, caso: j.caso === 'B' ? 'B' : 'A', t: Date.now() }));
+    ls.del('hera_reserva_directa');                   // al volver, los textos son los del pago, no los de una reserva
+    salirCuenta();
+    irAPagar(j.url, j.base, w);
+  } catch (e) {
+    try { if (w) w.close(); } catch (_) {}
+    btn.disabled = false; btn.innerHTML = txt;
+    if (e.auth) return;
+    const err = e.resp && e.resp.error;
+    toast(err === 'bloqueado' ? 'Las cuentas del equipo de Hera no se abren en la tablet.'
+      : err === 'pase' ? 'Se venció tu consulta. Vuelve a buscar tu nombre, por favor.'
+      : err === 'demasiadas' ? 'Espera unos minutos o pasa a recepción, por favor.'
+      : err === 'ya-no' ? 'Tu membresía ya no tiene nada pendiente 🌿'
+      : 'No se pudo abrir. Pasa a recepción y te ayudamos 🌿');
+  }
+}
+function irAPagar(url, base, w){
+  const aparte = !!w && !w.closed;
+  ponerMarca(base, aparte);
+  if (!aparte) { location.href = url; return; }
+  try { if (w.location.href !== url) w.location.href = url; } catch (_) { try { w.location.href = url; } catch (__) {} }
+  try { w.focus(); } catch (_) {}
+  vigilarPestana(w);
+}
+
 async function pedirReserva(){
   const mio = verif;
   if (!mio || mio.ocupado) return;
@@ -1424,7 +1520,10 @@ async function consultarCuenta(prueba){
   try {
     const j = await api('cuenta', { ref: mio.cd.ref, ...prueba });
     if (verif !== mio) return;                        // canceló o ya es otra persona: no se abre nada
-    cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; cuentaReservaNo = j.reservaNo || null; pintarCuenta(j.cuenta); ir('vCuenta');
+    cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; cuentaReservaNo = j.reservaNo || null;
+    cuentaPago = j.pago && CASOS_PAGO.includes(j.pago.caso) ? { caso: j.pago.caso, nota: !!j.pago.nota } : null;   // F2: solo el código
+    cuentaPasePago = cuentaPago && j.pasePago ? j.pasePago : null; pagoOculto = false;
+    pintarCuenta(j.cuenta); ir('vCuenta');
   } catch (e) {
     if (e.auth || verif !== mio) return;
     const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
@@ -1465,6 +1564,7 @@ function pintarCuenta(u){
   }
   let html = datos.length ? `<div class="datos" style="max-width:none">${datos.join('')}</div>` : '';
   if (u.aviso) html += `<div class="aviso" style="--c:#B5651D;max-width:none">${esc(u.aviso.texto)}</div>`;
+  html += bloquePago();                                 // F2: después de sus 4 dígitos, nunca en «¡Listo!» ni en el vistazo
   // Tu progreso: próximo hito, este mes contra el anterior, racha de semanas.
   const pg = u.progresoHera;
   if (pg && pg.total) {
@@ -1516,8 +1616,10 @@ function pintarCuenta(u){
     ${u.aMembresia ? `<div class="qr"><div class="cod" id="uQrMembresia"></div><div><b>¿Vienes seguido?</b><br><small style="color:#6F6F6F">Con una membresía tus clases se renuevan solas cada mes. Escanea para ver los planes o pregunta en recepción.</small></div></div>` : ''}</div>`;
   $('uCuerpo').innerHTML = html;
   document.querySelectorAll('[data-uc]').forEach(b => b.onclick = () => checkinDesdeCuenta(fut[+b.dataset.uc]));
-  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => reservarDesdeCuenta(b));
-  if ($('uReservar')) $('uReservar').onclick = () => reservarDesdeCuenta($('uReservar'));
+  document.querySelectorAll('[data-ul]').forEach(b => b.onclick = () => antesDeReservar(b));
+  if ($('uReservar')) $('uReservar').onclick = () => antesDeReservar($('uReservar'));
+  if ($('uPagar')) $('uPagar').onclick = () => abrirPago($('uPagar'));
+  if ($('uPagoRecepcion')) $('uPagoRecepcion').onclick = () => { pagoOculto = true; const b = $('uPago'); if (b) b.remove(); };
   cargarQRLib().then(() => {
     if (cuentaActual !== u || !$('vCuenta').classList.contains('activa')) return;
     const dibuja = (id, url) => { const el = $(id); if (el && !el.childElementCount) try { new QRCode(el, { text: url, width: 264, height: 264, colorDark:'#424949', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (_) {} };
@@ -1536,7 +1638,7 @@ function checkinDesdeCuenta(r){
   else marcarCheckin(hit.r, hit.c);
 }
 function salirCuenta(volver = true){
-  cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
+  cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; olvidarPago(); $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
@@ -1643,7 +1745,8 @@ async function mandar(op){
   { const c0 = leerCola(), y = c0.find(z => z.id === op.id && z.tipo === op.tipo); if (y) { y.intentada = true; y.envios = (y.envios || 0) + 1; n = y.envios; guardarCola(c0); } }
   try {
     // `n` también al quitar: así el servidor sabe que esta tablet ya no espera la respuesta para mandar otra (cola en paralelo).
-    await api(op.tipo, { bookingId: op.id, ts: op.ts, ...(op.tipo === 'checkin' ? cronometro(op, n) : { n }) });
+    const j = await api(op.tipo, { bookingId: op.id, ts: op.ts, ...(op.tipo === 'checkin' ? cronometro(op, n) : { n }) });
+    if (op.tipo === 'checkin' && j && j.pendientePago) avisoPagoListo(op.id, String(j.pendientePago));   // F2: solo el código
     quitarDeCola(op.id, op.tipo); esperaDe.delete(op.id); fallasRed = 0; sinRedHasta = 0; red(true);
   } catch (e) {
     if (e.auth) seguir = false;
@@ -1867,7 +1970,7 @@ if (!(Date.now() - Number(ls.get('hera_alta_pestana_t') || 0) < 20 * 60000)) ls.
 // Reserva directa (revisión 9-nov): un kiosco nunca se toma por la ventana de reserva, y si la marca de reserva quedó sin
 // sesión abierta, se borra (si no, el regreso de otra cosa usaría sus textos).
 if (window.name === 'heraReserva' || window.name === 'heraCliente') window.name = '';
-if (!ls.get('hera_alta_sesion')) ls.del('hera_reserva_directa');
+if (!ls.get('hera_alta_sesion')) { ls.del('hera_reserva_directa'); ls.del('hera_pago_tablet'); }   // sin sesión abierta, nadie regresa de pagar
 else if (ls.get('hera_reserva_directa')) ls.set('hera_reserva_directa', '1');   // esta pestaña es el kiosco: nunca se cierra sola
 $('avisoSesion').onclick = () => {
   if (!window.confirm('¿Cerrar la venta o reserva que quedó abierta en otra pestaña? Si la clienta todavía está pagando o reservando, se le corta.')) return;
