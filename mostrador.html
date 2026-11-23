@@ -210,6 +210,12 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .falta.t-nota:not(.llego){background:#E9ECF8;color:#2C3A6B} .falta.t-neutro:not(.llego){background:#F3EEE8;color:#3D4343}
 .falta.con-tema:not(.llego) a{color:inherit;font-weight:500}
 a.px-clase{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+.mini.FUEGO{background:var(--fuego)} .mini.AGUA{background:var(--agua)} .mini.AIRE{background:var(--aire)} .mini.TIERRA{background:var(--tierra-el)}
+/* miembro (laurel, como en la tablet) o paquete, y cuántas clases le quedan */
+.px-plan{display:inline-flex;align-items:center;gap:2px;flex:none}
+.ico-laurel{display:inline-block;width:15px;height:15px;flex:none;background:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Cg fill="none" stroke="%23B8862B" stroke-width="1.5" stroke-linecap="round"%3E%3Cpath d="M10.6 20.3A8 8 0 0 1 6.6 6.3"/%3E%3Cpath d="M13.4 20.3A8 8 0 0 0 17.4 6.3"/%3E%3C/g%3E%3Cg fill="%23D4A23C" stroke="%23A97A1F" stroke-width=".5"%3E%3Cellipse cx="8.24" cy="19.46" rx="1.8" ry="3.4" transform="rotate%2896 8.24 19.46%29"/%3E%3Cellipse cx="5.33" cy="16.82" rx="1.8" ry="3.4" transform="rotate%28125 5.33 16.82%29"/%3E%3Cellipse cx="4.03" cy="13.1" rx="1.8" ry="3.4" transform="rotate%28153 4.03 13.1%29"/%3E%3Cellipse cx="4.66" cy="9.21" rx="1.8" ry="3.4" transform="rotate%28182 4.66 9.21%29"/%3E%3Cellipse cx="7.07" cy="6.1" rx="1.8" ry="3.4" transform="rotate%28210 7.07 6.1%29"/%3E%3Cellipse cx="15.76" cy="19.46" rx="1.8" ry="3.4" transform="rotate%2884 15.76 19.46%29"/%3E%3Cellipse cx="18.67" cy="16.82" rx="1.8" ry="3.4" transform="rotate%2856 18.67 16.82%29"/%3E%3Cellipse cx="19.97" cy="13.1" rx="1.8" ry="3.4" transform="rotate%2827 19.97 13.1%29"/%3E%3Cellipse cx="19.34" cy="9.21" rx="1.8" ry="3.4" transform="rotate%28-1 19.34 9.21%29"/%3E%3Cellipse cx="16.93" cy="6.1" rx="1.8" ry="3.4" transform="rotate%28-30 16.93 6.1%29"/%3E%3C/g%3E%3C/svg%3E') center/contain no-repeat}
+.px-saldo{font-size:11px;font-weight:600;line-height:1;color:var(--carbon);background:#fff;border:1px solid var(--crema);border-radius:999px;padding:2px 5px;font-variant-numeric:tabular-nums}
+.px-plan.paquete .px-saldo{border-color:var(--pizarra);border-style:dashed}
 a.px-clase:hover{border-bottom-style:solid}
 /* Ideas v3: la clase ya empezó y falta gente: llamarla, o a los 20 min Wix la deja en «No se presentó» */
 .proxima.empezo{box-shadow:var(--sombra),inset 4px 0 0 var(--alerta)}
@@ -241,6 +247,7 @@ a.px-clase:hover{border-bottom-style:solid}
 .ley-pastillas li{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px;align-items:center;font-size:13.5px;color:var(--carbon);line-height:1.3}
 .ley-pastillas .falta{width:max-content;max-width:100%}
 .falta.ley-empezo{border-color:var(--alerta);border-style:dashed}
+.ley-mini{display:inline-flex;margin:0 auto}
 .ley-nota{margin-top:10px;font-size:12.5px;color:var(--gris);line-height:1.4}
 @media (max-width:520px){.ley-fila{grid-template-columns:42px 12px minmax(0,1fr)} .ley-hacer{grid-column:3;font-size:12.5px} .ley-pastillas li{grid-template-columns:1fr}}
 .pie{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--gris);line-height:1.45}
@@ -336,6 +343,9 @@ a.px-clase:hover{border-bottom-style:solid}
         <li class="ley-fila"><span class="ley-ic">⭐</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Su clase número N (o N+ clases)</span><span class="ley-hacer">felicitarla</span></li>
         <li class="ley-fila"><span class="ley-ic">👋</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Regresa tras varios días sin venir</span><span class="ley-hacer">darle la bienvenida</span></li>
         <li class="ley-fila"><span class="ley-ic">🎂</span><span class="ley-muestra m-cumple"></span><span class="ley-que">Cumple años hoy</span><span class="ley-hacer">felicitarla</span></li>
+        <li class="ley-fila"><span class="ley-ic"><span class="ico-laurel"></span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Miembro (membresía)</span><span class="ley-hacer">el laurel de la tablet</span></li>
+        <li class="ley-fila"><span class="ley-ic"><span class="px-saldo">4</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Clases que le quedan en su plan</span><span class="ley-hacer">«∞» = ilimitado · borde punteado = paquete</span></li>
+        <li class="ley-fila"><span class="ley-ic"><span class="mini FUEGO ley-mini">CA</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Color del círculo = su elemento</span><span class="ley-hacer">Fuego, Agua, Aire o Tierra (gris: sin plan)</span></li>
         <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">validar su código</span></li>
         <li class="ley-fila"><span class="ley-ic ley-ic-txt">equipo</span><span class="ley-muestra m-equipo"></span><span class="ley-que">Del equipo o Lobas</span><span class="ley-hacer">no se cobra (gris, solo informativo)</span></li>
       </ul>
@@ -349,7 +359,7 @@ a.px-clase:hover{border-bottom-style:solid}
         <li><span class="falta llego con-tema t-canje"><span class="mini">✓</span><span>Clienta</span><span class="px-iconos">💵</span></span><span>Ya llegó, pero su pendiente sigue abierto</span></li>
         <li><span class="falta ley-empezo"><span class="mini">CA</span><span>Clienta</span></span><span>La clase ya empezó y no ha llegado: a los 20 min Wix la marca «No se presentó»</span></li>
       </ul>
-      <p class="ley-nota">El nombre de la clase abre en Wix sus reservas de hoy. Cada nombre abre su ficha. Pasa el ratón sobre una pastilla para leer su tema completo.</p>
+      <p class="ley-nota">El nombre de la clase abre en Wix sus reservas de hoy. Cada nombre abre su ficha. Pasa el ratón sobre una pastilla para ver su plan, cuántas clases le quedan, sus años en Hera y sus temas.</p>
     </div>
   </div>
 </section>

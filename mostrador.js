@@ -870,7 +870,17 @@
   function marcasDe(f) {
     var m = f && f.m && typeof f.m === 'object' ? f.m : null;
     var arr = function (v) { return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : []; };
-    return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq) };
+    var pl = m && m.p && typeof m.p === 'object' ? m.p : {}, txt = function (v, n) { return typeof v === 'string' ? v.slice(0, n) : ''; };
+    return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq),
+      p: { el: tiene(ELEMENTOS, pl.el) ? pl.el : '', tipo: pl.tipo === 'membresia' || pl.tipo === 'paquete' ? pl.tipo : '',
+        n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30) } };
+  }
+  var NOMBRE_EL = { FUEGO: 'Fuego', AGUA: 'Agua', AIRE: 'Aire', TIERRA: 'Tierra' };
+  /** «quedan 4» → «4», «queda 1» → «1», «ilimitado» → «∞»; otra cosa, nada. */
+  function numSaldo(q) {
+    if (q === 'ilimitado') return '∞';
+    var x = /^quedan? (\d{1,3})$/.exec(String(q || ''));
+    return x ? x[1] : '';
   }
   /** Las personas de una clase (Olmo 23-nov: «si ya hicieron check-in que no desaparezcan de la clase, que se ponga en
    *  verde»): las que faltan y las que ya llegaron juntas, por nombre (no saltan de lugar al llegar); marketplace al final. */
@@ -888,14 +898,29 @@
   function pastillaProxima(doc, x) {
     var f = x.f, m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
     var li = el(doc, 'li', 'falta' + (x.llego ? ' llego' : '') + (m.t.length ? ' con-tema t-' + color : ''));
-    li.appendChild(el(doc, 'span', 'mini', x.llego ? '✓' : String(f.iniciales || '?')));
+    // Círculo con el color de su elemento (como en la tablet y en «Por resolver»); al llegar, verde con ✓.
+    li.appendChild(el(doc, 'span', 'mini' + (!x.llego && m.p.el ? ' ' + m.p.el : ''), x.llego ? '✓' : String(f.iniciales || '?')));
     li.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ')' : ''), f.ficha, null));
+    // Olmo 23-nov: miembro (laurel, como en la tablet) o paquete, y cuántas clases le quedan.
+    var n = numSaldo(m.p.q);
+    if (m.p.tipo === 'membresia' || n) {
+      var pl = el(doc, 'span', 'px-plan' + (m.p.tipo ? ' ' + m.p.tipo : ''));
+      if (m.p.tipo === 'membresia') pl.appendChild(el(doc, 'span', 'ico-laurel'));
+      if (n) pl.appendChild(el(doc, 'span', 'px-saldo', n));
+      li.appendChild(pl);
+    }
     var iconos = m.t.map(function (y) { return String(y.i || '•'); }).concat(m.i.map(function (y) { return String(y.i || ''); })).join('');
     if (iconos) li.appendChild(el(doc, 'span', 'px-iconos', iconos));
-    var globo = m.t.map(function (y) { return String(y.i || '') + ' ' + String(y.t || ''); }).concat(m.i.map(function (y) { return String(y.t || y.i || ''); }));
+    // Globo al pasar el ratón: nombre, plan, lo que le queda, miembro/paquete, elemento, años, temas e insignias.
+    var globo = [String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' · ' + f.lugares + ' lugares' : '')];
+    if (m.p.n || m.p.q) globo.push([m.p.n, m.p.q].filter(Boolean).join(' · '));
+    var quien = [m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', m.p.el ? NOMBRE_EL[m.p.el] : '', m.p.a].filter(Boolean);
+    if (quien.length) globo.push(quien.join(' · '));
+    m.t.forEach(function (y) { globo.push(String(y.i || '') + ' ' + String(y.t || '')); });
+    m.i.forEach(function (y) { globo.push(String(y.t || y.i || '')); });
     if (m.eq) globo.push('equipo o Lobas: no se cobra');
     globo.push(x.llego ? 'Ya llegó ✓' : 'Falta por llegar');
-    li.setAttribute('title', globo.join(' · '));
+    li.setAttribute('title', globo.join('\n'));
     return li;
   }
   function pintarProximas(doc, ps) {
