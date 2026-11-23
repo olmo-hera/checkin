@@ -878,9 +878,14 @@
     // Agrupada bajo el subtítulo de su clase (v3), el renglón ya no la repite.
     if (!agrupada) l1.appendChild(el(doc, 'span', 'f-clase', ' · ' + claseCorta(t.clase) + (t.clase && t.clase.coach ? ' · ' + t.clase.coach : '')));
     info.appendChild(l1);
-    var meta = metaDe(t);
-    if (meta) { var m = el(doc, 'div', 'f-meta', meta); m.setAttribute('title', meta); info.appendChild(m); }   // se corta con «…»: completo al pasar el ratón
+    var meta = metaDe(t), conGl = conDetalleGlobo(t);
+    if (meta) { var m = el(doc, 'div', 'f-meta', meta); if (!conGl) m.setAttribute('title', meta); info.appendChild(m); }   // se corta con «…»: completo en el globo
     li.appendChild(info);
+    if (conGl) {                                                // el globo en su nombre y su círculo (las pastillas traen el suyo)
+      var dgl = datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahoraMs);
+      info.setAttribute('aria-label', textoGlobo(dgl));
+      conGlobo(doc, info, dgl); conGlobo(doc, circ, dgl);
+    }
     if (ps.length) {
       var temas = el(doc, 'div', 'f-temas');
       ps.forEach(function (x) { temas.appendChild(pastilla(doc, x, t)); });
@@ -925,7 +930,8 @@
             if (cm.addEventListener) cm.addEventListener('click', function () { editandoMuestra[t.id] = 1; if (alEditarMuestra) alEditarMuestra(); });
             x.appendChild(cm);
           }
-          x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
+          if (conDetalleGlobo(t)) conGlobo(doc, x, datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahora));
+          else x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
           ch.appendChild(x);
         }
         // v3.1: equipo o Lobas: «equipo · 💵 sin canjear · Clienta A.» en gris (informativo, sin renglón).
@@ -933,7 +939,8 @@
           var q = el(doc, 'span', 'chip chip-equipo');
           q.appendChild(el(doc, 'span', null, equipoDe(t).map(textoEquipo).join(' · ') + ' · '));
           q.appendChild(nombreNodo(doc, nombreCorto(t.nombre), t.detalle && t.detalle.ficha, null));
-          q.setAttribute('title', TEXTO_EQUIPO);
+          if (conDetalleGlobo(t)) conGlobo(doc, q, datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahora));
+          else q.setAttribute('title', TEXTO_EQUIPO);
           ch.appendChild(q);
         }
       });
@@ -1083,6 +1090,31 @@
       return String(a.f.nombre || '').localeCompare(String(b.f.nombre || ''), 'es');
     });
   }
+  /** Olmo 23-nov («de las que ya llegaron también dame los detalles del hover»): el detalle de una llegada con la misma
+   *  forma que los temas compactos de «Faltan por llegar», para el mismo globo. */
+  var ICONO_INS = { primera: '🌱', hito: '⭐', estrella: '⭐', regreso: '👋', cumple: '🎂' };
+  function marcasDeDetalle(det) {
+    var vistos = {}, t = [], ins = [], anios = '';
+    (det.pendientes || []).forEach(function (p) {
+      var k = String(p.icono || '') + '|' + String(p.tema || '');
+      if (!p || vistos[k]) return;
+      vistos[k] = 1;
+      t.push({ i: String(p.icono || '•'), t: String(p.tema || 'Pendiente'), c: String(p.color || 'neutro') });
+    });
+    (det.insignias || []).forEach(function (x) {
+      if (!x) return;
+      if (x.tipo === 'anios') anios = String(x.texto || '');
+      else if (tiene(ICONO_INS, x.tipo)) ins.push({ i: ICONO_INS[x.tipo], t: String(x.texto || '') });
+    });
+    var vg = det.vigencia && typeof det.vigencia === 'object' ? vigenciaDe({ t: det.vigencia.tipo, f: det.vigencia.fecha }) : null;
+    var sg = Array.isArray(det.siguientes) ? siguientesDe(det.siguientes.map(function (x) { return x && { i: x.inicio, d: x.clase }; })) : null;
+    return { t: t.slice(0, 4), i: ins.slice(0, 3), eq: !!(det.equipo && det.equipo.length),
+      p: { el: tiene(ELEMENTOS, det.elemento) ? det.elemento : '', tipo: det.tipoPlan === 'membresia' || det.tipoPlan === 'paquete' ? det.tipoPlan : '',
+        n: typeof det.plan === 'string' ? det.plan.slice(0, 60) : '', q: typeof det.saldo === 'string' ? det.saldo.slice(0, 20) : '', a: anios.slice(0, 30),
+        v: vg, l: entero(det.libres), r: entero(det.reservadas), s: sg } };
+  }
+  /** ¿Lleva globo? Una llegada con su detalle real (no la provisional de la señal, ni marketplace o sin ficha). */
+  function conDetalleGlobo(t) { var d = t && t.detalle; return !!(d && !d.provisional && !d.market && !d.sinFicha && !d.sinDetalle && !t.market); }
   /** Lo que dice el globo de una persona (estructura, sin HTML). */
   function datosGlobo(f, m, estado, ahora) {
     return { nombre: String(f.nombre || 'Alumna'), lugares: f.lugares >= 2 ? f.lugares : 0, estado: estado,
@@ -1108,8 +1140,8 @@
   }
   /** Engancha el globo a un elemento (ratón y teclado). La página tiene un solo globo (#globo) que se mueve. */
   function conGlobo(doc, nodo, g) {
-    if (!nodo.addEventListener) return;
     nodo.setAttribute('tabindex', '0');
+    if (!nodo.addEventListener) return;
     var ver = function () { pintarGlobo(doc, g, nodo); }, ocultar = function () { var b = doc.getElementById('globo'); if (b) b.hidden = true; };
     nodo.addEventListener('mouseenter', ver); nodo.addEventListener('focus', ver);
     nodo.addEventListener('mouseleave', ocultar); nodo.addEventListener('blur', ocultar);
@@ -1979,7 +2011,7 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
-    puntosLlegada: puntosLlegada, datosGlobo: datosGlobo, textoGlobo: textoGlobo, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
+    puntosLlegada: puntosLlegada, marcasDeDetalle: marcasDeDetalle, datosGlobo: datosGlobo, textoGlobo: textoGlobo, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
