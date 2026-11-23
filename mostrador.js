@@ -23,6 +23,18 @@
   var TOKEN_KEY = 'hera_mostrador_token', SONIDO_KEY = 'hera_mostrador_sonido', AVISOS_KEY = 'hera_mostrador_avisos', LIDER_KEY = 'hera_mostrador_lider';
   var VOLUMEN_KEY = 'hera_mostrador_volumen';
   var RE_FICHA = /^https:\/\/manage\.wix\.com\/dashboard\/([0-9a-f-]{36})\/contacts\/view\/([0-9a-f-]{36})$/i;
+  var SITIO_WIX = '21d18206-19d9-4b9f-9cc4-3c7a471ae6c4', RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  /** Liga del subtítulo de una clase (Olmo 22-nov): la Lista de reservas de Wix filtrada por su servicio y HOY, de la más
+   *  temprana a la más tarde (ahí cada reserva trae «Canjear sesión» / «Ir a la página de pago»). La vista «Administrar
+   *  participantes» de una sesión no se puede ligar: su `dataCapsuleId` vive en el navegador que abrió el calendario. Se arma
+   *  aquí con piezas validadas (sitio fijo, id del servicio con forma de UUID, nombre codificado); null si no hay servicio. */
+  function ligaClase(c) {
+    if (!c || !RE_UUID.test(String(c.servicio || ''))) return null;
+    var q = 'tab=' + encodeURIComponent(JSON.stringify([{ id: 'booking-list', name: 'Citas y clases' }])) +
+      '&bookingDate=TODAY&serviceName=' + encodeURIComponent(JSON.stringify([{ id: String(c.servicio).toLowerCase(), name: String(c.servicioNombre || c.disciplina || 'Clase').slice(0, 60) }])) +
+      '&bookingStatus=' + encodeURIComponent(JSON.stringify([{ id: 'CONFIRMED', name: 'Confirmada' }])) + '&sort=' + encodeURIComponent('startDate asc');
+    return 'https://manage.wix.com/dashboard/' + SITIO_WIX + '/bookings/bookings/bookings-list?' + q;
+  }
   // v3 (Olmo 21-nov): cada pastilla lleva a la vista de Wix donde se resuelve. Lista blanca: solo manage.wix.com (armada aquí
   // con la ficha ya validada) y el permalink de una nota de #recepcion. Pestaña «Suscripciones» de la ficha (verificado en
   // Chrome el 21-nov). La sesión de la clase no tiene liga estable: la lista de reservas filtrada por ella es lo más cerca.
@@ -509,7 +521,7 @@
   function deSenal(e, est, cat, dir) {
     var ps = (est && est.proximas) || [], i, j;
     for (i = 0; i < ps.length; i++) {
-      var p = ps[i], cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach };
+      var p = ps[i], cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach, servicio: p.servicio, servicioNombre: p.servicioNombre };
       if (e.m) { if (e.c && p.id === e.c) return { id: e.id, nombre: e.m, iniciales: '🎟️', market: true, origen: 'tablet', hora: e.ts, clase: cl, senal: { p: 0 } }; continue; }
       var fs = Array.isArray(p.faltan) ? p.faltan : [];
       for (j = 0; j < fs.length; j++) if (fs[j] && fs[j].id === e.id) {
@@ -544,7 +556,7 @@
     };
     ((est && est.tarjetas) || []).forEach(function (t) { if (!t.provisional && !(t.detalle && t.detalle.market)) pon(t.id, t.nombre, t.iniciales, t.clase, t.lugares, t.detalle && t.detalle.ficha); });
     ((est && est.proximas) || []).forEach(function (p) {
-      var cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach };
+      var cl = { id: p.id, disciplina: p.disciplina, inicio: p.inicio, fin: p.fin, coach: p.coach, servicio: p.servicio, servicioNombre: p.servicioNombre };
       (Array.isArray(p.faltan) ? p.faltan : []).forEach(function (f) { if (f) pon(f.id, f.nombre, f.iniciales, cl, f.lugares, f.ficha); });
     });
     return out;
@@ -755,7 +767,13 @@
     var c = g.clase || {}, li = el(doc, 'li', conFin ? 'sub-fin' : 'sub-clase'), f = finClase(c);
     var tit = (conFin ? 'Terminó ' + hora(new Date(f).toISOString()) + ' · ' : '') + claseCorta(c) + (c.coach ? ' · ' + c.coach : '') +
       (conFin ? ' · hace ' + Math.max(0, Math.round((ahora - f) / 60000)) + ' min' : '');
-    li.appendChild(el(doc, 'span', 'sub-titulo', tit));
+    var lc = ligaClase(c);
+    if (lc) {
+      var a = el(doc, 'a', 'sub-titulo sub-liga', tit);
+      a.href = lc; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.setAttribute('title', 'Abrir en Wix las reservas de hoy de ' + (c.servicioNombre || c.disciplina || 'esta clase') + ' (ahí está «Canjear sesión»)');
+      li.appendChild(a);
+    } else li.appendChild(el(doc, 'span', 'sub-titulo', tit));
     var cta = cuentaGrupo(g, resumen);
     if (cta) li.appendChild(el(doc, 'span', 'sub-cuenta', cta));
     if (g.chips.length) {
