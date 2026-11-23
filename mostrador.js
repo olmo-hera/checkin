@@ -852,7 +852,7 @@
     doc.getElementById('conteo').textContent = tx.conteo;
     var nota = doc.getElementById('notaHoras');
     if (nota) { nota.textContent = ts.length && estado && !estado.horas ? TEXTOS.sinHoras : ''; nota.hidden = !nota.textContent; }
-    pintarProximas(doc, (estado && estado.proximas) || []);
+    pintarProximas(doc, (estado && estado.proximas) || [], ahora);
     var at = doc.getElementById('avisoTablet');
     if (at) { at.textContent = avisoTablet(estado && estado.tablet, ahora, !!(estado && estado.activo)); at.hidden = !at.textContent; }
     return b;
@@ -873,7 +873,23 @@
     var pl = m && m.p && typeof m.p === 'object' ? m.p : {}, txt = function (v, n) { return typeof v === 'string' ? v.slice(0, n) : ''; };
     return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq),
       p: { el: tiene(ELEMENTOS, pl.el) ? pl.el : '', tipo: pl.tipo === 'membresia' || pl.tipo === 'paquete' ? pl.tipo : '',
-        n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30) } };
+        n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30), v: vigenciaDe(pl.v) } };
+  }
+  /** { t: renueva|termina|vence, f: ISO } validado → { t, ms } o null. */
+  function vigenciaDe(v) {
+    if (!v || typeof v !== 'object' || !tiene(VIGENCIA, v.t) || typeof v.f !== 'string') return null;
+    var ms = Date.parse(v.f);
+    return isFinite(ms) ? { t: v.t, ms: ms } : null;
+  }
+  var VIGENCIA = { renueva: 'Se renueva', termina: 'Termina', vence: 'Vence' };
+  /** «Se renueva el 5 dic · en 12 días» (días de calendario en Guadalajara). */
+  function textoVigencia(v, ahora) {
+    if (!v) return '';
+    var dia = function (ms) { try { return new Date(ms).toLocaleDateString('en-CA', { timeZone: ZONA }); } catch (_) { return new Date(ms).toISOString().slice(0, 10); } };
+    var d = Math.round((Date.parse(dia(v.ms) + 'T12:00:00Z') - Date.parse(dia(ahora) + 'T12:00:00Z')) / 864e5), f;
+    try { f = new Date(v.ms).toLocaleDateString('es-MX', { timeZone: ZONA, day: 'numeric', month: 'short' }).replace('.', ''); } catch (_) { f = dia(v.ms); }
+    var cuando = d === 0 ? 'hoy' : d === 1 ? 'mañana' : d > 1 ? 'en ' + d + ' días' : (v.t === 'renueva' ? 'hace ' + (-d) + ' días' : 'ya pasó');
+    return VIGENCIA[v.t] + ' el ' + f + ' · ' + cuando;
   }
   var NOMBRE_EL = { FUEGO: 'Fuego', AGUA: 'Agua', AIRE: 'Aire', TIERRA: 'Tierra' };
   /** «quedan 4» → «4», «queda 1» → «1», «ilimitado» → «∞»; otra cosa, nada. */
@@ -895,7 +911,7 @@
     });
   }
   /** La pastilla de una persona: verde con ✓ si ya llegó; con tema, el color de su tema más urgente y sus íconos. */
-  function pastillaProxima(doc, x) {
+  function pastillaProxima(doc, x, ahora) {
     var f = x.f, m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
     var li = el(doc, 'li', 'falta' + (x.llego ? ' llego' : '') + (m.t.length ? ' con-tema t-' + color : ''));
     // Círculo con el color de su elemento (como en la tablet y en «Por resolver»); al llegar, verde con ✓.
@@ -916,6 +932,7 @@
     if (m.p.n || m.p.q) globo.push([m.p.n, m.p.q].filter(Boolean).join(' · '));
     var quien = [m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', m.p.el ? NOMBRE_EL[m.p.el] : '', m.p.a].filter(Boolean);
     if (quien.length) globo.push(quien.join(' · '));
+    if (m.p.v) globo.push(textoVigencia(m.p.v, ahora));
     m.t.forEach(function (y) { globo.push(String(y.i || '') + ' ' + String(y.t || '')); });
     m.i.forEach(function (y) { globo.push(String(y.t || y.i || '')); });
     if (m.eq) globo.push('equipo o Lobas: no se cobra');
@@ -923,7 +940,7 @@
     li.setAttribute('title', globo.join('\n'));
     return li;
   }
-  function pintarProximas(doc, ps) {
+  function pintarProximas(doc, ps, ahora) {
     var cont = doc.getElementById('proximas');
     vaciar(cont);
     doc.getElementById('sinProximas').hidden = !!ps.length;
@@ -950,7 +967,7 @@
       var xs = personasProxima(p);
       if (xs.length) {
         var ul = el(doc, 'ul', 'faltan');
-        xs.forEach(function (x) { ul.appendChild(pastillaProxima(doc, x)); });
+        xs.forEach(function (x) { ul.appendChild(pastillaProxima(doc, x, ahora)); });
         s.appendChild(ul);
       }
       cont.appendChild(s);
