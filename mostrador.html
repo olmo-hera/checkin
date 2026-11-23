@@ -250,7 +250,12 @@ a.px-clase:hover{border-bottom-style:solid}
 .ley-mini{display:inline-flex;margin:0 auto}
 .ley-nota{margin-top:10px;font-size:12.5px;color:var(--gris);line-height:1.4}
 @media (max-width:520px){.ley-fila{grid-template-columns:42px 12px minmax(0,1fr)} .ley-hacer{grid-column:3;font-size:12.5px} .ley-pastillas li{grid-template-columns:1fr}}
-.pie{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--gris);line-height:1.45}
+.pie{max-width:1440px;margin:0 auto;padding:0 16px 18px;font-size:13px;color:var(--gris);line-height:1.45}
+.pie-tit{font-family:Poppins,Helvetica,Arial,sans-serif;font-weight:600;font-size:13px;color:var(--carbon);margin-bottom:4px}
+.pie-lista{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:4px 18px}
+.pie-lista li{padding-left:12px;position:relative}
+.pie-lista li::before{content:"";position:absolute;left:0;top:.6em;width:5px;height:5px;border-radius:50%;background:var(--crema)}
+.pie-lista b{color:var(--carbon);font-weight:500}
 /* ---- cronómetro (solo con ?medir=1; latencia, Olmo 21-nov noche): franja discreta dentro de la barra */
 .medicion{max-width:1440px;margin:0 auto;padding:4px 16px 8px;font-size:12px;color:var(--gris);line-height:1.5;font-variant-numeric:tabular-nums}
 .med-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -317,7 +322,17 @@ a.px-clase:hover{border-bottom-style:solid}
       <div id="proximas"></div>
     </aside>
   </main>
-  <p class="pie">Solo lectura: esta pantalla no marca ni cobra nada. Cada check-in de la tablet sale unos segundos en un recuadro arriba a la derecha; en la lista solo se queda quien trae pendiente, hasta 45 min después de que termina su clase o hasta que se cierra en Wix (el resumen del día sigue en Slack). Cada nombre abre su ficha en Wix (pide la sesión de Wix de recepción) y cada pastilla con «↗» abre la vista donde se resuelve: 💵 la lista de sus reservas (ahí «⋯ → Gestionar participantes → Canjear sesión»), 💳 ⛔ ⏸️ 🗓️ 🧾 sus suscripciones, 📝 la nota en Slack. Los renglones van agrupados por clase, con cuántas llegaron de las que reservaron; 🌱 primera clase y 🎂 cumple van como chip en su clase. «panel aprox.» = check-in marcado en el panel de Wix; su hora es cuando lo vio esta pantalla («sin hora» si lo vio tarde). Pasa el ratón sobre una pastilla para ver el pendiente completo. En «Faltan por llegar», quien ya llegó se queda en verde con ✓ y quien trae pendiente sale con el color y los íconos de su tema (pasa el ratón para leerlo); el nombre de la clase abre sus reservas de hoy en Wix.</p>
+  <div class="pie">
+    <p class="pie-tit">Cómo leer esta pantalla</p>
+    <ul class="pie-lista">
+      <li><b>Por resolver:</b> quien ya hizo check-in y trae algo pendiente. Sale al cerrarse en Wix o 45 min después de su clase.</li>
+      <li><b>Faltan por llegar:</b> quien reservó una clase de la próxima hora y media. En verde, las que ya llegaron.</li>
+      <li><b>Recuadro arriba a la derecha:</b> cada check-in de la tablet, unos segundos.</li>
+      <li><b>Ligas:</b> cada nombre abre su ficha en Wix, cada pastilla con «↗» abre dónde se resuelve y el nombre de la clase abre sus reservas de hoy.</li>
+      <li><b>«panel aprox.»:</b> check-in marcado en el panel de Wix; la hora es cuando lo vio esta pantalla.</li>
+      <li>Esta pantalla no marca asistencia ni cobra: eso se hace en Wix. El resumen del día sigue en Slack.</li>
+    </ul>
+  </div>
 <section class="leyenda" aria-labelledby="btnLeyenda">
   <button type="button" class="chip-btn" id="btnLeyenda" aria-expanded="false" aria-controls="leyenda">¿Qué significa cada ícono? · Ver</button>
   <div class="ley-cuerpo" id="leyenda" hidden>
