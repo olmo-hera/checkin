@@ -123,11 +123,11 @@
     if ((det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) return 2;
     return 3;
   };
-  /** «Clienta A Ejemplo» → «Clienta A.» (para la notificación: nombre y la inicial del apellido). */
+  /** «Daniela Salcido Pérez» → «Daniela Salcido» (Olmo 23-nov: el primer apellido completo, ya no la inicial). */
   function nombreCorto(n) {
     var ps = String(n || '').trim().split(/\s+/).filter(Boolean);
     if (!ps.length) return 'Alumna';
-    return ps.length === 1 ? ps[0] : ps[0] + ' ' + ps[1].charAt(0).toLocaleUpperCase('es-MX') + '.';
+    return ps.length === 1 ? ps[0] : ps[0] + ' ' + ps[1];
   }
   /** Lo más importante de una llegada para la notificación: su pendiente, o 🌱, o 🎂, o nada.
    *  `detallado` = el modo «Avisos: con detalle» (dice CUÁL pendiente); si no, solo «trae pendiente». */
@@ -670,7 +670,7 @@
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) { extra = '🌱 primera clase'; tipo = 'primera'; }
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'cumple'; })) { extra = '🎂 cumple hoy'; tipo = 'cumple'; }
     else if ((det && det.market) || (!det && t && t.market)) { extra = esFitpass(t && t.nombre) ? '🎟️ hacer su check-in en Fitpass' : '🎟️ registrar su visita en ' + String((t && t.nombre) || 'su app'); tipo = 'market'; }
-    var o = { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1].charAt(0).toLocaleUpperCase('es-MX') + '.' : '',
+    var o = { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1] : '',   // Olmo 23-nov: el primer apellido completo
       linea: 'hizo check-in · ' + claseCorta(t && t.clase), extra: extra, tipo: tipo, iniciales: (t && t.iniciales) || '?',
       elemento: det ? (tiene(ELEMENTOS, det.elemento) ? det.elemento : '') : (sn && tiene(ELEMENTOS, sn.e) ? sn.e : ''), market: !!(t && t.market) };
     if (sn) o.senal = sn;
