@@ -185,6 +185,7 @@
       var l = ls[i], p = previas[l.id], t = {};
       for (var k in l) if (Object.prototype.hasOwnProperty.call(l, k)) t[k] = l[k];
       if (t.detalle === undefined) t.detalle = p ? p.detalle : undefined;   // el servidor solo manda el detalle de las nuevas
+      if (t.muestra === undefined && p) { t.muestra = p.muestra; t.muestraEn = p.muestraEn; }   // la lectura por la señal no trae las marcas
       if (Array.isArray(l.abiertos)) t.detalle = cerrarPendientes(t.detalle, l.abiertos);
       delete t.abiertos;
       t.prioridad = prioridadDe(t.detalle);
@@ -436,7 +437,22 @@
    *  un marketplace (desde 23-nov ya no: su check-in de Fitpass va en el recuadro). 🌱 primera clase y los
    *  avisos de renovar (🔚 ⏳) NO: solo van en su recuadro y en Slack (decisión pendiente de Olmo, docs/MOSTRADOR.md P3). */
   // Olmo 23-nov: el marketplace con check-in en Wix ya no se queda en «Por resolver» (su check-in de Fitpass sale en el recuadro).
-  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle); }
+  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle || porMarcarMuestra(t)); }
+  /** Olmo 23-nov: la de PRIMERA clase es pendiente hasta que recepción marque «Compró», «No compró» o «Lo piensa». */
+  function esPrimera(t) { return !!(t && t.detalle && (t.detalle.insignias || []).some(function (x) { return x && x.tipo === 'primera'; })); }
+  function porMarcarMuestra(t) { return esPrimera(t) && !t.market && (!resultadoMuestra(t) || !!editandoMuestra[t.id]); }
+  var MUESTRA = { compro: 'Compró', 'no-compro': 'No compró', 'lo-piensa': 'Lo piensa' };
+  // id → { r, ms } de lo marcado en ESTA pantalla: gana a un «sin marca» atrasado (otra instancia) o a una marca más vieja;
+  // una marca más nueva de la otra compu gana a la local. `editando` = ids con los botones abiertos otra vez (corregir).
+  var muestrasLocales = {}, editandoMuestra = {};
+  function resultadoMuestra(t) {
+    if (!t) return null;
+    var l = tiene(muestrasLocales, t.id) ? muestrasLocales[t.id] : null, srv = tiene(MUESTRA, t.muestra) ? t.muestra : null;
+    var en = Date.parse(t.muestraEn || '');
+    var r = l && (!srv || !isFinite(en) || en <= l.ms) ? l.r : srv;
+    return tiene(MUESTRA, r) ? r : null;
+  }
+  var alMarcarMuestra = null, alEditarMuestra = null;          // la página los fija: guardar en el servidor y repintar
   /** La lista de «Por resolver» (Olmo 21-nov: «si no tienen pendientes no es necesario que se queden en el listado, y que
    *  haya un separador…»): SOLO quien trae tema, en dos bloques.
    *  - `van`: su clase no ha terminado (por empezar o en curso), la más nueva arriba;
@@ -446,7 +462,7 @@
   /** 🌱 primera clase y 🎂 cumple de quien NO trae tema (Ideas v3): un chip en el subtítulo de su clase, sin renglón. */
   function chipsDe(t) {
     var ins = (t.detalle && t.detalle.insignias) || [], out = [];
-    if (ins.some(function (x) { return x && x.tipo === 'primera'; })) out.push('🌱');
+    if (ins.some(function (x) { return x && x.tipo === 'primera'; }) && !porMarcarMuestra(t)) out.push('🌱');
     if (ins.some(function (x) { return x && x.tipo === 'cumple'; })) out.push('🎂');
     return out;
   }
@@ -749,7 +765,7 @@
     if (det.provisional) return 'confirmando con Wix…';            // v3.1: de la señal; la lista lo confirma o lo reemplaza
     if (det.sinDetalle) return '';
     var xs = [];
-    if (!det.market && !det.sinFicha) xs.push(String(det.plan || 'sin plan') + (det.saldo ? ' · ' + String(det.saldo) : ''));
+    if (!det.market && !det.sinFicha) { var sd = det.saldo ? textoSaldo(String(det.saldo), entero(det.libres), entero(det.reservadas)) : ''; xs.push(String(det.plan || 'sin plan') + (sd ? ' · ' + sd : '')); }
     (det.insignias || []).forEach(function (x) { if (x.tipo !== 'primera' && x.tipo !== 'cumple' && x.texto) xs.push(String(x.texto)); });
     return xs.join(' · ');
   }
@@ -784,7 +800,11 @@
     (ts || []).forEach(function (t) { if (t && t.id) ya[t.id] = 1; });
     var out = [];
     (ps || []).forEach(function (p) {
-      var fs = (Array.isArray(p.faltan) ? p.faltan : []).filter(function (f) { return f && !f.market && f.id && !ya[f.id] && marcasDe(f).t.length; });
+      var fs = (Array.isArray(p.faltan) ? p.faltan : []).filter(function (f) {
+        if (!f || f.market || !f.id || ya[f.id]) return false;
+        var m = marcasDe(f);
+        return m.t.length || m.i.some(function (x) { return x.i === '🌱'; });   // 🌱 primera clase también (Olmo 23-nov)
+      });
       if (fs.length) out.push({ clase: p, faltan: fs });
     });
     return out;
@@ -792,7 +812,7 @@
   /** Renglón gris de quien aún no llega y trae pendiente: círculo de su elemento, nombre, su plan y sus temas. */
   function filaPorLlegar(doc, f, ahora) {
     var m = marcasDe(f), t0 = m.t[0], color = t0 && tiene(COLOR_TEMA, t0.c) ? t0.c : 'neutro';
-    var li = el(doc, 'li', 'fila por-llegar c-' + color);
+    var li = el(doc, 'li', 'fila por-llegar c-' + (t0 ? color : 'primera'));
     li.appendChild(el(doc, 'div', 'f-hora', 'por llegar'));
     var circ = el(doc, 'div', 'circulo' + (m.p.el ? ' ' + m.p.el : ''), String(f.iniciales || '?'));
     circ.setAttribute('aria-hidden', 'true');
@@ -800,7 +820,7 @@
     var info = el(doc, 'div', 'f-info'), l1 = el(doc, 'div', 'f-l1');
     l1.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ' lugares)' : ''), f.ficha, 'nombre'));
     info.appendChild(l1);
-    var meta = [m.p.n, m.p.q, m.p.v ? textoVigencia(m.p.v, ahora) : ''].filter(Boolean).join(' · ');
+    var meta = [m.p.n, textoSaldo(m.p.q, m.p.l, m.p.r), m.p.v ? textoVigencia(m.p.v, ahora) : ''].filter(Boolean).join(' · ');
     if (meta) { var mm = el(doc, 'div', 'f-meta', meta); mm.setAttribute('title', meta); info.appendChild(mm); }
     li.appendChild(info);
     var temas = el(doc, 'div', 'f-temas');
@@ -809,14 +829,29 @@
       pl.appendChild(el(doc, 'span', 'pill-tema', String(y.i || '•') + ' ' + String(y.t || '')));
       temas.appendChild(pl);
     });
+    if (m.i.some(function (x) { return x.i === '🌱'; })) { var pp = el(doc, 'span', 'pill primera'); pp.appendChild(el(doc, 'span', 'pill-tema', '🌱 Primera clase')); temas.appendChild(pp); }
     li.appendChild(temas);
     li.setAttribute('title', 'Aún no llega · trae pendiente');
     return li;
+  }
+  /** «¿Compró?»: tres botones (Olmo 23-nov); lo que se marca va a OS.hera (bandeja KioscoMuestras). */
+  function botonesMuestra(doc, t) {
+    var g = el(doc, 'div', 'f-muestra');
+    g.appendChild(el(doc, 'span', 'f-muestra-q', '¿Compró?'));
+    ['compro', 'no-compro', 'lo-piensa'].forEach(function (r) {
+      var b = el(doc, 'button', 'b-muestra m-' + r, MUESTRA[r]);
+      b.type = 'button';
+      b.setAttribute('title', 'Guardar «' + MUESTRA[r] + '» en el registro de primeras clases (OS.hera)');
+      if (b.addEventListener) b.addEventListener('click', function () { if (alMarcarMuestra) alMarcarMuestra(t.id, r, b); });
+      g.appendChild(b);
+    });
+    return g;
   }
   function fila(doc, t, ahoraMs, animar, agrupada) {
     var det = t.detalle || null, ps = pastillasDe(t);
     var li = el(doc, 'li', 'fila');
     if (t.prioridad === 1) li.className += ' con-pendiente c-' + (ps.length ? ps[0].color : 'neutro');   // ps[0] = su pendiente más urgente
+    else if (porMarcarMuestra(t)) li.className += ' con-pendiente c-primera';
     else if (ps.length && ps[0].color === 'primera') li.className += ' c-primera';
     else if (det && det.market) li.className += ' c-neutro';      // 🎟️ marketplace
     else if (!ps.length && det) li.className += ' tenue';          // tenue = «se sabe que no trae nada»; sin detalle, no
@@ -847,6 +882,7 @@
     if (ps.length) {
       var temas = el(doc, 'div', 'f-temas');
       ps.forEach(function (x) { temas.appendChild(pastilla(doc, x, t)); });
+      if (porMarcarMuestra(t)) temas.appendChild(botonesMuestra(doc, t));
       li.appendChild(temas);
     } else if (det && !det.sinDetalle) {
       var col = el(doc, 'div', 'f-temas'), ok = el(doc, 'span', 'f-ok', '✓');
@@ -880,6 +916,13 @@
           var x = el(doc, 'span', 'chip ' + (chipsDe(t)[0] === '🌱' ? 'chip-primera' : 'chip-cumple'));
           x.appendChild(el(doc, 'span', null, chipsDe(t).join('') + ' '));
           x.appendChild(nombreNodo(doc, nombreCorto(t.nombre), t.detalle && t.detalle.ficha, null));
+          if (chipsDe(t)[0] === '🌱' && resultadoMuestra(t)) {
+            // Revisión 23-nov: se puede corregir (clic equivocado, o «Lo piensa» que después compró): reabre los tres botones.
+            var cm = el(doc, 'button', 'chip-muestra', ' · ' + MUESTRA[resultadoMuestra(t)] + ' ✎');
+            cm.type = 'button'; cm.setAttribute('title', 'Cambiar la marca');
+            if (cm.addEventListener) cm.addEventListener('click', function () { editandoMuestra[t.id] = 1; if (alEditarMuestra) alEditarMuestra(); });
+            x.appendChild(cm);
+          }
           x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
           ch.appendChild(x);
         }
@@ -924,7 +967,7 @@
       if (resto > 0) ul.appendChild(el(doc, 'li', 'sub-mas', 'y ' + resto + ' más de esta clase'));
       // Abajo y en gris: las que aún no llegan y traen pendiente (al hacer check-in suben arriba como renglón normal).
       if (g.faltan.length) {
-        ul.appendChild(el(doc, 'li', 'sub-porllegar', 'Aún no llegan · traen pendiente (' + g.faltan.length + ')'));
+        ul.appendChild(el(doc, 'li', 'sub-porllegar', 'Aún no llegan · traen pendiente o es su primera clase (' + g.faltan.length + ')'));
         g.faltan.forEach(function (f) { ul.appendChild(filaPorLlegar(doc, f, ahora)); });
       }
     });
@@ -977,7 +1020,8 @@
     var pl = m && m.p && typeof m.p === 'object' ? m.p : {}, txt = function (v, n) { return typeof v === 'string' ? v.slice(0, n) : ''; };
     return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq),
       p: { el: tiene(ELEMENTOS, pl.el) ? pl.el : '', tipo: pl.tipo === 'membresia' || pl.tipo === 'paquete' ? pl.tipo : '',
-        n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30), v: vigenciaDe(pl.v) } };
+        n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30), v: vigenciaDe(pl.v),
+        l: entero(pl.l), r: entero(pl.r) } };
   }
   /** { t: renueva|termina|vence, f: ISO } validado → { t, ms } o null. */
   function vigenciaDe(v) {
@@ -994,6 +1038,14 @@
     try { f = new Date(v.ms).toLocaleDateString('es-MX', { timeZone: ZONA, day: 'numeric', month: 'short' }).replace('.', ''); } catch (_) { f = dia(v.ms); }
     var cuando = d === 0 ? 'hoy' : d === 1 ? 'mañana' : d > 1 ? 'en ' + d + ' días' : (v.t === 'renueva' ? 'hace ' + (-d) + ' días' : 'ya pasó');
     return VIGENCIA[v.t] + ' el ' + f + ' · ' + cuando;
+  }
+  function entero(v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v < 1000 ? Math.floor(v) : null; }
+  /** «5 por usar: 3 sin programar · 2 ya reservadas» (Olmo 23-nov); sin el desglose, «quedan 5». */
+  function textoSaldo(q, l, r) {
+    if (l == null) return q || '';
+    var total = l + (r || 0);
+    if (!r) return l === 1 ? 'queda 1 sin programar' : 'quedan ' + l + ' sin programar';
+    return total + ' por usar: ' + l + ' sin programar · ' + r + (r === 1 ? ' ya reservada' : ' ya reservadas');
   }
   var NOMBRE_EL = { FUEGO: 'Fuego', AGUA: 'Agua', AIRE: 'Aire', TIERRA: 'Tierra' };
   /** «quedan 4» → «4», «queda 1» → «1», «ilimitado» → «∞»; otra cosa, nada. */
@@ -1025,11 +1077,11 @@
     li.appendChild(mini);
     li.appendChild(nombreNodo(doc, String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' (' + f.lugares + ')' : ''), f.ficha, null));
     // Olmo 23-nov: miembro (laurel, como en la tablet) o paquete, y cuántas clases le quedan.
-    var n = numSaldo(m.p.q);
+    var n = m.p.l != null ? String(m.p.l) : numSaldo(m.p.q);   // el número = las que le quedan SIN programar
     if (m.p.tipo === 'membresia' || n) {
       var pl = el(doc, 'span', 'px-plan' + (m.p.tipo ? ' ' + m.p.tipo : ''));
       if (m.p.tipo === 'membresia') pl.appendChild(el(doc, 'span', 'ico-laurel'));
-      if (n) pl.appendChild(el(doc, 'span', 'px-saldo', n));
+      if (n) pl.appendChild(el(doc, 'span', 'px-saldo' + (m.p.r ? ' con-reservas' : ''), n + (m.p.r ? '+' + m.p.r : '')));
       li.appendChild(pl);
     }
     var iconos = m.t.map(function (y) { return String(y.i || '•'); }).concat(m.i.map(function (y) { return String(y.i || ''); })).join('');
@@ -1044,7 +1096,7 @@
     }
     // Globo al pasar el ratón: nombre, plan, lo que le queda, miembro/paquete, elemento, años, temas e insignias.
     var globo = [String(f.nombre || 'Alumna') + (f.lugares >= 2 ? ' · ' + f.lugares + ' lugares' : '')];
-    if (m.p.n || m.p.q) globo.push([m.p.n, m.p.q].filter(Boolean).join(' · '));
+    if (m.p.n || m.p.q) globo.push([m.p.n, textoSaldo(m.p.q, m.p.l, m.p.r)].filter(Boolean).join(' · '));
     var quien = [m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', m.p.el ? NOMBRE_EL[m.p.el] : '', m.p.a].filter(Boolean);
     if (quien.length) globo.push(quien.join(' · '));
     if (m.p.v) globo.push(textoVigencia(m.p.v, ahora));
@@ -1249,6 +1301,17 @@
     var MEDIR = /(^|[?&])medir=1(&|$)/.test(String((win.location && win.location.search) || ''));
     var horaServidor = function () { return Date.now() + (relojPag ? relojPag.off : desfase); };
     relojRecuadros = horaServidor;
+    // Primera clase (Olmo 23-nov): «Compró / No compró / Lo piensa» se guarda en el servidor; mientras, el renglón se va.
+    alMarcarMuestra = function (id, resultado, boton) {
+      if (boton) { boton.disabled = true; boton.textContent = 'Guardando…'; }
+      api('muestra', { id: id, resultado: resultado }).then(function (x) {
+        if (x.s === 401) { sesionPerdida(); return; }            // revisión 23-nov: un 403 (servidor aún sin publicar) NO saca a la pantalla
+        if (x.s === 409) { if (boton) { boton.textContent = 'No es su primera clase'; } return; }
+        if (x.s !== 200 || !x.j || !x.j.ok) { if (boton) { boton.disabled = false; boton.textContent = (x.s === 403 || x.s === 503 ? 'No disponible' : 'No se guardó') + ' · reintentar'; } return; }
+        muestrasLocales[id] = { r: resultado, ms: Date.parse((x.j && x.j.marcadoEn) || '') || horaServidor() }; delete editandoMuestra[id]; repintar();
+      }, function () { if (boton) { boton.disabled = false; boton.textContent = 'Sin conexión · reintentar'; } });
+    };
+    alEditarMuestra = function () { repintar(); };
     function listaProv() { var out = [], id; for (id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) out.push(provisionales[id]); return out; }
     function listaRecientes() { var out = [], id; for (id in deLaSenal) if (Object.prototype.hasOwnProperty.call(deLaSenal, id)) out.push({ id: id, hora: deLaSenal[id].hora }); return out; }
     function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv(), listaRecientes()); }
@@ -1818,7 +1881,7 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
-    puntosLlegada: puntosLlegada, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
+    puntosLlegada: puntosLlegada, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
