@@ -186,6 +186,7 @@
       for (var k in l) if (Object.prototype.hasOwnProperty.call(l, k)) t[k] = l[k];
       if (t.detalle === undefined) t.detalle = p ? p.detalle : undefined;   // el servidor solo manda el detalle de las nuevas
       if (t.muestra === undefined && p) { t.muestra = p.muestra; t.muestraEn = p.muestraEn; }   // la lectura por la señal no trae las marcas
+      if (t.u === undefined && p) t.u = p.u;   // su clase anterior: otra instancia (sin su historial) puede no mandarla
       if (Array.isArray(l.abiertos)) t.detalle = cerrarPendientes(t.detalle, l.abiertos);
       delete t.abiertos;
       t.prioridad = prioridadDe(t.detalle);
@@ -882,7 +883,7 @@
     if (meta) { var m = el(doc, 'div', 'f-meta', meta); if (!conGl) m.setAttribute('title', meta); info.appendChild(m); }   // se corta con «…»: completo en el globo
     li.appendChild(info);
     if (conGl) {                                                // el globo en su nombre y su círculo (las pastillas traen el suyo)
-      var dgl = datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahoraMs);
+      var dgl = datosGlobo({ nombre: t.nombre, lugares: t.lugares, u: t.u }, marcasDeDetalle(t.detalle), 'llego', ahoraMs);
       info.setAttribute('aria-label', textoGlobo(dgl));
       conGlobo(doc, info, dgl); conGlobo(doc, circ, dgl);
     }
@@ -930,7 +931,7 @@
             if (cm.addEventListener) cm.addEventListener('click', function () { editandoMuestra[t.id] = 1; if (alEditarMuestra) alEditarMuestra(); });
             x.appendChild(cm);
           }
-          if (conDetalleGlobo(t)) conGlobo(doc, x, datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahora));
+          if (conDetalleGlobo(t)) conGlobo(doc, x, datosGlobo({ nombre: t.nombre, lugares: t.lugares, u: t.u }, marcasDeDetalle(t.detalle), 'llego', ahora));
           else x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
           ch.appendChild(x);
         }
@@ -939,7 +940,7 @@
           var q = el(doc, 'span', 'chip chip-equipo');
           q.appendChild(el(doc, 'span', null, equipoDe(t).map(textoEquipo).join(' · ') + ' · '));
           q.appendChild(nombreNodo(doc, nombreCorto(t.nombre), t.detalle && t.detalle.ficha, null));
-          if (conDetalleGlobo(t)) conGlobo(doc, q, datosGlobo({ nombre: t.nombre, lugares: t.lugares }, marcasDeDetalle(t.detalle), 'llego', ahora));
+          if (conDetalleGlobo(t)) conGlobo(doc, q, datosGlobo({ nombre: t.nombre, lugares: t.lugares, u: t.u }, marcasDeDetalle(t.detalle), 'llego', ahora));
           else q.setAttribute('title', TEXTO_EQUIPO);
           ch.appendChild(q);
         }
@@ -1030,7 +1031,7 @@
     return { t: arr(m && m.t).slice(0, 4), i: arr(m && m.i).slice(0, 3), eq: !!(m && m.eq),
       p: { el: tiene(ELEMENTOS, pl.el) ? pl.el : '', tipo: pl.tipo === 'membresia' || pl.tipo === 'paquete' ? pl.tipo : '',
         n: txt(pl.n, 60), q: txt(pl.q, 20), a: txt(pl.a, 30), v: vigenciaDe(pl.v),
-        l: entero(pl.l), r: entero(pl.r), s: siguientesDe(pl.s) } };
+        l: entero(pl.l), r: entero(pl.r), s: siguientesDe(pl.s), u: anteriorDe(pl.u) } };
   }
   /** { t: renueva|termina|vence, f: ISO } validado → { t, ms } o null. */
   function vigenciaDe(v) {
@@ -1054,13 +1055,21 @@
     return xs.filter(function (x) { return x && typeof x.i === 'string' && isFinite(Date.parse(x.i)); }).slice(0, 3)
       .map(function (x) { return { ms: Date.parse(x.i), d: typeof x.d === 'string' ? x.d.slice(0, 40) : 'Clase' }; });
   }
+  /** Su clase anterior ({ i: ISO, d, a: si|no|sm }, Olmo 24-nov), validada; null si el servidor no la trae. */
+  function anteriorDe(x) {
+    if (!x || typeof x !== 'object' || typeof x.i !== 'string' || !isFinite(Date.parse(x.i)) || !tiene(ASIS_HIST, x.a)) return null;
+    return { ms: Date.parse(x.i), d: typeof x.d === 'string' && x.d ? x.d.slice(0, 40) : 'Clase', a: x.a };
+  }
   /** «hoy 7:00 pm», «mañana 8:00 am», «jue 27 nov · 7:00 am» (día de calendario en Guadalajara). */
   function cuandoClase(ms, ahora) {
     var d = Math.round((Date.parse(diaDe(ms) + 'T12:00:00Z') - Date.parse(diaDe(ahora) + 'T12:00:00Z')) / 864e5), h = hora(new Date(ms).toISOString()), f;
     if (d === 0) return 'hoy ' + h;
     if (d === 1) return 'mañana ' + h;
     if (d === -1) return 'ayer ' + h;
-    try { f = new Date(ms).toLocaleDateString('es-MX', { timeZone: ZONA, weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '').replace(',', '').replace(/ de /g, ' '); } catch (_) { f = diaDe(ms); }
+    // Revisión 24-nov: su clase anterior puede ser de hace más de un año; sin el año parecería futura.
+    var o = { timeZone: ZONA, weekday: 'short', day: 'numeric', month: 'short' };
+    if (Math.abs(d) > 300) o.year = 'numeric';
+    try { f = new Date(ms).toLocaleDateString('es-MX', o).replace(/\./g, '').replace(/,/g, '').replace(/ de /g, ' '); } catch (_) { f = diaDe(ms); }
     return f + ' · ' + h;
   }
   /** Sus últimas reservas (Olmo 23-nov, solo de quien no vino), validadas; null si el servidor no las trae. `a`: si (vino),
@@ -1143,20 +1152,23 @@
     });
     var vg = det.vigencia && typeof det.vigencia === 'object' ? vigenciaDe({ t: det.vigencia.tipo, f: det.vigencia.fecha }) : null;
     var sg = Array.isArray(det.siguientes) ? siguientesDe(det.siguientes.map(function (x) { return x && { i: x.inicio, d: x.clase }; })) : null;
+    var an = det.anterior && typeof det.anterior === 'object' ? anteriorDe({ i: det.anterior.inicio, d: det.anterior.clase, a: det.anterior.a }) : null;
     return { t: t.slice(0, 4), i: ins.slice(0, 3), eq: !!(det.equipo && det.equipo.length),
       p: { el: tiene(ELEMENTOS, det.elemento) ? det.elemento : '', tipo: det.tipoPlan === 'membresia' || det.tipoPlan === 'paquete' ? det.tipoPlan : '',
         n: typeof det.plan === 'string' ? det.plan.slice(0, 60) : '', q: typeof det.saldo === 'string' ? det.saldo.slice(0, 20) : '', a: anios.slice(0, 30),
-        v: vg, l: entero(det.libres), r: entero(det.reservadas), s: sg } };
+        v: vg, l: entero(det.libres), r: entero(det.reservadas), s: sg, u: an } };
   }
   /** ¿Lleva globo? Una llegada con su detalle real (no la provisional de la señal, ni marketplace o sin ficha). */
   function conDetalleGlobo(t) { var d = t && t.detalle; return !!(d && !d.provisional && !d.market && !d.sinFicha && !d.sinDetalle && !t.market); }
   /** Lo que dice el globo de una persona (estructura, sin HTML). */
   function datosGlobo(f, m, estado, ahora) {
+    var antG = anteriorDe(f.u) || m.p.u;   // la fresca de esta respuesta (revisión 24-nov) o la del detalle
     return { nombre: String(f.nombre || 'Alumna'), lugares: f.lugares >= 2 ? f.lugares : 0, estado: estado,
       tipo: m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', el: m.p.el, anios: m.p.a,
       plan: m.p.n, saldo: textoSaldo(m.p.q, m.p.l, m.p.r), l: m.p.l, r: m.p.r, vig: m.p.v ? textoVigencia(m.p.v, ahora) : '',
       sigs: m.p.s ? m.p.s.map(function (y) { return { cuando: cuandoClase(y.ms, ahora), clase: y.d }; }) : null,
-      temas: m.t, ins: m.i, eq: m.eq, hist: estado === 'no' ? globoHist(histDe(f.h), ahora) : null };
+      temas: m.t, ins: m.i, eq: m.eq, hist: estado === 'no' ? globoHist(histDe(f.h), ahora) : null,
+      ant: antG ? { cuando: cuandoClase(antG.ms, ahora), clase: antG.d, a: antG.a } : null };
   }
   var ESTADO_GLOBO = { falta: 'Falta por llegar', llego: 'Ya llegó ✓', no: 'No vino' };
   /** El mismo contenido en una línea por dato (aria-label y pruebas). */
@@ -1167,6 +1179,7 @@
     if (quien.length) xs.push(quien.join(' · '));
     if (g.vig) xs.push(g.vig);
     if (g.sigs) xs.push(g.sigs.length ? 'Próximas: ' + g.sigs.map(function (y) { return y.cuando + ' ' + y.clase; }).join('; ') : 'Sin otras clases reservadas');
+    if (g.ant && !g.hist) xs.push('Anterior: ' + g.ant.cuando + ' ' + g.ant.clase + ': ' + ASIS_HIST[g.ant.a]);
     if (g.hist) {
       xs.push('Reservas pasadas: ' + g.hist.res.join(' · '));
       g.hist.filas.forEach(function (y) { xs.push(y.cuando + ' ' + y.clase + ': ' + ASIS_HIST[y.a]); });
@@ -1234,6 +1247,15 @@
       var sg = seccion('Próximas clases');
       if (!g.sigs.length) sg.appendChild(el(doc, 'div', 'gl-vacio', 'Sin otras clases reservadas'));
       g.sigs.forEach(function (y) { var r = el(doc, 'div', 'gl-clase'); r.appendChild(el(doc, 'span', 'gl-cuando', y.cuando)); r.appendChild(el(doc, 'span', 'gl-disc', y.clase)); sg.appendChild(r); });
+    }
+    // Olmo 24-nov: después de las próximas, la anterior y si vino (de quien no vino ya salen todas arriba).
+    if (g.ant && !g.hist) {
+      var sa = seccion('Clase anterior'), ra = el(doc, 'div', 'gl-clase');
+      ra.appendChild(el(doc, 'span', 'gl-cuando', g.ant.cuando));
+      var da = el(doc, 'span', 'gl-disc', g.ant.clase + ' ');
+      da.appendChild(el(doc, 'span', 'gl-asis a-' + g.ant.a, ASIS_HIST[g.ant.a]));
+      ra.appendChild(da);
+      sa.appendChild(ra);
     }
     if (g.temas.length || g.eq) {
       var st = seccion('Pendiente');
@@ -1338,10 +1360,10 @@
    *  mismo día; si las dos traen, gana la de sello `s` más nuevo (revisión 23-nov: con dos instancias, una pastilla ya
    *  resuelta no salta de color cada 30 s). Así una pastilla no pierde su color entre sondeos. */
   function conMarcasPrevias(ps, previas) {
-    var vistas = {}, hist = {};
+    var vistas = {}, hist = {}, ants = {};
     var sello = function (m) { var t = m && typeof m.s === 'string' ? Date.parse(m.s) : NaN; return isFinite(t) ? t : 0; };
     (previas || []).forEach(function (p) {
-      [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; });
+      [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; if (f && f.id && f.u) ants[f.id] = f.u; });
       (p.noVinieron || []).forEach(function (f) { if (f && f.id && f.h) hist[f.id] = f.h; });
     });
     // Su historial (quien no vino) que esta respuesta no trae (otra instancia aún no lo lee) se conserva del sondeo anterior.
@@ -1351,6 +1373,7 @@
     });
     (ps || []).forEach(function (p) {
       [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) {
+        if (f && f.id && f.u === undefined && tiene(ants, f.id)) f.u = ants[f.id];   // su clase anterior (24-nov), igual
         if (!f || !f.id || !tiene(vistas, f.id)) return;
         if (f.m === undefined || sello(vistas[f.id]) > sello(f.m)) f.m = vistas[f.id];
       });
