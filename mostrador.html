@@ -78,7 +78,7 @@ a{color:inherit}
 .resolver .fila{min-height:56px}
 .fila.c-pago{border-left-color:#C2452A} .fila.c-canje{border-left-color:#C98A1B} .fila.c-offline{border-left-color:#7A63A8}
 .fila.c-pausa{border-left-color:var(--pizarra)} .fila.c-neutro{border-left-color:#B9AC9E} .fila.c-primera{border-left-color:var(--ok)}
-.fila.c-nota{border-left-color:#2F6F73}
+.fila.c-nota{border-left-color:#2F6F73} .fila.c-market{border-left-color:#E2007A}
 .fila.nueva{background:#FFF8EC}
 .fila.entra{animation:entra .5s cubic-bezier(.2,.8,.2,1)}
 @keyframes entra{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
@@ -140,6 +140,7 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .sep::before{content:"";width:10px;height:10px;border-radius:50%;flex:none;background:var(--ok)}
 .sep-yendo{padding-top:12px;border-top:2px dashed var(--crema)}
 .sep-yendo::before{background:var(--alerta)}
+.sep-market{padding-top:12px;border-top:2px dashed var(--crema)} .sep-market::before{background:#E2007A}
 .vacio-bloque{font-size:13.5px;color:var(--gris);padding:2px 4px 4px}
 .sub-fin{list-style:none;padding:5px 14px 4px 16px;font-size:12.5px;font-weight:500;color:var(--alerta);background:var(--alerta-fondo);border-left:4px solid var(--alerta-borde)}
 /* v3: cada clase es un subtítulo (Olmo: «para ver todos juntos por tipo de clase»): clase · coach, conteo a la derecha, chips 🌱/🎂 */
@@ -156,6 +157,7 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .chip-primera{background:#E5F0E8;border-color:#C5DCCB;color:#2B5435}
 .chip-cumple{background:#FBE9F1;border-color:#EFC7D9;color:#7A2852}
 .chip-equipo{background:#F1F1EF;border-color:#DCDCD8;color:#4A4F4F;font-weight:400}
+.chip-market{background:#F3EEE8;border-color:#E3D8CC;color:#3D4343}
 .fila + .sub-fin,.sub-mas + .sub-fin,.sub-mas + .sub-clase,.fila + .sub-clase,.sub-clase + .sub-clase,.sub-fin + .sub-fin{border-top:1px solid #F1EAE2}
 .aviso-tablet{background:var(--alerta-fondo);border:1px solid var(--alerta-borde);color:#7F2410;border-radius:12px;padding:9px 14px;font-size:14px;font-weight:500;line-height:1.35}
 .sub-mas{list-style:none;padding:6px 14px;font-size:13px;color:var(--gris);text-align:center;border-top:1px solid #F1EAE2}
@@ -222,6 +224,7 @@ a.pill-boton:focus-visible{outline:2px solid var(--terracota);outline-offset:2px
 .b-muestra.m-compro{background:#2F7A45;border-color:#2F7A45;color:#fff}
 .b-muestra.m-no-compro{background:#fff;border-color:#C9B8A6;color:#5A4A3A}
 .b-muestra.m-lo-piensa{background:#FFF7E6;border-color:#E3C27A;color:#6A4A0A}
+.b-muestra.m-fitpass{background:#E2007A;border-color:#E2007A;color:#fff;text-decoration:none}
 .b-muestra:disabled{opacity:.6;cursor:default}
 .chip-muestra{font-weight:600;background:none;border:0;padding:0;color:inherit;cursor:pointer;font:inherit}
 .chip-muestra:hover{text-decoration:underline}
@@ -319,7 +322,7 @@ a.px-clase:hover{border-bottom-style:solid}
 .ley-que{color:var(--carbon);font-weight:500}
 .ley-hacer{color:var(--gris)}
 .m-pago{background:#FCE8E3;border-color:#D9826D} .m-canje{background:#FCF1DC;border-color:#D9A845} .m-offline{background:#EFEAF7;border-color:#9A86C4}
-.m-pausa{background:#E6EDF2;border-color:#8FA6B4} .m-nota{background:#E9ECF8;border-color:#8E9BC9} .m-neutro{background:#F3EEE8;border-color:#C9B8A6}
+.m-pausa{background:#E6EDF2;border-color:#8FA6B4} .m-nota{background:#E9ECF8;border-color:#8E9BC9} .m-neutro{background:#F3EEE8;border-color:#C9B8A6} .m-market{background:#FBE3F0;border-color:#E2007A}
 .m-primera{background:#E5F0E8;border-color:#8DB89A} .m-cumple{background:#FBE9F1;border-color:#D99BB8} .m-equipo{background:#F1F1EF;border-color:#BDBDB8}
 .ley-pastillas{list-style:none;display:flex;flex-direction:column;gap:8px}
 .ley-pastillas li{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px;align-items:center;font-size:13.5px;color:var(--carbon);line-height:1.3}
@@ -377,7 +380,7 @@ a.px-clase:hover{border-bottom-style:solid}
   <main class="cuerpo">
     <div class="col">
       <section class="seccion resolver" aria-labelledby="tResolver">
-        <h2 id="tResolver">Por resolver <span class="cuenta" id="conteoResolver"></span> <small>solo quien trae pendiente o 🎟️ código por validar (lo que traía al llegar; sale al cerrarse en Wix)</small></h2>
+        <h2 id="tResolver">Por resolver <span class="cuenta" id="conteoResolver"></span> <small>solo quien trae pendiente o 🎟️ check-in en su plataforma sin confirmar (lo que traía al llegar; sale al cerrarse en Wix)</small></h2>
         <p class="aviso-tablet" id="avisoTablet" role="alert" hidden></p>
         <p class="vacio-mini espera" id="sinResolver" hidden></p>
         <div class="bloque" id="bloqueVan" hidden>
@@ -389,6 +392,10 @@ a.px-clase:hover{border-bottom-style:solid}
           <h3 class="sep sep-yendo">Se van yendo <span class="cuenta" id="cuentaYendo"></span> <small>su clase ya terminó: alcánzala en la puerta (hasta 45 min)</small></h3>
           <p class="vacio-bloque" id="vacioYendo">Nadie por ahora</p>
           <ul class="filas" id="yendo" hidden></ul>
+        </div>
+        <div class="bloque" id="bloqueMarket" hidden>
+          <h3 class="sep sep-market">🎟️ Marketplace sin confirmar <span class="cuenta" id="cuentaMarket"></span> <small>su clase terminó hace más de 45 min: falta hacer su check-in en su plataforma (se queda hasta confirmarlo)</small></h3>
+          <ul class="filas" id="market" hidden></ul>
         </div>
         <p class="conteo-dia" id="conteo"></p>
         <p class="conteo-dia" id="notaHoras" hidden></p>
@@ -403,7 +410,7 @@ a.px-clase:hover{border-bottom-style:solid}
   <div class="pie">
     <p class="pie-tit">Cómo leer esta pantalla</p>
     <ul class="pie-lista">
-      <li><b>Por resolver:</b> arriba, quien ya hizo check-in y trae algo pendiente (sale al cerrarse en Wix o 45 min después de su clase); abajo y en gris, quien aún no llega y trae pendiente.</li>
+      <li><b>Por resolver:</b> arriba, quien ya hizo check-in y trae algo pendiente (sale al cerrarse en Wix o 45 min después de su clase; el 🎟️ marketplace, hasta confirmar su check-in en su plataforma); abajo y en gris, quien aún no llega y trae pendiente.</li>
       <li><b>Faltan por llegar:</b> todas las clases del turno (mañana o tarde). En verde, las que ya llegaron; con ✕, las que no vinieron («Contactar» abre su chat en GHL). Las clases que ya pasaron bajan y quedan en gris.</li>
       <li><b>Recuadros arriba a la derecha:</b> cada check-in de la tablet por 45 s, del más nuevo arriba, con su hora. Punto verde = la última en llegar; naranja = la anterior.</li>
       <li><b>Ligas:</b> cada nombre abre su ficha en Wix, cada pastilla con «↗» abre dónde se resuelve y el nombre de la clase abre sus reservas de hoy.</li>
@@ -421,6 +428,7 @@ a.px-clase:hover{border-bottom-style:solid}
         <li class="ley-fila"><span class="ley-ic">💳</span><span class="ley-muestra m-pago"></span><span class="ley-que">Cobro que no pasó</span><span class="ley-hacer">que pague en línea o con terminal</span></li>
         <li class="ley-fila"><span class="ley-ic">⛔</span><span class="ley-muestra m-pago"></span><span class="ley-que">Membresía o paquete cancelado por cobro</span><span class="ley-hacer">ofrecer reactivar</span></li>
         <li class="ley-fila"><span class="ley-ic">💵</span><span class="ley-muestra m-canje"></span><span class="ley-que">Reserva sin cobrar o sin canjear</span><span class="ley-hacer">usar su plan («Canjear sesión») o cobrar</span></li>
+        <li class="ley-fila"><span class="ley-ic">💵</span><span class="ley-muestra m-canje"></span><span class="ley-que">Pasadas sin canjear: vino a clases de los últimos 90 días que siguen sin pagar</span><span class="ley-hacer">en su lista de reservas, «Canjear sesión» en cada una (o cobrarla)</span></li>
         <li class="ley-fila"><span class="ley-ic">🛍️</span><span class="ley-muestra m-canje"></span><span class="ley-que">2ª clase sin plan</span><span class="ley-hacer">cobrar y ofrecer plan</span></li>
         <li class="ley-fila"><span class="ley-ic">🧾</span><span class="ley-muestra m-offline"></span><span class="ley-que">Plan offline sin marcar pagado</span><span class="ley-hacer">si ya pagó, marcarlo pagado</span></li>
         <li class="ley-fila"><span class="ley-ic">⏸️</span><span class="ley-muestra m-pausa"></span><span class="ley-que">Membresía pausada</span><span class="ley-hacer">reanudarla o cobrar la clase</span></li>
@@ -441,7 +449,7 @@ a.px-clase:hover{border-bottom-style:solid}
         <li class="ley-fila"><span class="ley-ic"><span class="ico-laurel"></span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Miembro (membresía)</span><span class="ley-hacer">el laurel de la tablet</span></li>
         <li class="ley-fila"><span class="ley-ic"><span class="px-saldo">4</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Clases que le quedan SIN programar (+ las ya reservadas)</span><span class="ley-hacer">«3+2» = 3 sin programar y 2 reservadas · «∞» = ilimitado · borde punteado = paquete</span></li>
         <li class="ley-fila"><span class="ley-ic"><span class="mini FUEGO ley-mini">CA</span></span><span class="ley-muestra m-neutro"></span><span class="ley-que">Color del círculo = su elemento</span><span class="ley-hacer">Fuego, Agua, Aire o Tierra (gris: sin plan)</span></li>
-        <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-neutro"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">Fitpass: su check-in en admin2.fitpass.com (botón en el recuadro)</span></li>
+        <li class="ley-fila"><span class="ley-ic">🎟️</span><span class="ley-muestra m-market"></span><span class="ley-que">Viene por Fitpass, TotalPass o Wellhub</span><span class="ley-hacer">hacer su check-in en su plataforma (Fitpass: admin2.fitpass.com) y tocar «✓ Ya hice su check-in»: hasta entonces sigue en Por resolver</span></li>
         <li class="ley-fila"><span class="ley-ic ley-ic-txt">equipo</span><span class="ley-muestra m-equipo"></span><span class="ley-que">Del equipo o Lobas</span><span class="ley-hacer">no se cobra (gris, solo informativo)</span></li>
       </ul>
     </div>

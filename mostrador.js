@@ -186,6 +186,11 @@
       for (var k in l) if (Object.prototype.hasOwnProperty.call(l, k)) t[k] = l[k];
       if (t.detalle === undefined) t.detalle = p ? p.detalle : undefined;   // el servidor solo manda el detalle de las nuevas
       if (t.muestra === undefined && p) { t.muestra = p.muestra; t.muestraEn = p.muestraEn; }   // la lectura por la señal no trae las marcas
+      // Olmo 24-nov: sin dato del check-in en su app (lectura por la señal, o null = no se pudo leer), se conserva el anterior.
+      if (t.marketOk == null && p && typeof p.marketOk === 'boolean') { t.marketOk = p.marketOk; t.marketOkEn = p.marketOkEn; }
+      // Revisión 3: un «sin tocar» (false sin hora = no hay documento) nunca es más nuevo que una marca CON hora (esos documentos
+      // no se borran el mismo día): es la caché de 15 s de otra instancia o una réplica atrasada. Se conserva la marca.
+      if (t.marketOk === false && !t.marketOkEn && p && typeof p.marketOk === 'boolean' && p.marketOkEn) { t.marketOk = p.marketOk; t.marketOkEn = p.marketOkEn; }
       if (t.u === undefined && p) t.u = p.u;   // su clase anterior: otra instancia (sin su historial) puede no mandarla
       if (Array.isArray(l.abiertos)) t.detalle = cerrarPendientes(t.detalle, l.abiertos);
       delete t.abiertos;
@@ -200,6 +205,16 @@
         else nuevas.push(t);
       }
       tarjetas.push(t);
+    }
+    // Olmo 24-nov (revisión 1): con más llegadas que las que trae la lista (tope de 80), el marketplace sin confirmar que ya no
+    // vino se conserva: un TotalPass con contacto propio que esa instancia no sabe que es de marketplace. Revisión 2: también
+    // en la lectura ligera (la de la señal; si no, la perdía y el repaso siguiente ya no la tenía de dónde sacar), y SOLO la de
+    // contacto propio: la de contacto compartido («Fitpass») el servidor siempre la manda pasado el tope; si no viene, su
+    // check-in se deshizo en Wix y se va.
+    if (!cambioDia && Number(resp.total) > ls.length) {
+      var hay = {};
+      for (i = 0; i < ls.length; i++) hay[ls[i].id] = 1;
+      for (i = 0; i < e.tarjetas.length; i++) { var q = e.tarjetas[i]; if (!hay[q.id] && !q.market && porConfirmarMarket(q)) tarjetas.push(q); }
     }
     nuevas.sort(function (a, b) { return a.prioridad - b.prioridad; });
     var siguenTodas = tarjetas.filter(function (t) { return previas[t.id]; }).length;
@@ -325,7 +340,7 @@
     var ins = det.insignias || [];
     if (ins.some(function (x) { return x.tipo === 'primera'; })) out.push({ icono: '🌱', tema: 'Primera clase', accion: '', color: 'primera', texto: 'Es su primera clase en Hera: recibirla' });
     if (ins.some(function (x) { return x.tipo === 'cumple'; })) out.push({ icono: '🎂', tema: 'Cumple', accion: '', color: 'cumple', texto: 'Cumple años hoy: felicitarla' });
-    if (det.market || t.market) out.push({ icono: '🎟️', tema: String(det.plan || t.nombre || 'Marketplace'), accion: esFitpass(det.plan || t.nombre) ? 'check-in en admin de Fitpass' : 'registrar su visita', color: 'neutro', texto: (det.avisos || [])[0] });
+    if (det.market || t.market) out.push({ icono: '🎟️', tema: String(det.plan || t.nombre || 'Marketplace'), accion: 'hacer su check-in en su plataforma', color: 'neutro', texto: (det.avisos || [])[0] });
     else if (det.sinFicha) out.push({ icono: '', tema: 'Sin ficha en Wix', accion: 'revisar', color: 'neutro', texto: (det.avisos || [])[0] });
     else (det.avisos || []).forEach(function (a) { out.push({ icono: '', tema: String(a), accion: '', color: 'aviso', texto: String(a) }); });
     return out;
@@ -435,10 +450,9 @@
     return Number.isFinite(i) ? i + 60 * 60000 : NaN;
   }
   /** ¿Trae tema para la lista? Un pendiente accionable, un detalle que no se pudo armar («Sin detalle / revisar su ficha») o
-   *  un marketplace (desde 23-nov ya no: su check-in de Fitpass va en el recuadro). 🌱 primera clase y los
-   *  avisos de renovar (🔚 ⏳) NO: solo van en su recuadro y en Slack (decisión pendiente de Olmo, docs/MOSTRADOR.md P3). */
-  // Olmo 23-nov: el marketplace con check-in en Wix ya no se queda en «Por resolver» (su check-in de Fitpass sale en el recuadro).
-  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle || porMarcarMuestra(t)); }
+   *  un marketplace SIN confirmar su check-in en su plataforma (Olmo 24-nov; del 23-nov solo iba en el recuadro). 🌱 primera
+   *  clase y los avisos de renovar (🔚 ⏳) NO: solo van en su recuadro y en Slack (decisión pendiente de Olmo, docs/MOSTRADOR.md P3). */
+  function conTema(t) { return !!t.detalle && (t.prioridad === 1 || !!t.detalle.sinDetalle || porMarcarMuestra(t) || porConfirmarMarket(t)); }
   /** Olmo 23-nov: la de PRIMERA clase es pendiente hasta que recepción marque «Compró», «No compró» o «Lo piensa». */
   function esPrimera(t) { return !!(t && t.detalle && (t.detalle.insignias || []).some(function (x) { return x && x.tipo === 'primera'; })); }
   function porMarcarMuestra(t) { return esPrimera(t) && !t.market && (!resultadoMuestra(t) || !!editandoMuestra[t.id]); }
@@ -454,6 +468,53 @@
     return tiene(MUESTRA, r) ? r : null;
   }
   var alMarcarMuestra = null, alEditarMuestra = null;          // la página los fija: guardar en el servidor y repintar
+  // ---- Olmo 24-nov: marketplace (Fitpass, TotalPass, Wellhub) = pendiente hasta «✓ Ya hice su check-in en <su app>» ----
+  // Como la 🌱: lo marcado en ESTA pantalla (id → { ok, ms }) gana a un «sin tocar» o a una marca más vieja del servidor; una
+  // más nueva de la otra compu gana a la local. `editandoMarket` = ids con los botones abiertos otra vez (deshacer/corregir).
+  // A diferencia de los demás temas, sin confirmar NO se va a los 45 min del fin de su clase: sigue en «Se van yendo».
+  var marketLocales = {}, editandoMarket = {}, alMarcarMarket = null, alEditarMarket = null;
+  function esMarket(t) { return !!(t && t.detalle && (t.market || t.detalle.market)); }
+  /** Su marca: el contacto compartido se llama «Fitpass»; el TotalPass con contacto propio la trae en el plan de su detalle. */
+  function marcaMarket(t) { var d = (t && t.detalle) || {}; return String((d.market && d.plan) || (t && t.nombre) || 'Marketplace'); }
+  /** «en Fitpass» / «en TotalPass» / «en Wellhub» (Gympass = Wellhub); otra, «en su app». */
+  function dondeMarket(t) {
+    var m = marcaMarket(t);
+    return /fitpass/i.test(m) ? 'en Fitpass' : /totalpass/i.test(m) ? 'en TotalPass' : /wellhub|gympass/i.test(m) ? 'en Wellhub' : 'en su app';
+  }
+  function marketHecho(t) {
+    if (!t) return false;
+    var l = tiene(marketLocales, t.id) ? marketLocales[t.id] : null, srv = typeof t.marketOk === 'boolean' ? t.marketOk : null;
+    var en = Date.parse(t.marketOkEn || '');
+    return (l && (srv === null || !isFinite(en) || en <= l.ms) ? l.ok : srv) === true;
+  }
+  /** Cuándo se confirmó (ms): la marca local si es la que manda, si no la del servidor; NaN si no se sabe. */
+  function marketHechoEn(t) {
+    var l = tiene(marketLocales, t.id) ? marketLocales[t.id] : null, en = Date.parse(t.marketOkEn || '');
+    return l && (typeof t.marketOk !== 'boolean' || !isFinite(en) || en <= l.ms) ? l.ms : en;
+  }
+  function porConfirmarMarket(t) { return esMarket(t) && (!marketHecho(t) || !!editandoMarket[t.id]); }
+  /** Ya confirmada (y sin editar): chip en el subtítulo de su clase, como la 🌱 marcada. */
+  function chipMarket(t) { return esMarket(t) && !porConfirmarMarket(t); }
+  /** Botones del renglón: (Fitpass) su liga a admin2.fitpass.com, «✓ Ya hice su check-in en Fitpass» y, al corregir, «Aún no». */
+  function botonesMarket(doc, t) {
+    var g = el(doc, 'div', 'f-muestra f-market');
+    if (dondeMarket(t) === 'en Fitpass') {
+      var a = el(doc, 'a', 'b-muestra m-fitpass', 'Check-in en Fitpass ↗');
+      a.href = FITPASS_ASISTENCIAS; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      g.appendChild(a);
+    }
+    var b = el(doc, 'button', 'b-muestra m-compro', '✓ Ya hice su check-in ' + dondeMarket(t));
+    b.type = 'button'; b.setAttribute('title', 'Ya quedó registrada su visita ' + dondeMarket(t) + ': sale de «Por resolver»');
+    if (b.addEventListener) b.addEventListener('click', function () { if (alMarcarMarket) alMarcarMarket(t.id, true, b); });
+    g.appendChild(b);
+    if (editandoMarket[t.id]) {
+      var n = el(doc, 'button', 'b-muestra m-no-compro', 'Aún no');
+      n.type = 'button'; n.setAttribute('title', 'Deshacer: todavía no se hizo su check-in ' + dondeMarket(t) + ' (sigue pendiente)');
+      if (n.addEventListener) n.addEventListener('click', function () { if (alMarcarMarket) alMarcarMarket(t.id, false, n); });
+      g.appendChild(n);
+    }
+    return g;
+  }
   /** La lista de «Por resolver» (Olmo 21-nov: «si no tienen pendientes no es necesario que se queden en el listado, y que
    *  haya un separador…»): SOLO quien trae tema, en dos bloques.
    *  - `van`: su clase no ha terminado (por empezar o en curso), la más nueva arriba;
@@ -468,17 +529,23 @@
     return out;
   }
   function bloques(ts, ahoraMs) {
-    var ahora = ahoraMs || Date.now(), van = [], yendo = [], fuera = 0, sd = 0, ct = 0, chipsVan = [], chipsYendo = [];
+    var ahora = ahoraMs || Date.now(), van = [], yendo = [], market = [], fuera = 0, sd = 0, ct = 0, chipsVan = [], chipsYendo = [], chipsMarket = [];
     (ts || []).forEach(function (t) {
       if (!t.detalle) { sd++; return; }
       var f = finClase(t.clase), aVan = !Number.isFinite(f) || ahora < f, aYendo = !aVan && ahora - f <= YENDO_MS;
       if (!conTema(t)) {
-        if (chipsDe(t).length || equipoDe(t).length) { if (aVan) chipsVan.push(t); else if (aYendo) chipsYendo.push(t); }
+        if (chipsDe(t).length || equipoDe(t).length || chipMarket(t)) {
+          if (aVan) chipsVan.push(t); else if (aYendo) chipsYendo.push(t);
+          // Revisión 2: confirmada ya fuera de «Se van yendo» (lo normal: se confirma tarde), su chip ✎ se queda 45 min en el
+          // bloque del marketplace: un toque equivocado se puede deshacer. Después se va (no se llena el bloque todo el día).
+          else if (chipMarket(t) && ahora - marketHechoEn(t) <= YENDO_MS) chipsMarket.push(t);
+        }
         return;
       }
       ct++;
       if (aVan) van.push(t);
       else if (aYendo) yendo.push(t);
+      else if (porConfirmarMarket(t)) market.push(t);   // Olmo 24-nov: el marketplace sin confirmar no se va (bloque aparte, revisión 1)
       else fuera++;
     });
     var porHora = function (a, b) { return String(b.hora || '').localeCompare(String(a.hora || '')); };
@@ -486,8 +553,9 @@
     // Por fin de su clase y, si dos clases terminan juntas (Reformer y Mat), por clase: sus renglones no se intercalan y el
     // encabezado «Terminó…» sale una vez por clase.
     var claseDe = function (t) { return String((t.clase && (t.clase.id || t.clase.inicio)) || ''); };
-    yendo.sort(function (a, b) { return finClase(b.clase) - finClase(a.clase) || claseDe(a).localeCompare(claseDe(b)) || porHora(a, b); });
-    return { van: van, yendo: yendo, fuera: fuera, sinDetalle: sd, conTema: ct, total: (ts || []).length, chipsVan: chipsVan, chipsYendo: chipsYendo };
+    var porFin = function (a, b) { return finClase(b.clase) - finClase(a.clase) || claseDe(a).localeCompare(claseDe(b)) || porHora(a, b); };
+    yendo.sort(porFin); market.sort(porFin);
+    return { van: van, yendo: yendo, market: market, fuera: fuera, sinDetalle: sd, conTema: ct, total: (ts || []).length, chipsVan: chipsVan, chipsYendo: chipsYendo, chipsMarket: chipsMarket };
   }
   var claveClase = function (c) { return String((c && (c.id || c.inicio)) || ''); };
   /** Grupos por clase (Olmo 21-nov: «que el nombre de la clase sea una subcategoría, para ver todos juntos por tipo de
@@ -651,7 +719,7 @@
     var n = Math.max(b.total, total || 0), partes = [];
     if (n) partes.push(n === 1 ? '1 llegada hoy' : n + ' llegadas hoy');
     if (n && b.conTema) partes.push(b.conTema + ' con tema');
-    var hay = b.van.length + b.yendo.length, vacio = '';
+    var hay = b.van.length + b.yendo.length + (b.market || []).length, vacio = '';
     if (b.sinDetalle && hay) partes.push('revisando ' + b.sinDetalle + ' sin detalle');   // sin renglones ya lo dice la franja
     if (!hay) vacio = !n ? 'Todavía no llega nadie hoy.' : b.sinDetalle ? 'Revisando ' + (b.sinDetalle === 1 ? '1 llegada' : b.sinDetalle + ' llegadas') + ' sin detalle…' : 'Nadie con pendiente ahora ✓';
     return { conteo: partes.join(' · '), vacio: vacio, ok: !!n && !b.sinDetalle };
@@ -670,7 +738,7 @@
     else if (eq.length) { extra = textoEquipo(eq[0]); tipo = 'equipo'; }      // informativo: no se cobra
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'primera'; })) { extra = '🌱 primera clase'; tipo = 'primera'; }
     else if (det && (det.insignias || []).some(function (x) { return x.tipo === 'cumple'; })) { extra = '🎂 cumple hoy'; tipo = 'cumple'; }
-    else if ((det && det.market) || (!det && t && t.market)) { extra = esFitpass(t && t.nombre) ? '🎟️ hacer su check-in en Fitpass' : '🎟️ registrar su visita en ' + String((t && t.nombre) || 'su app'); tipo = 'market'; }
+    else if ((det && det.market) || (!det && t && t.market)) { extra = dondeMarket(t) === 'en Fitpass' ? '🎟️ hacer su check-in en Fitpass' : '🎟️ registrar su visita ' + dondeMarket(t); tipo = 'market'; }   // revisión 3: la marca de su detalle (TotalPass con contacto propio), no su nombre
     var o = { id: t && t.id, nombre: ps[0] || 'Alumna', inicial: ps.length > 1 ? ps[1] : '',   // Olmo 23-nov: el primer apellido completo
       linea: 'hizo check-in · ' + claseCorta(t && t.clase), extra: extra, tipo: tipo, iniciales: (t && t.iniciales) || '?',
       elemento: det ? (tiene(ELEMENTOS, det.elemento) ? det.elemento : '') : (sn && tiene(ELEMENTOS, sn.e) ? sn.e : ''), market: !!(t && t.market) };
@@ -766,6 +834,7 @@
     if (det.provisional) return 'confirmando con Wix…';            // v3.1: de la señal; la lista lo confirma o lo reemplaza
     if (det.sinDetalle) return '';
     var xs = [];
+    if (porConfirmarMarket(t)) xs.push('pendiente hasta confirmar su check-in ' + dondeMarket(t));   // Olmo 24-nov
     if (!det.market && !det.sinFicha) { var sd = det.saldo ? textoSaldo(String(det.saldo), entero(det.libres), entero(det.reservadas)) : ''; xs.push(String(det.plan || 'sin plan') + (sd ? ' · ' + sd : '')); }
     (det.insignias || []).forEach(function (x) { if (x.tipo !== 'primera' && x.tipo !== 'cumple' && x.texto) xs.push(String(x.texto)); });
     return xs.join(' · ');
@@ -855,6 +924,7 @@
     var li = el(doc, 'li', 'fila');
     if (t.prioridad === 1) li.className += ' con-pendiente c-' + (ps.length ? ps[0].color : 'neutro');   // ps[0] = su pendiente más urgente
     else if (porMarcarMuestra(t)) li.className += ' con-pendiente c-primera';
+    else if (porConfirmarMarket(t)) li.className += ' con-pendiente c-market';   // 🎟️ sin confirmar su check-in en su app
     else if (ps.length && ps[0].color === 'primera') li.className += ' c-primera';
     else if (det && det.market) li.className += ' c-neutro';      // 🎟️ marketplace
     else if (!ps.length && det) li.className += ' tenue';          // tenue = «se sabe que no trae nada»; sin detalle, no
@@ -891,6 +961,7 @@
       var temas = el(doc, 'div', 'f-temas');
       ps.forEach(function (x) { temas.appendChild(pastilla(doc, x, t)); });
       if (porMarcarMuestra(t)) temas.appendChild(botonesMuestra(doc, t));
+      if (porConfirmarMarket(t)) temas.appendChild(botonesMarket(doc, t));
       li.appendChild(temas);
     } else if (det && !det.sinDetalle) {
       var col = el(doc, 'div', 'f-temas'), ok = el(doc, 'span', 'f-ok', '✓');
@@ -904,10 +975,12 @@
   var animadas = {};
   /** Subtítulo de una clase: «Reformer 7:30 am · Coach» (en «Se van yendo», «Terminó 8:20 pm · Reformer 7:30 pm · Coach ·
    *  hace 5 min»), a la derecha «2 con tema · 5/7 llegaron», y abajo los chips 🌱/🎂 de quien no ocupa renglón. */
+  // Revisión 3: el marketplace sin confirmar de la mañana dice «hace 5 h», no «hace 310 min».
+  function haceFin(ms) { var m = Math.max(0, Math.round(ms / 60000)); return m >= 90 ? Math.floor(m / 60) + ' h' : m + ' min'; }
   function subtitulo(doc, g, resumen, ahora, conFin) {
     var c = g.clase || {}, li = el(doc, 'li', conFin ? 'sub-fin' : 'sub-clase'), f = finClase(c);
     var tit = (conFin ? 'Terminó ' + hora(new Date(f).toISOString()) + ' · ' : '') + claseCorta(c) + (c.coach ? ' · ' + c.coach : '') +
-      (conFin ? ' · hace ' + Math.max(0, Math.round((ahora - f) / 60000)) + ' min' : '');
+      (conFin ? ' · hace ' + haceFin(ahora - f) : '');
     var lc = ligaClase(c);
     if (lc) {
       var a = el(doc, 'a', 'sub-titulo sub-liga', tit);
@@ -934,6 +1007,16 @@
           if (conDetalleGlobo(t)) conGlobo(doc, x, datosGlobo({ nombre: t.nombre, lugares: t.lugares, u: t.u }, marcasDeDetalle(t.detalle), 'llego', ahora));
           else x.setAttribute('title', chipsDe(t)[0] === '🌱' ? 'Primera clase en Hera: recibirla' : 'Cumple años hoy: felicitarla');
           ch.appendChild(x);
+        }
+        // Olmo 24-nov: marketplace con su check-in ya hecho en su app: «🎟️ Fitpass · check-in hecho ✎» (tocar = corregir).
+        if (chipMarket(t)) {
+          var mk = el(doc, 'span', 'chip chip-market');
+          mk.appendChild(el(doc, 'span', null, '🎟️ ' + (t.market ? '' : nombreCorto(t.nombre) + ' · ') + marcaMarket(t) + ' '));
+          var me = el(doc, 'button', 'chip-muestra', '· check-in hecho ✎');
+          me.type = 'button'; me.setAttribute('title', 'Corregir: todavía no se hizo su check-in ' + dondeMarket(t));
+          if (me.addEventListener) me.addEventListener('click', function () { editandoMarket[t.id] = 1; if (alEditarMarket) alEditarMarket(); });
+          mk.appendChild(me);
+          ch.appendChild(mk);
         }
         // v3.1: equipo o Lobas: «equipo · 💵 sin canjear · Clienta A.» en gris (informativo, sin renglón).
         if (equipoDe(t).length) {
@@ -985,7 +1068,7 @@
   }
   function pintar(doc, estado, ahoraMs, provs, recientes) {
     var ts = conProvisionales((estado && estado.tarjetas) || [], provs), ahora = ahoraMs || Date.now();
-    var b = bloques(ts, ahora), tx = textosLista(b, estado && estado.total), hay = b.van.length + b.yendo.length;
+    var b = bloques(ts, ahora), tx = textosLista(b, estado && estado.total), hay = b.van.length + b.yendo.length + b.market.length;
     var resumen = (estado && estado.clases) || [];
     PUNTOS = puntosLlegada(ts, recientes, ahora);
     var pl = porLlegarConTema((estado && estado.proximas) || [], [].concat(ts, recientes || [])), npl = pl.length;
@@ -1001,6 +1084,13 @@
     doc.getElementById('vacioYendo').hidden = !!(b.yendo.length + b.chipsYendo.length);
     doc.getElementById('cuentaVan').textContent = b.van.length ? '(' + b.van.length + ')' : '';
     doc.getElementById('cuentaYendo').textContent = b.yendo.length ? '(' + b.yendo.length + ')' : '';
+    // Olmo 24-nov (revisión 1): el marketplace sin confirmar de clases que terminaron hace más de 45 min, en su propio bloque
+    // (con su propio tope): no le quita lugar en «Se van yendo» a los pendientes de la clase que acaba de terminar.
+    var um = doc.getElementById('market'), bm = doc.getElementById('bloqueMarket');
+    if (um) pintarBloque(doc, um, b.market, b.chipsMarket, resumen, ahora, true);
+    if (bm) bm.hidden = !b.market.length && !b.chipsMarket.length;
+    var cm = doc.getElementById('cuentaMarket');
+    if (cm) cm.textContent = b.market.length ? '(' + b.market.length + ')' : '';
     var sr = doc.getElementById('sinResolver');
     sr.hidden = !!hay || conChips;
     sr.textContent = tx.vacio;
@@ -1523,6 +1613,17 @@
       }, function () { if (boton) { boton.disabled = false; boton.textContent = 'Sin conexión · reintentar'; } });
     };
     alEditarMuestra = function () { repintar(); };
+    // Olmo 24-nov: «✓ Ya hice su check-in en Fitpass» (o «Aún no», al corregir) se guarda en el servidor (la otra compu lo ve).
+    alMarcarMarket = function (id, ok, boton) {
+      if (boton) { boton.disabled = true; boton.textContent = 'Guardando…'; }
+      api('marketOk', { id: id, ok: ok }).then(function (x) {
+        if (x.s === 401) { sesionPerdida(); return; }            // un 403 (servidor aún sin publicar) NO saca a la pantalla
+        if (x.s === 409) { if (boton) boton.textContent = 'No es de marketplace'; return; }
+        if (x.s !== 200 || !x.j || !x.j.ok) { if (boton) { boton.disabled = false; boton.textContent = (x.s === 403 || x.s === 503 ? 'No disponible' : 'No se guardó') + ' · reintentar'; } return; }
+        marketLocales[id] = { ok: ok, ms: Date.parse((x.j && x.j.marcadoEn) || '') || horaServidor() }; delete editandoMarket[id]; repintar();
+      }, function () { if (boton) { boton.disabled = false; boton.textContent = 'Sin conexión · reintentar'; } });
+    };
+    alEditarMarket = function () { repintar(); };
     function listaProv() { var out = [], id; for (id in provisionales) if (Object.prototype.hasOwnProperty.call(provisionales, id)) out.push(provisionales[id]); return out; }
     function listaRecientes() { var out = [], id; for (id in deLaSenal) if (Object.prototype.hasOwnProperty.call(deLaSenal, id)) out.push({ id: id, hora: deLaSenal[id].hora }); return out; }
     function repintar() { if (estado && !$('vistaLista').hidden) pintar(doc, estado, ahoraMs(), listaProv(), listaRecientes()); }
@@ -2092,7 +2193,9 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
-    puntosLlegada: puntosLlegada, marcasDeDetalle: marcasDeDetalle, datosGlobo: datosGlobo, textoGlobo: textoGlobo, histDe: histDe, resumenHist: resumenHist, conMarcasPrevias: conMarcasPrevias, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
+    puntosLlegada: puntosLlegada, marcasDeDetalle: marcasDeDetalle, datosGlobo: datosGlobo, textoGlobo: textoGlobo, histDe: histDe, resumenHist: resumenHist, conMarcasPrevias: conMarcasPrevias, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra,
+    porConfirmarMarket: porConfirmarMarket, marketHecho: marketHecho, botonesMarket: botonesMarket, dondeMarket: dondeMarket,
+    marketLocales: marketLocales, editandoMarket: editandoMarket, fijarAlMarcarMarket: function (f) { alMarcarMarket = f; }, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
