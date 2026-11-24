@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-podOPf/UeSwKed7TwmUGLd1tf+GAbh8MqG+rjPEom/s=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZkhPGmk41Np0+304g8bdVnvbJtimMpxkUo5tPpCKIyI=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -110,9 +110,28 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 .pista{font-size:16px;color:var(--gris);text-align:center;margin-top:-10px}
 .resultados{display:flex;flex-direction:column;gap:10px;width:min(760px,100%)}
 .grupo{font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:8px 4px 0}
-.reservar{display:flex;align-items:center;gap:18px;background:var(--arena-suave);border:1px solid var(--crema);border-radius:var(--radio);padding:14px 20px;width:min(760px,100%);font-size:18px;color:var(--carbon)}
-.reservar .cod{width:132px;height:132px;flex:none;background:#fff;border-radius:16px;padding:7px;box-shadow:var(--sombra)}
-.reservar .cod svg{width:100%;height:100%;display:block}
+/* Olmo 24-nov: «🔥 Rachas de Hera» en el inicio (donde estaba el QR «¿Todavía no reservas?»): top 10 de días de racha. */
+.tarjeta.rachas{width:min(760px,100%);padding:16px 22px 14px}
+.dato.racha-listo .num{color:var(--fuego)}
+.rachas-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+.rachas-cab h2{font-size:22px;color:var(--carbon)}
+.rachas-cab p{font-size:15px;color:var(--gris);margin-top:2px}
+.rachas-cab .btn{padding:10px 16px;min-height:0;font-size:16px;flex:none}
+.rachas-lista{list-style:none;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;column-gap:28px;margin-top:8px}
+.rachas-lista li{display:flex;align-items:center;gap:12px;padding:8px 2px;border-bottom:1px solid var(--arena);font-size:18px;min-width:0}
+.rachas-lista .pos{width:32px;flex:none;text-align:center;font-family:Poppins;font-weight:600;font-size:16px;color:var(--gris)}
+.rachas-lista .pos.podio{font-size:24px;line-height:1}
+.rachas-lista .quien{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rachas-lista .num{font-size:19px;color:var(--fuego);white-space:nowrap}
+.rachas-lista .num small{font-family:Jost;font-weight:400;font-size:14px;color:var(--gris);margin-left:4px}
+@media (max-width:640px){.rachas-lista{grid-template-columns:1fr;grid-auto-flow:row;grid-template-rows:none!important}}
+.pista.lugar{color:var(--terracota);font-weight:500}
+.dato.racha .num{color:var(--fuego)}
+.dato.racha.destacada{border:2px solid var(--fuego);padding:16px 24px}
+.dato.racha.destacada .num{font-size:34px}
+.dato.racha.destacada span{font-size:19px;margin-top:2px}
+.dato.racha.destacada.texto .num{font-size:24px}
+.dato.racha b{color:var(--carbon);font-weight:500}
 .res{background:#fff;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:19px;box-shadow:var(--sombra);gap:12px}
 .res > span:first-child{text-align:left}
 .res small{color:var(--gris);font-size:15px;display:block}
@@ -489,9 +508,8 @@ button.fila-r:active{background:var(--arena-suave)}
       <span class="lupa" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
       <input id="q" placeholder="Tu nombre, tu correo o los 4 últimos de tu cel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     </div>
-    <p class="pista">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
+    <p class="pista" id="pistaInicio">Haz check-in o consulta tus clases, tus reservas y tu renovación</p>
     <div class="resultados" id="resultados"></div>
-    <div class="reservar" id="reservarHome" hidden><div class="cod" id="qrReservar"></div><div><b>¿Todavía no reservas?</b><br>Escanea: se abre la Agenda de Hera en la app <b>Fit by Wix</b>.</div></div>
     <!-- Olmo 13-nov: promo «Propósito 2027». Se esconde sola al agotarse o después del 31-dic (promo.json). -->
     <button class="bol" id="promoBanner" type="button" hidden aria-label="Propósito 2027: paga 3 meses y llévate más de 1 mes de regalo. Ver mi precio.">
       <span class="bol-papel">
@@ -513,6 +531,15 @@ button.fila-r:active{background:var(--arena-suave)}
         </span>
       </span>
     </button>
+    <!-- Olmo 24-nov: arriba la promo de Propósitos y abajo las rachas. -->
+    <!-- Olmo 24-nov: ranking de días de racha (api 'ranking': «Nombre A.» y días, sin ids). Se esconde si no hay ranking. -->
+    <div class="tarjeta rachas" id="rachasHome" hidden>
+      <div class="rachas-cab">
+        <div><h2>🔥 Rachas de Hera</h2><p>Días seguidos viniendo · una falta o 14 días sin venir la reinician</p></div>
+        <button class="btn sec" id="rachasLugar" type="button">¿En qué lugar voy?</button>
+      </div>
+      <ol class="rachas-lista" id="rachasLista"></ol>
+    </div>
     <!-- Alta en mostrador (v2): chico y en la esquina para no estorbar a las alumnas. Pide el PIN de recepción en alta.html. -->
     <button class="nueva-venta" id="nuevaVenta">Nueva venta</button>
     <button class="aviso-sesion" id="avisoSesion" hidden>⚠️ Hay una cuenta de clienta abierta en otra pestaña · <b>Cerrarla</b></button>
@@ -822,6 +849,7 @@ async function entrar(){
   try {
     const j = await api('entrar', { clave });
     ls.set(TOKEN_KEY, j.token); $('clave').value = '';
+    rachasIntento = 0;   // Olmo 24-nov (revisión 3): el intento sin token no cuenta; con la contraseña puesta el ranking se pide ya
     ir('vInicio'); cargar(); vaciarCola(); pedirWakeLock();
   } catch (e) {
     const err = e.resp && e.resp.error;
@@ -1025,6 +1053,9 @@ function pintarPerfil(p){
   }
   const col = p.elemento && EL[p.elemento] ? EL[p.elemento][0] : 'var(--carbon)';
   const d = [];
+  // Olmo 24-nov: al hacer check-in, cómo va su racha (contando la clase de hoy) y en qué lugar del ranking.
+  const ra = p.racha, rd = ra && Number(ra.dias), rl = ra && Number(ra.lugar), rde = ra && Number(ra.de);
+  if (rd >= 1) d.push(`<div class="dato racha-listo"><div><div class="num">🔥 ${rd}</div><span>${rd === 1 ? 'día de racha: ¡empezaste tu racha!' : 'días de racha'}${rl >= 1 && rde >= rl ? ` · vas en el lugar #${rl} de ${rde}` : ''}</span></div></div>`);
   if (p.numeroClase) d.push(`<div class="dato"><div><div class="num">#${p.numeroClase}</div><span>clase en Hera</span></div></div>`);
   if (p.progreso) {
     const n = p.progreso.restantes, res = p.progreso.reservadas || 0;
@@ -1111,12 +1142,9 @@ function terminarToque(){
 let qrLib = null;
 /* --------------------------------------------------------------- reservar desde su celular (QR bonito) */
 // La app Fit by Wix no abre filtrada por disciplina y su invitación pide aprobación (probado 8-nov): el QR va a la página
-// web del servicio, que sí enseña solo sus sesiones (reservar o lista de espera). La liga de la app queda guardada aquí.
-// Olmo (8-nov): QR grande a la app (con Agenda como primera pestaña en Fit by Wix abre directo ahí) y QR chico a la web filtrada.
-// Liga directa a la pestaña «Agenda» de Hera en Fit by Wix: es el mismo deepLink que usan las notificaciones push del panel
-// (platform/club/<tabId de Agenda>/<siteId>; sacado el 8-nov de la lista de notificaciones enviadas). Si cambian las pestañas
-// de la app, el tabId sale de manage.wix.com → App móvil → notificaciones (businesses/structures/tabs).
-const URL_APP_FIT = 'https://fitness.wix.app/platform/club/3aca4561-2d36-464a-803b-e87cbf0b6a97/21d18206-19d9-4b9f-9cc4-3c7a471ae6c4', USAR_APP = true;
+// web del servicio, que sí enseña solo sus sesiones (reservar o lista de espera).
+// Olmo 24-nov: se quitó el QR general «¿Todavía no reservas?» del inicio (su lugar es del ranking de rachas). Su liga era la
+// pestaña «Agenda» de Fit by Wix: platform/club/<tabId de Agenda>/<siteId> (manage.wix.com → App móvil → notificaciones).
 const ICONO_HERA = 'https://static.wixstatic.com/media/9d6afa_e930e021d3564d24bc04bdc3e4c172f3~mv2.png/v1/fill/w_140,h_140/icono.png';
 // Liga a UN servicio en Fit by Wix: la misma que arma el panel para notificaciones de tipo «Ítem» (bookings/<sitio>/service/<id>/details).
 const SITIO_WIX = '21d18206-19d9-4b9f-9cc4-3c7a471ae6c4';
@@ -1213,7 +1241,7 @@ function pintarResultados(hits, candidatas, mensaje){
   if (hits.length) html += `<div class="grupo">Check-in ahora · toca tu nombre</div>` + hits.slice(0, 5).map(filaCheckin).join('');
   if (candidatas && candidatas.length) html += `<div class="grupo">Consultar mis clases y mi plan</div>` + candidatas.map((cd, i) => `<button class="res" data-cu="${i}">
       <span>${esc(cd.nombre)}<small>${esc(cd.correo || '')}</small></span>
-      <span class="etiqueta">Ver mis clases</span></button>`).join('');
+      <span class="etiqueta">${modoLugar ? 'Ver mi lugar' : 'Ver mis clases'}</span></button>`).join('');
   if (mensaje && !hits.length) html += `<div class="res"><span>${esc(mensaje)}</span></div>`;
   else if (!html) {
     const abreSig = siguiente ? abre(siguiente.inicio) : 0;
@@ -1223,7 +1251,8 @@ function pintarResultados(hits, candidatas, mensaje){
   } else if (candidatas === null) html += '<div class="res"><span class="cargando">Buscando tu cuenta…</span></div>';
   $('resultados').innerHTML = html;
   document.querySelectorAll('.res[data-ci]').forEach(b => b.onclick = () => {
-    const h = hits[+b.dataset.ci]; limpiarBusqueda(); alternar(h.r, h.c);
+    const h = hits[+b.dataset.ci]; limpiarBusqueda(); if (modoLugar) apagarLugar();   // revisión 3: hizo check-in, no pidió su lugar
+    alternar(h.r, h.c);
   });
   document.querySelectorAll('.res[data-cu]').forEach(b => b.onclick = () => { const cd = candidatas[+b.dataset.cu]; limpiarBusqueda(); pedirVerificacion(cd); });
 }
@@ -1233,16 +1262,16 @@ function limpiarBusqueda(){ ++busqSeq; clearTimeout(busqTimer); $('q').value = '
 let verif = null;                                    // { cd, digitos, ocupado }
 function pedirVerificacion(cd){
   if (!cd.conTel) { toast('Para ver tus clases pasa a recepción, por favor'); return; }
-  verif = { modo: 'cuenta', cd, digitos: '', ocupado: false };
+  verif = { modo: 'cuenta', cd, digitos: '', ocupado: false, lugar: modoLugar };   // lugar: vino de «¿En qué lugar voy?»
   $('vNombre').textContent = `Hola, ${cd.nombre}`;
   $('vError').textContent = '';
   $('vCel').hidden = false; $('vMail').hidden = true; $('vAbrir').hidden = true;
-  $('vTexto').textContent = 'Para ver tus clases, escribe los 4 últimos números de tu celular';
+  $('vTexto').textContent = `Para ver ${modoLugar ? 'tu lugar' : 'tus clases'}, escribe los 4 últimos números de tu celular`;
   pintarPuntos();
   $('veloVerif').classList.add('abierto');
 }
 function pintarPuntos(){ [...$('vPuntos').children].forEach((p, i) => p.classList.toggle('lleno', !!verif && i < verif.digitos.length)); }
-function cerrarVerificacion(){ verif = null; $('veloVerif').classList.remove('abierto'); }
+function cerrarVerificacion(){ verif = null; $('veloVerif').classList.remove('abierto'); if (modoLugar) apagarLugar(); }
 $('vTeclado').innerHTML = ['1','2','3','4','5','6','7','8','9','','0','⌫'].map(k => k ? `<button data-k="${k}">${k}</button>` : '<span></span>').join('');
 $('vTeclado').addEventListener('click', e => {
   const k = e.target && e.target.dataset && e.target.dataset.k; if (!k || !verif || verif.ocupado) return;   // mientras revisa, el teclado no responde
@@ -1529,7 +1558,7 @@ async function consultarCuenta(prueba){
     cerrarVerificacion(); cuentaPase = j.pase || null; cuentaPaseReserva = j.paseReserva || null; cuentaReservaNo = j.reservaNo || null;
     cuentaPago = j.pago && CASOS_PAGO.includes(j.pago.caso) ? { caso: j.pago.caso, nota: !!j.pago.nota } : null;   // F2: solo el código
     cuentaPasePago = cuentaPago && j.pasePago ? j.pasePago : null; pagoOculto = false;
-    pintarCuenta(j.cuenta); ir('vCuenta');
+    pintarCuenta(j.cuenta, { lugar: !!mio.lugar }); ir('vCuenta');
   } catch (e) {
     if (e.auth || verif !== mio) return;
     const err = e.resp && e.resp.error, seg = e.resp && e.resp.segundos;
@@ -1556,7 +1585,9 @@ function diaRelativo(d){
 // cuentaPaseReserva: solo llega si sus 4 dígitos fueron los de su celular PRINCIPAL (revisión 9-nov); sin él no se abre su sesión.
 let cuentaReservaNo = null;
 let cuentaActual = null, cuentaPase = null, cuentaPaseReserva = null, exitoIns = null, exitoVistazo = false;
-function pintarCuenta(u){
+/** Revisión 1: dato destacado con texto fijo (sin datos de nadie) para quien vino de «¿En qué lugar voy?» sin lugar que mostrar. */
+const datoSinLugar = (titulo, sub) => `<div class="dato racha destacada texto"><div><div class="num">${esc(titulo)}</div><span>${esc(sub)}</span></div></div>`;
+function pintarCuenta(u, opc = {}){
   cuentaActual = u;
   const pl = u.plan, col = pl && pl.elemento && EL[pl.elemento] ? EL[pl.elemento][0] : 'var(--carbon)';
   $('uTitulo').innerHTML = `Hola, ${esc(u.nombre)} ${pl ? insignias({ elemento: pl.elemento, miembro: pl.miembro, progreso: pl.progreso }, 28) : ''}`;
@@ -1571,15 +1602,24 @@ function pintarCuenta(u){
   let html = datos.length ? `<div class="datos" style="max-width:none">${datos.join('')}</div>` : '';
   if (u.aviso) html += `<div class="aviso" style="--c:#B5651D;max-width:none">${esc(u.aviso.texto)}</div>`;
   html += bloquePago();                                 // F2: después de sus 4 dígitos, nunca en «¡Listo!» ni en el vistazo
-  // Tu progreso: próximo hito, este mes contra el anterior, racha de semanas.
+  // Tu progreso: próximo hito, este mes contra el anterior y (Olmo 24-nov) días de racha con su lugar en el ranking; si vino
+  // de «¿En qué lugar voy?», la racha va primero y destacada.
   const pg = u.progresoHera;
   if (pg && pg.total) {
-    const d2 = [];
+    const d2 = [], lug = pg.lugar && pg.lugar.lugar >= 1 ? pg.lugar : null;
+    const racha = pg.racha >= 1 ? `<div class="dato racha${opc.lugar ? ' destacada' : ''}"><div><div class="num">🔥 ${esc(pg.racha)} día${pg.racha === 1 ? '' : 's'} de racha</div>`
+      + (lug ? `<span><b>Vas en el lugar #${esc(lug.lugar)} de ${esc(lug.de)}</b></span>` : '<span>días seguidos viniendo</span>') + '</div></div>' : '';
+    if (racha && opc.lugar) d2.push(racha);
     if (pg.hito) d2.push(`<div class="dato">${svgEstrella(pg.hito.siguiente, 52)}<div><div class="num">${pg.hito.faltan}</div><span>clase${pg.hito.faltan === 1 ? '' : 's'} para tu estrella de ${pg.hito.siguiente}</span></div></div>`);
     const dif = pg.mes.este - pg.mes.pasado;
     d2.push(`<div class="dato"><div><div class="num">${pg.mes.este}</div><span>clase${pg.mes.este === 1 ? '' : 's'} este mes · ${pg.mes.pasado} el anterior${dif > 0 ? ' ↑' : ''}</span></div></div>`);
-    if (pg.racha >= 2) d2.push(`<div class="dato"><div><div class="num">${pg.racha}</div><span>semanas seguidas viniendo 🔥</span></div></div>`);
+    if (racha && !opc.lugar) d2.push(racha);
+    if (!racha && opc.lugar) d2.unshift(datoSinLugar('🔥 Tu racha empieza con tu próxima clase', 'una falta o 14 días sin venir la reinician'));
     html += `<div class="tarjeta"><h3>Tu progreso · ${pg.total} clase${pg.total === 1 ? '' : 's'} en Hera</h3><div class="datos" style="max-width:none;justify-content:flex-start">${d2.join('')}</div></div>`;
+  } else if (opc.lugar) {
+    // Revisión 1: vino a preguntar su lugar y no hay progreso (sin clases o el historial falló): igual se le contesta.
+    html += `<div class="tarjeta"><h3>Tu racha</h3><div class="datos" style="max-width:none;justify-content:flex-start">${
+      datoSinLugar(pg ? '🔥 Tu racha empieza con tu próxima clase' : '🔥 Tu racha no se pudo ver ahora', pg ? 'una falta o 14 días sin venir la reinician' : 'inténtalo de nuevo en un rato')}</div></div>`;
   }
   const fut = u.futuras || [];
   html += `<div class="tarjeta"><h3>Tus próximas clases</h3>${fut.length ? fut.map((r, i) => `<div class="fila-r">
@@ -1645,20 +1685,43 @@ function checkinDesdeCuenta(r){
 }
 function salirCuenta(volver = true){
   cuentaActual = null; cuentaPase = null; cuentaPaseReserva = null; cuentaReservaNo = null; olvidarPago(); $('uCuerpo').innerHTML = ''; $('uTitulo').innerHTML = ''; $('uSub').textContent = '';
+  if (modoLugar) apagarLugar();
   if (volver) { ir('vInicio'); pintarInicio(); }
 }
 $('salirCuenta').onclick = () => salirCuenta();
 $('uListo').onclick = () => salirCuenta();
 
-/* --------------------------------------------------------------- QR de "reserva tu clase" en el inicio */
-// Olmo (8-nov): el QR general de reservar abre la app Fit by Wix (con Agenda como primera pestaña); la web queda de respaldo.
-const URL_RESERVAR = USAR_APP ? URL_APP_FIT : 'https://www.herazenter.com/classes';
-function pintarQRReservar(){
-  cargarQRLib().then(() => {
-    const el = $('qrReservar'); if (!el || el.childElementCount) return;
-    try { el.innerHTML = qrBonito(URL_RESERVAR); $('reservarHome').hidden = false; } catch (_) {}
-  }).catch(() => {});
+/* --------------------------------------------------------------- 🔥 rachas en el inicio (Olmo 24-nov, docs/RACHAS.md) */
+// Top 10 del ranking ('ranking': { top: [{ lugar, nombre «Nombre A.», dias }] }, sin ids). Se pide al abrir y cada 10 min; si
+// falla se queda el último bueno (en memoria). «¿En qué lugar voy?» pone el inicio en modo «lugar»: la búsqueda de siempre →
+// candidata → 4 dígitos abre «Mis clases» con su racha y su lugar primero. El modo se apaga al cancelar o por inactividad.
+const MEDALLAS = ['🥇', '🥈', '🥉'], PISTA_INICIO = 'Haz check-in o consulta tus clases, tus reservas y tu renovación';
+let rachasTop = [], rachasT = 0, rachasIntento = 0, rachasEnVuelo = false, modoLugar = false;
+function pintarRachas(){
+  const el = $('rachasHome'), n = rachasTop.length;
+  el.hidden = !n; if (!n) { $('rachasLista').innerHTML = ''; return; }
+  $('rachasLista').style.gridTemplateRows = `repeat(${Math.ceil(n / 2)}, auto)`;   // dos columnas: 1-5 a la izquierda, 6-10 a la derecha
+  $('rachasLista').innerHTML = rachasTop.map(x => `<li><span class="pos${x.lugar <= 3 ? ' podio' : ''}">${x.lugar <= 3 ? MEDALLAS[x.lugar - 1] : esc(x.lugar)}</span>
+    <span class="quien">${esc(x.nombre)}</span><span class="num">${esc(x.dias)}<small>día${x.dias === 1 ? '' : 's'}</small></span></li>`).join('');
 }
+function cargarRachas(){
+  if (rachasEnVuelo) return; rachasEnVuelo = true; rachasIntento = Date.now();   // revisión 2: el intento cuenta aunque falle
+  api('ranking').then(j => {
+    if (!j || !Array.isArray(j.top)) return;
+    rachasTop = j.top.filter(x => x && Number.isInteger(x.lugar) && x.lugar >= 1 && Number.isInteger(x.dias) && x.dias >= 1 && typeof x.nombre === 'string').slice(0, 14);   // 10 + las empatadas con el 10.º (rachas.armarTop)
+    rachasT = Date.now();
+  }).catch(() => {}).finally(() => { rachasEnVuelo = false; pintarRachas(); });
+}
+function prenderLugar(){
+  limpiarBusqueda(); modoLugar = true;
+  const p = $('pistaInicio'); p.textContent = 'Escribe tu nombre y luego tus 4 dígitos para ver tu lugar'; p.classList.add('lugar');
+  $('q').scrollIntoView({ block: 'center' }); $('q').focus();
+}
+function apagarLugar(){
+  modoLugar = false;
+  const p = $('pistaInicio'); p.textContent = PISTA_INICIO; p.classList.remove('lugar');
+}
+$('rachasLugar').onclick = prenderLugar;
 
 /* --------------------------------------------------------------- cola (si se cae el internet) */
 const leerCola = () => leerJSON(COLA_KEY, []);
@@ -1799,7 +1862,7 @@ async function cargar(){
     };
     clases = (j.clases || []).map(c => ({ ...c, reservas: (c.reservas || []).map(r => ({ ...r, llego: estado(r.id, r.llego) })) }));
     diaCargado = j.dia || 'hoy'; finDiaMs = Date.parse(j.finDia) || (ahoraMs() + 3600e3); siguiente = j.siguiente || null;
-    ultimaCargaOk = Date.now(); pintarQRReservar();
+    ultimaCargaOk = Date.now(); if (!rachasT && Date.now() - rachasIntento > 2 * 60000) cargarRachas();   // la primera vez (p. ej. recién puesta la contraseña); si falla, cada 2 min a lo más
     ls.set(CACHE_KEY, JSON.stringify({ dia: diaCargado, finDia: finDiaMs, siguiente, clases, desfase, zonaMin: ZONA_MIN, t: ultimaCargaOk }));
     red(true);
   } catch (e) {
@@ -1937,6 +2000,8 @@ $('promoCerrar').onclick = () => $('veloPromo').classList.remove('abierto');
 $('veloPromo').addEventListener('click', e => { if (e.target.id === 'veloPromo') $('veloPromo').classList.remove('abierto'); });
 pintarPromo(); cargarPromo();
 setInterval(() => { if (!document.hidden) cargarPromo(); }, 5 * 60000);
+cargarRachas();
+setInterval(() => { if (!document.hidden) cargarRachas(); }, 10 * 60000);
 ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { ultimoToque = Date.now(); pedirWakeLock(); }, { passive:true }));
 // Olmo (9-nov): leer con el dedo en la pantalla también cuenta como actividad (sobre todo en «Mi cuenta»). El pointerdown
 // solo llega al primer toque y el navegador cancela el puntero en cuanto empieza a desplazarse, así que se escuchan los
@@ -1953,6 +2018,7 @@ setInterval(() => {                                          // inactividad: vue
   const quieto = dedosAbajo > 0 && sinTocar < TOPE_DEDO ? 0 : sinTocar;   // dedo puesto = sigue leyendo
   if (claseAbierta && quieto > 45000 && !$('exito').classList.contains('abierto')) { claseAbierta = null; ir('vInicio'); pintarInicio(); }
   if (quieto > 45000 && ($('q').value || $('resultados').innerHTML)) limpiarBusqueda();
+  if (modoLugar && quieto > 45000 && !$('veloVerif').classList.contains('abierto')) apagarLugar();
   if ($('veloNoreg').classList.contains('abierto') && quieto > 120000) $('veloNoreg').classList.remove('abierto');
   if ($('veloApp').classList.contains('abierto') && quieto > 90000) $('veloApp').classList.remove('abierto');
   if ($('veloPromo').classList.contains('abierto') && quieto > 90000) $('veloPromo').classList.remove('abierto');
@@ -2022,6 +2088,8 @@ function demoApi(accion, datos){
       .map(x => ({ ref: x.ref, nombre: x.nombre, correo: x.correo, conTel: true }));
     return { ok:true, checkins: [], candidatas: c };
   });
+  if (accion === 'ranking') return espera(200).then(() => ({ ok:true, de: 42, top: [['Ana E.',41],['Sofía M.',33],['Paola C.',33],['Regina P.',27],['Renata B.',19],
+    ['Lucía H.',15],['Jimena Z.',12],['Carla I.',9],['Elena W.',8],['Valeria G.',7]].map(([nombre, dias], i, xs) => ({ lugar: 1 + xs.filter(y => y[1] > dias).length, nombre, dias })) }));
   if (accion === 'reservaPase' && datos.pase) return espera(400).then(() => ({ ok:true, url:'alta.html#reservada', base:'https://www.herazenter.com' }));
   if (accion === 'reservaPase') return espera(500).then(() => { const x = D.cuentas.find(c => c.correoReal && datos.email.startsWith(c.correoReal)); if (!x) return falla('sin-cuenta'); if (datos.ult4 !== x.ult4) return falla('verificacion'); return { ok:true, url:'alta.html#reservada', base:'https://www.herazenter.com' }; });
   if (accion === 'cuenta') return espera(500).then(() => {
@@ -2071,7 +2139,8 @@ function demoDatos(){
       qr: { url: 'https://www.herazenter.com/pricing-plans/plans-pricing', texto: 'Escanea para renovar desde tu celular' },
       anterior: { titulo: 'Pilates Reformer', disciplina: 'Reformer', coach: 'Coach A', inicio: h(-2, 8), asistio: true },
       futuras: [{ id: 'f1', disciplina: 'Barre', titulo: 'Barre', coach: 'Coach B', inicio: h(1, 19), checkin: false }],
-      masFuturas: 0, reservar: 'https://www.herazenter.com/classes' } }];
+      masFuturas: 0, reservar: 'https://www.herazenter.com/classes',
+      progresoHera: { total: 26, hito: { siguiente: 50, faltan: 24 }, mes: { este: 5, pasado: 6 }, racha: 9, lugar: { lugar: 8, de: 42 } } } }];
   return { clases, perfiles, cuentas };
 }
 if (DEMO) document.body.insertAdjacentHTML('beforeend', '<div class="demo">DEMO · datos inventados · contraseña: demo</div>');
