@@ -1059,9 +1059,44 @@
     var d = Math.round((Date.parse(diaDe(ms) + 'T12:00:00Z') - Date.parse(diaDe(ahora) + 'T12:00:00Z')) / 864e5), h = hora(new Date(ms).toISOString()), f;
     if (d === 0) return 'hoy ' + h;
     if (d === 1) return 'mañana ' + h;
+    if (d === -1) return 'ayer ' + h;
     try { f = new Date(ms).toLocaleDateString('es-MX', { timeZone: ZONA, weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '').replace(',', '').replace(/ de /g, ' '); } catch (_) { f = diaDe(ms); }
     return f + ' · ' + h;
   }
+  /** Sus últimas reservas (Olmo 23-nov, solo de quien no vino), validadas; null si el servidor no las trae. `a`: si (vino),
+   *  no («No se presentó») o sm (terminó sin check-in). */
+  function histDe(h) {
+    if (!h || typeof h !== 'object' || !Array.isArray(h.u)) return null;
+    var u = h.u.filter(function (x) { return x && typeof x.i === 'string' && isFinite(Date.parse(x.i)) && (x.a === 'si' || x.a === 'no' || x.a === 'sm'); })
+      .slice(0, 8).map(function (x) { return { ms: Date.parse(x.i), d: typeof x.d === 'string' ? x.d.slice(0, 40) : 'Clase', a: x.a }; });
+    var fecha = function (v) { return typeof v === 'string' && isFinite(Date.parse(v)) ? Date.parse(v) : null; }, n = entero(h.n);
+    return { u: u, seguidas: entero(h.seguidas) || 0, vino: entero(h.vino) || 0, n: n == null ? u.length : n, uv: fecha(h.uv), luego: fecha(h.luego), todas: h.todas === true };
+  }
+  /** Lo que importa para escribirle (Olmo 23-nov: «si es la primera que falla o van varias»), en una o dos líneas. */
+  function resumenHist(hh, ahora) {
+    if (!hh || !hh.n) return [];
+    var xs = [];
+    if (hh.seguidas >= hh.n) {
+      if (hh.todas) xs.push(hh.n === 1 ? 'Era su primera reserva' : 'No ha venido a ninguna de sus ' + hh.n + ' reservas');
+      else xs.push('No vino a ninguna de sus últimas ' + hh.n + ' reservas');
+    } else {
+      // seguidas 0 no debería pasar (su clase es una falta); si pasa, no se dice «primera falta».
+      if (hh.seguidas === 1) xs.push('Primera falta seguida: a la anterior sí vino');
+      else if (hh.seguidas >= 2) xs.push(hh.seguidas + ' faltas seguidas');
+      var de = hh.todas ? 'de sus ' + hh.n + ' reservas' : 'de sus últimas ' + hh.n;
+      xs.push('Vino a ' + hh.vino + ' ' + de + (hh.seguidas >= 2 && hh.uv != null ? ' · la última vez, ' + cuandoClase(hh.uv, ahora) : ''));
+    }
+    // Revisión 23-nov: faltó a esta y luego sí vino a otra (p. ej. se cambió de horario sin cancelar).
+    if (hh.luego != null) xs.push('Después sí vino: ' + cuandoClase(hh.luego, ahora));
+    return xs;
+  }
+  /** Lo del globo: resumen, sus filas con fecha y si va en alerta (2 faltas seguidas o más); null sin historial. */
+  function globoHist(hh, ahora) {
+    if (!hh || !hh.n) return null;
+    return { res: resumenHist(hh, ahora), alerta: hh.seguidas >= 2,
+      filas: hh.u.map(function (y) { return { cuando: cuandoClase(y.ms, ahora), clase: y.d, a: y.a }; }) };
+  }
+  var ASIS_HIST = { si: '✓ Vino', no: '✕ No vino', sm: '✕ Sin check-in' };
   function entero(v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v < 1000 ? Math.floor(v) : null; }
   /** «5 por usar: 3 sin programar · 2 ya reservadas» (Olmo 23-nov); sin el desglose, «quedan 5». */
   function textoSaldo(q, l, r) {
@@ -1121,7 +1156,7 @@
       tipo: m.p.tipo === 'membresia' ? 'Miembro' : m.p.tipo === 'paquete' ? 'Paquete' : '', el: m.p.el, anios: m.p.a,
       plan: m.p.n, saldo: textoSaldo(m.p.q, m.p.l, m.p.r), l: m.p.l, r: m.p.r, vig: m.p.v ? textoVigencia(m.p.v, ahora) : '',
       sigs: m.p.s ? m.p.s.map(function (y) { return { cuando: cuandoClase(y.ms, ahora), clase: y.d }; }) : null,
-      temas: m.t, ins: m.i, eq: m.eq };
+      temas: m.t, ins: m.i, eq: m.eq, hist: estado === 'no' ? globoHist(histDe(f.h), ahora) : null };
   }
   var ESTADO_GLOBO = { falta: 'Falta por llegar', llego: 'Ya llegó ✓', no: 'No vino' };
   /** El mismo contenido en una línea por dato (aria-label y pruebas). */
@@ -1132,6 +1167,10 @@
     if (quien.length) xs.push(quien.join(' · '));
     if (g.vig) xs.push(g.vig);
     if (g.sigs) xs.push(g.sigs.length ? 'Próximas: ' + g.sigs.map(function (y) { return y.cuando + ' ' + y.clase; }).join('; ') : 'Sin otras clases reservadas');
+    if (g.hist) {
+      xs.push('Reservas pasadas: ' + g.hist.res.join(' · '));
+      g.hist.filas.forEach(function (y) { xs.push(y.cuando + ' ' + y.clase + ': ' + ASIS_HIST[y.a]); });
+    }
     g.temas.forEach(function (y) { xs.push(String(y.i || '') + ' ' + String(y.t || '')); });
     g.ins.forEach(function (y) { xs.push(String(y.t || y.i || '')); });
     if (g.eq) xs.push('equipo o Lobas: no se cobra');
@@ -1167,6 +1206,19 @@
       b.appendChild(s1);
     }
     var seccion = function (titulo) { var sc = el(doc, 'div', 'gl-sec'); sc.appendChild(el(doc, 'div', 'gl-tit', titulo)); b.appendChild(sc); return sc; };
+    // Olmo 23-nov: de quien no vino, primero sus reservas pasadas (¿primera falta o van varias?), para escribirle.
+    if (g.hist) {
+      var sh = seccion('Reservas pasadas');
+      g.hist.res.forEach(function (t, k) { sh.appendChild(el(doc, 'div', k === 0 ? 'gl-hres' + (g.hist.alerta ? ' alerta' : '') : 'gl-linea', t)); });
+      g.hist.filas.forEach(function (y) {
+        var r = el(doc, 'div', 'gl-clase');
+        r.appendChild(el(doc, 'span', 'gl-cuando', y.cuando));
+        var dr = el(doc, 'span', 'gl-disc', y.clase + ' ');
+        dr.appendChild(el(doc, 'span', 'gl-asis a-' + y.a, ASIS_HIST[y.a]));
+        r.appendChild(dr);
+        sh.appendChild(r);
+      });
+    }
     if (g.plan || g.saldo || g.vig) {
       var sp = seccion('Plan');
       if (g.plan) sp.appendChild(el(doc, 'div', 'gl-plan', g.plan));
@@ -1286,10 +1338,16 @@
    *  mismo día; si las dos traen, gana la de sello `s` más nuevo (revisión 23-nov: con dos instancias, una pastilla ya
    *  resuelta no salta de color cada 30 s). Así una pastilla no pierde su color entre sondeos. */
   function conMarcasPrevias(ps, previas) {
-    var vistas = {};
+    var vistas = {}, hist = {};
     var sello = function (m) { var t = m && typeof m.s === 'string' ? Date.parse(m.s) : NaN; return isFinite(t) ? t : 0; };
     (previas || []).forEach(function (p) {
       [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) { if (f && f.id && f.m) vistas[f.id] = f.m; });
+      (p.noVinieron || []).forEach(function (f) { if (f && f.id && f.h) hist[f.id] = f.h; });
+    });
+    // Su historial (quien no vino) que esta respuesta no trae (otra instancia aún no lo lee) se conserva del sondeo anterior.
+    (ps || []).forEach(function (p) {
+      // Con dos instancias, gana la lectura más nueva (`s`), como los temas: el globo no salta entre una y otra.
+      (p.noVinieron || []).forEach(function (f) { if (f && f.id && tiene(hist, f.id) && (f.h === undefined || sello(hist[f.id]) > sello(f.h))) f.h = hist[f.id]; });
     });
     (ps || []).forEach(function (p) {
       [].concat(p.faltan || [], p.yaLlegaron || [], p.noVinieron || []).forEach(function (f) {
@@ -2011,7 +2069,7 @@
     detalleProvisional: detalleProvisional, senalDe: senalDe, DESTINOS: DESTINOS, idsRevisar: idsRevisar, finClase: finClase, pastillasDe: pastillasDe, metaDe: metaDe,
     etiquetaAviso: etiquetaAviso, recuadroDe: recuadroDe, vaRecuadro: vaRecuadro, pintarRecuadros: pintarRecuadros,
     recetaCuenco: recetaCuenco, muestrasCuenco: muestrasCuenco, VOLUMENES: VOLUMENES, CUENCO: CUENCO,
-    puntosLlegada: puntosLlegada, marcasDeDetalle: marcasDeDetalle, datosGlobo: datosGlobo, textoGlobo: textoGlobo, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
+    puntosLlegada: puntosLlegada, marcasDeDetalle: marcasDeDetalle, datosGlobo: datosGlobo, textoGlobo: textoGlobo, histDe: histDe, resumenHist: resumenHist, conMarcasPrevias: conMarcasPrevias, pintarGlobo: pintarGlobo, cuandoClase: cuandoClase, marcasDe: marcasDe, textoSaldo: textoSaldo, esPrimera: esPrimera, porMarcarMuestra: porMarcarMuestra, botonesMuestra: botonesMuestra, esFitpass: esFitpass, FITPASS_ASISTENCIAS: FITPASS_ASISTENCIAS, ligaGHL: ligaGHL, ordenProximas: ordenProximas, porLlegarConTema: porLlegarConTema, ordenRecuadros: ordenRecuadros, RECUADRO_MS: RECUADRO_MS, RECUADROS_VISIBLES: RECUADROS_VISIBLES,
     apiUrl: apiUrl, hora: hora, claseCorta: claseCorta, TEXTOS: TEXTOS, TOKEN_KEY: TOKEN_KEY, TAG_PENDIENTE: TAG_PENDIENTE, TAG_AVISO: TAG_AVISO };
   if (raiz.document && raiz.location && raiz.fetch && !raiz.HeraMostradorSinArranque) {
     if (raiz.document.readyState === 'loading') raiz.document.addEventListener('DOMContentLoaded', function () { arrancar(raiz); });
