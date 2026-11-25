@@ -1671,6 +1671,7 @@
     function red(ok, txt, dormido) {
       $('punto').className = 'punto' + (ok ? (dormido ? ' dormido' : '') : ' off');
       $('estadoTxt').textContent = txt;
+      $('estadoTxt').setAttribute('title', txt);   // en celular se corta con «…»: así se lee completo
       alerta = ok ? '' : 'Sin conexión'; ponerTitulo();
     }
     function irClave(msg) {
@@ -1680,14 +1681,30 @@
       $('errorClave').textContent = msg || '';
       try { $('clave').focus(); } catch (_) {}
     }
-    function irLista() { $('vistaClave').hidden = true; $('vistaLista').hidden = false; alerta = ''; avisoSesion = false; ponerTitulo(); permisoUi(); sonidoUi(); avisosUi(); pintarMedicion(); }
+    var menuAbierto = false;   // «Opciones» en celular; se cierra al entrar
+    function irLista() { $('vistaClave').hidden = true; $('vistaLista').hidden = false; alerta = ''; avisoSesion = false; ponerTitulo(); menuAbierto = false; menuUi(false); permisoUi(); sonidoUi(); avisosUi(); pintarMedicion(); }
 
     function permisoUi() {
       var b = $('permiso'), nota = $('notaPermiso'), probar = $('probar');
-      if (!Notif) { b.hidden = true; probar.hidden = true; nota.hidden = false; nota.textContent = TEXTOS.sinNotif; return; }
+      if (!Notif) { b.hidden = true; probar.hidden = true; nota.hidden = false; nota.textContent = TEXTOS.sinNotif; menuUi(); return; }
       var p = Notif.permission;
       b.hidden = p !== 'default'; probar.hidden = p !== 'granted';
       nota.hidden = p !== 'denied'; nota.textContent = p === 'denied' ? TEXTOS.permisoNo : '';
+      menuUi();
+    }
+    /** Celular (Olmo 25-nov): «Opciones» abre y cierra los botones de la barra; con avisos sin activar o bloqueados lleva un punto. */
+    function menuUi(abrir) {
+      var m = $('menuBarra'), barra = $('barra'); if (!m || !barra) return;
+      if (abrir != null) {
+        if (barra.classList) barra.classList.toggle('abierta', !!abrir);
+        m.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        m.textContent = abrir ? 'Cerrar ▴' : 'Opciones ▾';
+      }
+      // El punto: falta activar los avisos o están bloqueados (la nota roja queda dentro del menú). En un aparato sin avisos
+      // (iPhone en Safari) no: ahí no hay nada que hacer y el punto estaría siempre prendido.
+      var falta = !!Notif && (!$('permiso').hidden || Notif.permission === 'denied');
+      if (m.classList) m.classList.toggle('alerta', falta);
+      m.setAttribute('title', falta ? 'Los avisos de este aparato no están activos' : 'Avisos, sonido, actualizar y salir');
     }
     var sonidoOn = function () { return ls.get(SONIDO_KEY) === '1'; };
     var volumen = function () { return volumenDe(ls.get(VOLUMEN_KEY)); };
@@ -2150,6 +2167,7 @@
       if (detallado()) ls.set(AVISOS_KEY, 'discreto'); else ls.del(AVISOS_KEY);
       avisosUi();
     });
+    if ($('menuBarra')) $('menuBarra').addEventListener('click', function () { menuAbierto = !menuAbierto; menuUi(menuAbierto); });
     $('actualizar').addEventListener('click', function () { sonido.preparar(); cargar({ fresco: 1 }); });   // a mano: sin la caché de 10 s
     // Leyenda de íconos (Olmo 23-nov): plegable; esta compu recuerda si la dejaron abierta.
     var leyendaUi = function (abierta) {
@@ -2168,7 +2186,7 @@
     $('salir').addEventListener('click', function () { ls.del(TOKEN_KEY); irClave(''); });
     var alVolver = function () {
       if (enSegundoPlano(doc)) return;
-      sinVer = []; ponerTitulo();
+      sinVer = []; ponerTitulo(); permisoUi();   // por si cambiaron el permiso de avisos en los ajustes del navegador
       if (ls.get(TOKEN_KEY) && Date.now() - ultimaCarga > 10000) cargar();
     };
     doc.addEventListener('visibilitychange', alVolver);
