@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-x/W1XTWOsUwNVcZ2Zl+7xiX0SIDeDx9CGxJGuZHS+2Y=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-D1+VIweN2JvOpZT3n/Q6fPF+PJVeiukAuwzAgj7M/bM=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://static.wixstatic.com data:; connect-src https://www.herazenter.com 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -170,6 +170,7 @@ main{flex:1;padding:8px 28px 28px;display:flex;flex-direction:column;width:100%;
 /* Revisión: el botón de salir siempre a la vista (en 1180×820 quedaba bajo el pliegue y el kiosco se trababa 60 s). */
 #rxCerrar{position:sticky;bottom:0;flex:none;box-shadow:0 -10px 0 10px #fff}
 .dato.racha .racha-ult{display:block;font-size:14px;color:var(--gris);margin-top:2px}
+.racha-prot{display:block;font-size:15px;color:var(--carbon);margin-top:4px}
 @media (max-width:640px){.rachas-lista{grid-template-columns:1fr;grid-auto-flow:row;grid-template-rows:none!important}}
 .pista.lugar{color:var(--terracota);font-weight:500}
 .dato.racha .num{color:var(--fuego)}
@@ -700,9 +701,10 @@ button.fila-r:active{background:var(--arena-suave)}
     <ol class="rx-pasos">
       <li style="--i:0"><span class="rx-ico">✅</span><div><b>Ven a tu clase y haz check-in en la tablet</b><span>Cada día que vienes suma 1. Si tomas 2 clases el mismo día, cuenta 1.</span></div></li>
       <li style="--i:1"><span class="rx-ico">📅</span><div><b>¿No puedes venir? Cancela con tiempo desde la app</b><span>Una clase cancelada a tiempo no rompe tu racha.</span></div></li>
-      <li style="--i:2"><span class="rx-ico">⚠️</span><div><b>Una falta la regresa a 0</b><span>Si reservas y no llegas, es falta. Haz siempre check-in: sin check-in, el sistema te marca falta.</span></div></li>
+      <li style="--i:2"><span class="rx-ico">⚠️</span><div><b>Una falta la regresa a 0</b><span>Si reservas y no llegas, es falta (salvo que tengas protector 🛡️). Haz siempre check-in: sin check-in, el sistema te marca falta.</span></div></li>
       <li style="--i:3"><span class="rx-ico">⏳</span><div><b>No dejes pasar más de 14 días</b><span>Si pasan 14 días sin que vengas, tu racha empieza de nuevo.</span></div></li>
-      <li style="--i:4"><span class="rx-ico">🏆</span><div><b>Sube en el ranking</b><span>Entre más días llevas, más arriba sales. Toca «¿En qué lugar voy?» para ver tu lugar.</span></div></li>
+      <li style="--i:4"><span class="rx-ico">🛡️</span><div><b>Cada 30 días ganas un protector</b><span>Te cuida una falta o 14 días más sin venir (una gripa, un viaje). Guardas hasta 2 y se usan solos.</span></div></li>
+      <li style="--i:5"><span class="rx-ico">🏆</span><div><b>Sube en el ranking</b><span>Entre más días llevas, más arriba sales. Toca «¿En qué lugar voy?» para ver tu lugar.</span></div></li>
     </ol>
     <button class="btn pri" id="rxCerrar" type="button">¡Va, a cuidar mi racha! 🔥</button>
   </div>
@@ -1110,6 +1112,21 @@ function medallas(ins){
   }
   return m.map(([icono, txt]) => `<div class="medalla">${icono}<span>${txt}</span></div>`).join('');
 }
+/* Protector de racha (Olmo 24-nov): se gana 1 a los 30, 60, 90… días (máx. 2) y perdona una falta o 14 días más sin venir. */
+function txtProtector(pr) {
+  if (!pr) return '';
+  const n = Number(pr.tiene) || 0, f = Number(pr.proximo) || 0, h = pr.salvadaHace;
+  const dd = x => `${x} día${x === 1 ? '' : 's'}`;
+  // Hueco de hoy abierto: el protector ya la está cuidando («ven antes del sábado 5 de diciembre»).
+  if (Number(pr.usando) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(pr.vence || '')) {
+    const f2 = new Date(pr.vence + 'T12:00:00Z').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+    return esc(`🛡️ Tu protector está cuidando tu racha: ven a más tardar el ${f2.replace(',', '')}`);
+  }
+  const salvo = Number.isInteger(h) ? `🛡️ Tu protector salvó tu racha ${h === 0 ? 'hoy' : h === 1 ? 'ayer' : `hace ${dd(h)}`}` : '';
+  const tiene = n >= 1 ? `Tienes ${n} protector${n > 1 ? 'es' : ''} de racha${f ? ` · el siguiente en ${dd(f)}` : ''}`
+    : f ? `Te falta${f === 1 ? '' : 'n'} ${dd(f)} para ${salvo ? 'otro' : 'tu'} protector de racha` : '';
+  return esc(salvo ? [salvo, tiene && tiene.charAt(0).toLowerCase() + tiene.slice(1)].filter(Boolean).join(' · ') : tiene ? '🛡️ ' + tiene : '');
+}
 function pintarPerfil(p){
   if (!p) { $('eDatos').innerHTML = ''; return; }
   // El número de clase del servidor manda: si ya tomó otra clase hoy, no se repite «primera clase» ni un hito viejo.
@@ -1121,7 +1138,8 @@ function pintarPerfil(p){
   const d = [];
   // Olmo 24-nov: al hacer check-in, cómo va su racha (contando la clase de hoy) y en qué lugar del ranking.
   const ra = p.racha, rd = ra && Number(ra.dias), rl = ra && Number(ra.lugar), rde = ra && Number(ra.de);
-  if (rd >= 1) d.push(`<div class="dato racha-listo"><div><div class="num">🔥 ${rd}</div><span>${rd === 1 ? 'día de racha: ¡empezaste tu racha!' : 'días de racha'}${rl >= 1 && rde >= rl ? ` · vas en el lugar #${rl} de ${rde}` : ''}</span></div></div>`);
+  const rpr = txtProtector(ra && ra.protector);
+  if (rd >= 1) d.push(`<div class="dato racha-listo"><div><div class="num">🔥 ${rd}</div><span>${rd === 1 ? 'día de racha: ¡empezaste tu racha!' : 'días de racha'}${rl >= 1 && rde >= rl ? ` · vas en el lugar #${rl} de ${rde}` : ''}</span>${rpr ? `<span class="racha-prot">${rpr}</span>` : ''}</div></div>`);
   if (p.numeroClase) d.push(`<div class="dato"><div><div class="num">#${p.numeroClase}</div><span>clase en Hera</span></div></div>`);
   if (p.progreso) {
     const n = p.progreso.restantes, res = p.progreso.reservadas || 0;
@@ -1678,6 +1696,7 @@ function pintarCuenta(u, opc = {}){
     const txtUlt = ult ? `tu última racha fue de ${ult} día${ult === 1 ? '' : 's'}` : '';
     const racha = pg.racha >= 1 ? `<div class="dato racha${opc.lugar ? ' destacada' : ''}"><div><div class="num">🔥 ${esc(pg.racha)} día${pg.racha === 1 ? '' : 's'} de racha</div>`
       + (lug ? `<span><b>Vas en el lugar #${esc(lug.lugar)} de ${esc(lug.de)}</b></span>` : '<span>días seguidos viniendo</span>')
+      + (txtProtector(pg.protector) ? `<span class="racha-prot">${txtProtector(pg.protector)}</span>` : '')
       + (ult ? `<span class="racha-ult">Antes: ${txtUlt}</span>` : '') + '</div></div>'
       : ult ? `<div class="dato racha${opc.lugar ? ' destacada' : ''}"><div><div class="num">🔥 ${txtUlt.charAt(0).toUpperCase() + txtUlt.slice(1)}</div><span>empieza otra en tu próxima clase · una falta o 14 días sin venir la reinician</span></div></div>` : '';
     if (racha && opc.lugar) d2.push(racha);
@@ -2247,7 +2266,8 @@ function demoDatos(){
         { numeroClase: visitas + 1, hito: aviso === 'hito' ? 50 : null, cumple: aviso === 'cumple', tipo, elemento: el, miembro, progreso,
           vigencia: el ? { fecha: new Date(ahora.getTime() + (aviso === 'vence' ? 3 : 15) * 864e5).toISOString(), tipo: miembro ? 'renueva' : 'vence' } : null,
           aviso: aviso ? { tipo: aviso, texto: textos[aviso] } : null,
-          qr: ['ultima','pocas','vence'].includes(aviso) ? { url:'https://www.herazenter.com/pricing-plans/plans-pricing', texto:'Escanea para renovar desde tu celular' } : null };
+          qr: ['ultima','pocas','vence'].includes(aviso) ? { url:'https://www.herazenter.com/pricing-plans/plans-pricing', texto:'Escanea para renovar desde tu celular' } : null,
+          racha: visitas >= 2 ? { dias: visitas, lugar: 1 + (visitas % 9), de: 42, protector: visitas >= 30 ? { tiene: 1, proximo: 60 - visitas, salvadaHace: visitas % 2 ? 3 : null } : { tiene: 0, proximo: 30 - visitas, salvadaHace: null } } : null };
       return { id, nombre, ult4: market ? '' : String(1000 + (i + 1) * (j + 3) * 137 % 9000).slice(-4), llego: min < 0 && j === 0,
         ins: market ? null : { elemento: el, miembro, estrella: visitas >= 100 ? 100 : visitas >= 50 ? 50 : visitas >= 25 ? 25 : null, anios: visitas >= 100 ? 2 : visitas >= 40 ? 1 : null } };
     });
@@ -2263,7 +2283,7 @@ function demoDatos(){
       anterior: { titulo: 'Pilates Reformer', disciplina: 'Reformer', coach: 'Coach A', inicio: h(-2, 8), asistio: true },
       futuras: [{ id: 'f1', disciplina: 'Barre', titulo: 'Barre', coach: 'Coach B', inicio: h(1, 19), checkin: false }],
       masFuturas: 0, reservar: 'https://www.herazenter.com/classes',
-      progresoHera: { total: 26, hito: { siguiente: 50, faltan: 24 }, mes: { este: 5, pasado: 6 }, racha: 9, lugar: { lugar: 8, de: 42 } } } }];
+      progresoHera: { total: 26, hito: { siguiente: 50, faltan: 24 }, mes: { este: 5, pasado: 6 }, racha: 9, protector: { tiene: 0, proximo: 21, salvadaHace: null }, lugar: { lugar: 8, de: 42 } } } }];
   return { clases, perfiles, cuentas };
 }
 if (DEMO) document.body.insertAdjacentHTML('beforeend', '<div class="demo">DEMO · datos inventados · contraseña: demo</div>');
